@@ -39,6 +39,14 @@ class Grid:
             for r in range(self.rows):
                 yield c, r, self.cells[c][r]
 
+    def get_empty_cells(self):
+        empty = []
+        for c in range(self.cols):
+            for r in range(self.rows):
+                if self.cells[c][r] is None:
+                    empty.append((c, r))
+        return empty
+
     def update(self, dt):
         for c, r, d in self.iterate():
             if d:
@@ -78,13 +86,15 @@ class Grid:
             return
 
         if clicked is None:
-            if self.game.money >= DIE_COST:
-                pool = self.game.loadout.selected or DIE_TYPES
-                t = random.choice(pool)
-                die = make_die(self.game, c, r, t, level=1)
-                self.set(c, r, die)
-                self.game.money -= DIE_COST
-                self.selected = None
+            # Left-click spawn disabled. Use Spacebar.
+            pass
+            # if self.game.money >= DIE_COST:
+            #     pool = self.game.loadout.selected or DIE_TYPES
+            #     t = random.choice(pool)
+            #     die = make_die(self.game, c, r, t, level=1)
+            #     self.set(c, r, die)
+            #     self.game.money -= DIE_COST
+            #     self.selected = None
         else:
             sel = self.selected
             if sel is None:
