@@ -25,7 +25,14 @@ class Button:
 
     def draw(self, surf):
         color = self.hover if self._hovering else self.bg
+        # Glow effect on hover
+        if self._hovering:
+            pygame.draw.rect(surf, (color[0], color[1], color[2], 100), self.rect.inflate(4, 4), border_radius=self.radius)
+        
         pygame.draw.rect(surf, color, self.rect, border_radius=self.radius)
+        # Subtle border
+        pygame.draw.rect(surf, (255, 255, 255), self.rect, width=1, border_radius=self.radius)
+
         if self.icon:
             ir = self.icon.get_rect(center=self.rect.center)
             surf.blit(self.icon, ir)
@@ -55,10 +62,16 @@ class Segmented:
     def draw(self, surf):
         n = len(self.labels)
         w = self.rect.w // n
+        # Background container
+        pygame.draw.rect(surf, DARKER, self.rect, border_radius=12)
+        pygame.draw.rect(surf, GRAY, self.rect, width=1, border_radius=12)
+
         for i, lab in enumerate(self.labels):
-            r = pygame.Rect(self.rect.x + i * w, self.rect.y, w - (0 if i == n - 1 else 1), self.rect.h)
+            r = pygame.Rect(self.rect.x + i * w, self.rect.y, w, self.rect.h)
             active = (i == self.index)
-            pygame.draw.rect(surf, ACCENT if active else DARK, r, border_radius=10)
+            if active:
+                pygame.draw.rect(surf, ACCENT, r.inflate(-4, -4), border_radius=8)
+            
             t = self.font.render(lab, True, WHITE if active else SLATE)
             surf.blit(t, (r.centerx - t.get_width() // 2, r.centery - t.get_height() // 2))
 
@@ -69,18 +82,20 @@ def draw_panel(surf, rect, title, title_font, body_fn=None):
 
     # gradient background
     panel = pygame.Surface((rect.w, rect.h))
+    # Simple vertical gradient
     for y in range(rect.h):
         t = y / max(1, rect.h - 1)
         r = int(PANEL_GRAD_TOP[0] * (1 - t) + PANEL_GRAD_BOTTOM[0] * t)
         g = int(PANEL_GRAD_TOP[1] * (1 - t) + PANEL_GRAD_BOTTOM[1] * t)
         b = int(PANEL_GRAD_TOP[2] * (1 - t) + PANEL_GRAD_BOTTOM[2] * t)
         pygame.draw.line(panel, (r, g, b), (0, y), (rect.w, y))
+    
+    panel.set_alpha(240) # Slight transparency
     panel = panel.convert()
     surf.blit(panel, rect.topleft)
 
     # frame
-    pygame.draw.rect(surf, DARKER, rect, width=6, border_radius=18)
-    pygame.draw.rect(surf, (255,255,255), rect, width=2, border_radius=18)
+    pygame.draw.rect(surf, (60, 60, 80), rect, width=2, border_radius=18)
 
     if title:
         title_surf = title_font.render(title, True, WHITE)

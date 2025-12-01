@@ -56,7 +56,8 @@ class Grid:
         for c in range(self.cols):
             for r in range(self.rows):
                 rect = self.rect_at(c, r)
-                pygame.draw.rect(surf, GRAY, rect, width=3, border_radius=10)
+                # Darker, more subtle grid borders
+                pygame.draw.rect(surf, (40, 45, 60), rect, width=2, border_radius=10)
                 die = self.get(c, r)
                 if die:
                     selected = (self.selected == (c, r))
@@ -66,7 +67,9 @@ class Grid:
         if GRID_X <= mx < GRID_X + self.cols * CELL_SIZE and GRID_Y <= my < GRID_Y + self.rows * CELL_SIZE:
             hc = (mx - GRID_X) // CELL_SIZE
             hr = (my - GRID_Y) // CELL_SIZE
-            pygame.draw.rect(surf, ACCENT, self.rect_at(hc, hr), width=3, border_radius=10)
+            # Hover effect
+            pygame.draw.rect(surf, (255, 255, 255, 30), self.rect_at(hc, hr), border_radius=10)
+            pygame.draw.rect(surf, ACCENT, self.rect_at(hc, hr), width=2, border_radius=10)
 
     def handle_click(self, event):
         if event.button != 1:

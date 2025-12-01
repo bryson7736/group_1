@@ -19,10 +19,16 @@ class Enemy:
         self.slow_ratio = 1.0
         self.slow_timer = 0.0
         self.carries_coin = False
+        self.poison_timer = 0.0
+        self.poison_dmg = 0.0
 
     def apply_slow(self, ratio, duration):
         self.slow_ratio = min(self.slow_ratio, ratio)
         self.slow_timer = max(self.slow_timer, duration)
+
+    def apply_poison(self, dmg, duration):
+        self.poison_dmg = max(self.poison_dmg, dmg)
+        self.poison_timer = max(self.poison_timer, duration)
 
     def hit(self, dmg):
         self.hp -= dmg
@@ -32,10 +38,19 @@ class Enemy:
     def update(self, dt, speed_mult=1.0, zone_mult=1.0):
         if self.dead or self.reached or self.idx >= len(self.path) - 1:
             return
+        
+        # Status effects
         if self.slow_timer > 0:
             self.slow_timer -= dt
             if self.slow_timer <= 0:
                 self.slow_ratio = 1.0
+        
+        if self.poison_timer > 0:
+            self.poison_timer -= dt
+            # Poison damage tick
+            self.hit(self.poison_dmg * dt)
+            if self.dead:
+                return
 
         tx, ty = self.path[self.idx + 1]
         dx, dy = tx - self.x, ty - self.y
@@ -53,7 +68,13 @@ class Enemy:
 
     def draw(self, surf, font):
         r = pygame.Rect(int(self.x - ENEMY_SIZE/2), int(self.y - ENEMY_SIZE/2), ENEMY_SIZE, ENEMY_SIZE)
-        pygame.draw.rect(surf, ORANGE, r, border_radius=10)
+        color = ORANGE
+        if self.poison_timer > 0:
+            color = (180, 50, 255) # Purple for poison
+        elif self.slow_timer > 0:
+            color = (100, 100, 255) # Blue for slow
+            
+        pygame.draw.rect(surf, color, r, border_radius=10)
         hp_txt = font.render(str(max(0, int(self.hp + 0.5))), True, WHITE)
         surf.blit(hp_txt, (r.centerx - hp_txt.get_width()//2, r.centery - hp_txt.get_height()//2))
 

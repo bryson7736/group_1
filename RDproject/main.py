@@ -13,7 +13,7 @@ from loadout import Loadout
 from upgrades import UpgradeState
 from enemy import Enemy, Boss
 from dice import DIE_TYPES, make_die
-from colors import WHITE, DARKER, GRAY, RED
+from colors import WHITE, DARKER, GRAY, RED, DARK
 from effects import TelegraphZone
 
 STATE_LOBBY = "lobby"
@@ -55,6 +55,10 @@ class Game:
         self.spawn_cd: float = 0.0
         self.spawn_interval: float = 0.9
         self.is_boss_wave: bool = False
+        
+        # Auto-wave system
+        self.wave_timer: float = 0.0
+        self.wave_delay: float = 5.0  # seconds until next wave
 
         self.speed_index: int = DEFAULT_SPEED_INDEX
         self.speed_mult: float = GAME_SPEEDS[self.speed_index]
@@ -81,30 +85,51 @@ class Game:
     def _build_lobby(self) -> None:
         """Initialize lobby UI elements."""
         self.buttons: List[Button] = []
-        bx, by, bw, bh = 60, 160, 220, 50
-        gap = 10
-        # three levels
+        
+        # Center layout configuration
+        btn_w, btn_h = 280, 60
+        gap = 20
+        start_y = 250
+        center_x = SCREEN_W // 2 - btn_w // 2
+
+        # Level Selection
         for i, lvl in enumerate(self.level_mgr.levels):
             self.buttons.append(
                 Button(
-                    (bx, by + i * (bh + gap), bw, bh),
+                    (center_x, start_y + i * (btn_h + gap), btn_w, btn_h),
                     f"Start: {lvl.name}",
                     self.font_big,
                     lambda i=i: self.start_level(i)
                 )
             )
-        # loadout & upgrades
+        
+        # Secondary Actions
+        y_offset = start_y + len(self.level_mgr.levels) * (btn_h + gap) + 20
+        
         self.buttons.append(
-            Button((bx, by + 3 * (bh + gap), bw, bh), "Carry Team", self.font_big, self.goto_loadout)
+            Button((center_x, y_offset, btn_w, btn_h), "Carry Team", self.font_big, self.goto_loadout)
         )
         self.buttons.append(
-            Button((bx, by + 4 * (bh + gap), bw, bh), "Upgrades", self.font_big, self.goto_upgrades)
+            Button((center_x, y_offset + (btn_h + gap), btn_w, btn_h), "Upgrades", self.font_big, self.goto_upgrades)
         )
-        # help & quit
+        
+        # Bottom Actions
+        bottom_y = SCREEN_H - 100
         self.buttons.append(
-            Button((bx, by + 5 * (bh + gap), bw, bh), "Help", self.font_big, self.goto_help)
+            Button((center_x - 160, bottom_y, 140, 50), "Help", self.font_big, self.goto_help)
         )
-        self.quit_btn = Button((bx, SCREEN_H - 100, bw, bh), "Quit", self.font_big, self.quit)
+        self.quit_btn = Button((center_x + 160 + btn_w - 140, bottom_y, 140, 50), "Quit", self.font_big, self.quit)
+        # Adjust quit button position logic if needed, but let's keep it simple for now:
+        # Actually, let's put Help and Quit side-by-side below Upgrades
+        
+        # Re-calculating for side-by-side
+        row_y = y_offset + 2 * (btn_h + gap) + 20
+        self.buttons.pop() # Remove Help from previous append
+        self.buttons.append(
+             Button((center_x, row_y, btn_w // 2 - 10, btn_h), "Help", self.font_big, self.goto_help)
+        )
+        self.quit_btn = Button((center_x + btn_w // 2 + 10, row_y, btn_w // 2 - 10, btn_h), "Quit", self.font_big, self.quit)
+
 
     def start_level(self, idx: int) -> None:
         """Start a specific level."""
@@ -259,6 +284,7 @@ class Game:
         """Start the next wave of enemies."""
         self.telegraphs = []
         self.wave += 1
+        self.wave_timer = 0.0 # Reset timer
         count, is_boss = self.level_mgr.wave_info(self.wave)
         count = int(count * self.level.difficulty)
         self.to_spawn = count
@@ -330,6 +356,12 @@ class Game:
                 self.base_hp -= 1
                 self.enemies.remove(e)
 
+        # Auto-wave logic
+        if self.to_spawn <= 0 and len(self.enemies) == 0:
+            self.wave_timer += dt * self.speed_mult
+            if self.wave_timer >= self.wave_delay:
+                self.start_wave()
+
         # bullets
         for b in list(self.bullets):
             if b.update(dt):
@@ -345,34 +377,24 @@ class Game:
     # --------------- Draw ---------------
     def lobby_draw(self) -> None:
         """Draw the lobby screen."""
-        self.screen.fill(DARKER)
-        left = pygame.Rect(20, 20, PANEL_W, SCREEN_H - 40)
-
-        def _left() -> None:
-            y = left.y + 70
-            lines = [
-                "Pick a level, or open Carry Team / Upgrades.",
-                "Left click empty: place Lv1 die ($10)",
-                "Left click die: select; merge same TYPE & LEVEL (+$3)",
-                "Boss waves are tougher and drop more money.",
-            ]
-            for s in lines:
-                t = self.font.render(s, True, WHITE)
-                self.screen.blit(t, (left.x + 20, y))
-                y += 24
-
-        draw_panel(self.screen, left, "Lobby", self.font_big, _left)
+        self.screen.fill(DARK)
+        
+        # Title
+        title = self.font_huge.render("RANDOM DICE DEFENSE", True, WHITE)
+        self.screen.blit(title, (SCREEN_W // 2 - title.get_width() // 2, 100))
+        
+        # Subtitle / Info
+        info_text = "Select a level to start"
+        sub = self.font_big.render(info_text, True, GRAY)
+        self.screen.blit(sub, (SCREEN_W // 2 - sub.get_width() // 2, 180))
 
         for b in self.buttons:
             b.draw(self.screen)
         self.quit_btn.draw(self.screen)
 
-        right = pygame.Rect(PANEL_W + 40, 20, SCREEN_W - PANEL_W - 60, SCREEN_H - 40)
-        pygame.draw.rect(self.screen, (32, 34, 58), right, border_radius=16)
-
     def play_draw(self) -> None:
         """Draw the gameplay screen."""
-        self.screen.fill((18, 22, 30))
+        self.screen.fill(DARK)
         if self.level:
             pygame.draw.lines(self.screen, GRAY, False, self.level.path, 6)
 
@@ -426,7 +448,9 @@ class Game:
         self.btn_trash.draw(self.screen)
 
         if self.to_spawn <= 0 and len(self.enemies) == 0:
-            top = self.font_big.render("Press N to start next wave", True, WHITE)
+            time_left = max(0.0, self.wave_delay - self.wave_timer)
+            msg = f"Next wave in {time_left:.1f}s (Press N to skip)"
+            top = self.font_big.render(msg, True, WHITE)
             self.screen.blit(top, (GRID_X, 42))
 
     def gameover_draw(self) -> None:

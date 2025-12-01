@@ -8,7 +8,10 @@ from projectiles import Bullet, ChainBolt
 DIE_SINGLE = "single"
 DIE_MULTI = "multi"
 DIE_FREEZE = "freeze"
-DIE_TYPES = [DIE_SINGLE, DIE_MULTI, DIE_FREEZE]
+DIE_WIND = "wind"
+DIE_POISON = "poison"
+DIE_IRON = "iron"
+DIE_TYPES = [DIE_SINGLE, DIE_MULTI, DIE_FREEZE, DIE_WIND, DIE_POISON, DIE_IRON]
 
 _dice_images_cache = {}
 
@@ -95,10 +98,10 @@ class Die:
             self.try_fire()
 
     def fire_rate_factor(self):
-        return self.game.upgrades.fire_rate_mult.get(self.type, 1.0)
+        return self.game.upgrades.get_fire_rate_mult(self.type)
 
     def damage_multiplier(self):
-        return self.game.upgrades.damage_mult.get(self.type, 1.0)
+        return self.game.upgrades.get_damage_mult(self.type)
 
     def try_fire(self):
         mode = self.game.target_mode
@@ -163,9 +166,61 @@ class FreezeDice(Die):
         target.apply_slow(FREEZE_SLOW_RATIO, FREEZE_DURATION + 0.2 * (self.level - 1))
 
 
+class WindDice(Die):
+    def __init__(self, game, c, r, level=1):
+        super().__init__(game, c, r, level)
+        self.type = DIE_WIND
+        # Wind fires much faster
+        self.base_fire_rate = max(6, int(self.base_fire_rate * 0.4))
+        self.base_period_sec = self.base_fire_rate / FPS
+
+    def set_level(self, lv):
+        super().set_level(lv)
+        self.base_fire_rate = max(4, int(self.base_fire_rate * 0.4))
+        self.base_period_sec = self.base_fire_rate / FPS
+
+
+class PoisonDice(Die):
+    def __init__(self, game, c, r, level=1):
+        super().__init__(game, c, r, level)
+        self.type = DIE_POISON
+
+    def fire_at(self, target):
+        base = 2 ** (self.level - 1)
+        dmg = base * self.damage_multiplier()
+        # Initial hit
+        self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
+        # Apply poison: dmg per sec for 3s
+        poison_dps = dmg * 0.5
+        target.apply_poison(poison_dps, 3.0)
+
+
+class IronDice(Die):
+    def __init__(self, game, c, r, level=1):
+        super().__init__(game, c, r, level)
+        self.type = DIE_IRON
+
+    def fire_at(self, target):
+        base = 2 ** (self.level - 1)
+        dmg = base * self.damage_multiplier()
+        
+        # Bonus vs Boss or High HP
+        from enemy import Boss
+        if isinstance(target, Boss):
+            dmg *= 2.0
+        
+        self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
+
+
 def make_die(game, c, r, die_type, level=1):
     if die_type == DIE_MULTI:
         return MultiDice(game, c, r, level)
     elif die_type == DIE_FREEZE:
         return FreezeDice(game, c, r, level)
+    elif die_type == DIE_WIND:
+        return WindDice(game, c, r, level)
+    elif die_type == DIE_POISON:
+        return PoisonDice(game, c, r, level)
+    elif die_type == DIE_IRON:
+        return IronDice(game, c, r, level)
     return SingleDice(game, c, r, level)

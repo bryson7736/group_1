@@ -11,15 +11,30 @@ class LevelManager:
         self.levels = [
             Level("Meadow",
                 [
-                    (1280, 125),  # 右上角 (4,0)
-                    (500, 125),  # 右下角 (4,2)
-                    (500, 650),
-                    (1280, 650)   # 左下角 (0,2)
+                    (1280, 125),  # Top Right
+                    (500, 125),   # Top Left-ish
+                    (500, 650),   # Bottom Left-ish
+                    (1280, 650)   # Bottom Right
                 ],
                 1.0
             ),
-            Level("Tundra", [(100, 360), (480, 360), (480, 120), (1180, 120)], 1.2),
-            Level("Lava",   [(100, 520), (520, 520), (520, 200), (1180, 200)], 1.4),
+            Level("Tundra", 
+                [
+                    (100, 100),   # Start Top-Left (Left of grid)
+                    (100, 650),   # Down (Left of grid)
+                    (1200, 650)   # Right (Below grid)
+                ], 
+                1.2
+            ),
+            Level("Lava",   
+                [
+                    (1200, 80),   # Start Top-Right (Above grid)
+                    (100, 80),    # Left (Above grid)
+                    (100, 650),   # Down (Left of grid)
+                    (600, 650)    # Right (Below grid)
+                ], 
+                1.4
+            ),
         ]
 
     def get(self, idx):

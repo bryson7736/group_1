@@ -1,25 +1,28 @@
 # -*- coding: utf-8 -*-
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-GRAY = (120, 130, 145)
-SLATE = (180, 188, 205)
-DARK = (35, 38, 50)
-DARKER = (22, 24, 36)
-RED = (220, 86, 86)
-GREEN = (86, 200, 120)
-BLUE = (86, 140, 220)
-YELLOW = (250, 210, 80)
-ORANGE = (255, 159, 64)
-CYAN = (75, 192, 192)
-ACCENT = (99, 132, 255)
+GRAY = (80, 85, 100)  # Darker gray for grid borders
+SLATE = (140, 150, 170)
+DARK = (20, 22, 30)   # Deep blue-black
+DARKER = (10, 12, 18) # Almost black
+RED = (255, 60, 80)   # Neon Red
+GREEN = (50, 255, 150) # Neon Green
+BLUE = (60, 160, 255)  # Neon Blue
+YELLOW = (255, 220, 50)
+ORANGE = (255, 140, 40)
+CYAN = (0, 255, 255)
+ACCENT = (120, 80, 255) # Neon Purple
 
 # Panel gradient
-PANEL_GRAD_TOP = (30, 34, 60)
-PANEL_GRAD_BOTTOM = (50, 56, 98)
+PANEL_GRAD_TOP = (25, 30, 45)
+PANEL_GRAD_BOTTOM = (15, 18, 25)
 
-# Dice colors
+# Dice colors (Vibrant Neon)
 DICE_COLORS = {
-    "single": (255, 99, 132),
-    "multi": (54, 162, 235),
-    "freeze": (153, 102, 255),
+    "single": (255, 50, 100),   # Hot Pink
+    "multi": (0, 200, 255),     # Cyan/Blue
+    "freeze": (100, 100, 255),  # Periwinkle/Blue
+    "wind": (50, 255, 200),     # Teal/Mint
+    "poison": (180, 50, 255),   # Deep Purple
+    "iron": (200, 200, 200),    # Silver/Iron
 }

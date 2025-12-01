@@ -3,14 +3,40 @@ class UpgradeState:
     """Session-lifetime upgrades and coins."""
     def __init__(self):
         self.coins = 0
-        self.damage_mult = {}
-        self.fire_rate_mult = {}
-        self.cost_mult = {}
+        # In-game upgrades (reset per run)
+        self.ingame_damage_mult = {}
+        self.ingame_fire_rate_mult = {}
+        self.ingame_cost_mult = {}
+        
+        # Class upgrades (persistent-ish)
+        self.class_damage_mult = {}
+        self.class_fire_rate_mult = {}
+        self.class_crit_rate = {}
+
+    def reset_ingame(self):
+        self.ingame_damage_mult = {}
+        self.ingame_fire_rate_mult = {}
+        self.ingame_cost_mult = {}
 
     def ensure_type(self, t):
-        self.damage_mult.setdefault(t, 1.0)
-        self.fire_rate_mult.setdefault(t, 1.0)  # period multiplier; lower = faster
-        self.cost_mult.setdefault(t, 1.0)
+        self.ingame_damage_mult.setdefault(t, 1.0)
+        self.ingame_fire_rate_mult.setdefault(t, 1.0)
+        self.ingame_cost_mult.setdefault(t, 1.0)
+        
+        self.class_damage_mult.setdefault(t, 1.0)
+        self.class_fire_rate_mult.setdefault(t, 1.0)
+
+    def get_damage_mult(self, t):
+        self.ensure_type(t)
+        return self.ingame_damage_mult[t] * self.class_damage_mult[t]
+
+    def get_fire_rate_mult(self, t):
+        self.ensure_type(t)
+        return self.ingame_fire_rate_mult[t] * self.class_fire_rate_mult[t]
+        
+    def get_cost_mult(self, t):
+        self.ensure_type(t)
+        return self.ingame_cost_mult[t]
 
     def add_coin(self, n=1):
         self.coins += n
@@ -21,23 +47,25 @@ class UpgradeState:
             return True
         return False
 
-    def upgrade_damage(self, t, *, step=0.10, cost=2):
+    # --- In-Game Upgrades ---
+    def upgrade_ingame_damage(self, t, *, step=0.10, cost=100):
         self.ensure_type(t)
         if self.spend(cost):
-            self.damage_mult[t] *= (1.0 + step)
+            self.ingame_damage_mult[t] *= (1.0 + step)
             return True
         return False
 
-    def upgrade_fire(self, t, *, step=0.08, cost=2):
+    def upgrade_ingame_fire(self, t, *, step=0.08, cost=100):
         self.ensure_type(t)
         if self.spend(cost):
-            self.fire_rate_mult[t] *= (1.0 - step)
+            self.ingame_fire_rate_mult[t] *= (1.0 - step)
             return True
         return False
-
-    def upgrade_cost(self, t, *, step=0.10, cost=2):
+        
+    # --- Class Upgrades (Lobby) ---
+    def upgrade_class_damage(self, t, *, step=0.10, cost=50):
         self.ensure_type(t)
         if self.spend(cost):
-            self.cost_mult[t] *= (1.0 - step)
+            self.class_damage_mult[t] *= (1.0 + step)
             return True
         return False
