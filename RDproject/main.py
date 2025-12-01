@@ -89,7 +89,7 @@ class Game:
         # Center layout configuration
         btn_w, btn_h = 280, 60
         gap = 20
-        start_y = 250
+        start_y = 200
         center_x = SCREEN_W // 2 - btn_w // 2
 
         # Level Selection
@@ -414,7 +414,7 @@ class Game:
                 ry = int(z.y + (z.r - 10) * math.sin(ang))
                 pygame.draw.circle(self.screen, color, (rx, ry), 6)
 
-        panel_rect = pygame.Rect(20, 20, 300, 260)
+        panel_rect = pygame.Rect(20, 10, 300, 260)
 
         def _body() -> None:
             y = panel_rect.y + 60
