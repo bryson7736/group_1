@@ -34,12 +34,17 @@ class Die:
         self.r = r
         self.level = level
         self.type = DIE_SINGLE
-        self.range = BASE_RANGE
+        self.base_range = BASE_RANGE  # Store base range
         self.base_fire_rate = max(12, BASE_FIRE_RATE - (self.level - 1) * FIRE_RATE_STEP)
         self.cool = 0.0
         self.image = None
         # Ensure period in seconds initialized at construction
         self.base_period_sec = self.base_fire_rate / FPS
+    
+    @property
+    def range(self):
+        """Effective range with in-game upgrades applied."""
+        return self.base_range * self.game.ingame_upgrades.get_range_multiplier()
 
     @property
     def x(self):
@@ -98,10 +103,17 @@ class Die:
             self.try_fire()
 
     def fire_rate_factor(self):
-        return self.game.upgrades.get_fire_rate_mult(self.type)
+        # Combine permanent upgrades with in-game upgrades
+        perm_mult = self.game.upgrades.get_fire_rate_mult(self.type)
+        ingame_mult = self.game.ingame_upgrades.get_firerate_multiplier()
+        # Fire rate multiplier reduces period (faster = smaller period)
+        return perm_mult / ingame_mult
 
     def damage_multiplier(self):
-        return self.game.upgrades.get_damage_mult(self.type)
+        # Combine permanent upgrades with in-game upgrades
+        perm_mult = self.game.upgrades.get_damage_mult(self.type)
+        ingame_mult = self.game.ingame_upgrades.get_damage_multiplier()
+        return perm_mult * ingame_mult
 
     def try_fire(self):
         mode = self.game.target_mode

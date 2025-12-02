@@ -14,6 +14,8 @@ from upgrades import UpgradeState
 from enemy import Enemy, Boss
 from dice import DIE_TYPES, make_die
 from colors import WHITE, DARKER, GRAY, RED, DARK
+from story_mode import StoryManager
+from ingame_upgrades import InGameUpgrades
 from effects import TelegraphZone
 
 STATE_LOBBY = "lobby"
@@ -22,6 +24,8 @@ STATE_GAMEOVER = "gameover"
 STATE_HELP = "help"
 STATE_LOADOUT = "loadout"
 STATE_UPGRADES = "upgrades"
+STATE_STORY_SELECT = "story_select"
+STATE_STORY = "story"
 
 
 class Game:
@@ -41,10 +45,14 @@ class Game:
         self.state: str = STATE_LOBBY
         self.level_mgr = LevelManager()
         self.level: Any = None  # Level object
+        self.story_mgr = StoryManager()
+        self.current_story_stage: Any = None  # StoryStage object
+        self.story_max_waves: int = 0  # Max waves for current story stage
 
         self.grid = Grid(self)
         self.loadout = Loadout(["single", "multi", "freeze"])
         self.upgrades = UpgradeState()
+        self.ingame_upgrades = InGameUpgrades()  # In-game upgrades
         self.enemies: List[Enemy] = []
         self.bullets: List[Any] = []  # Projectile objects
         self.telegraphs: List[TelegraphZone] = []
@@ -92,19 +100,25 @@ class Game:
         start_y = 200
         center_x = SCREEN_W // 2 - btn_w // 2
 
-        # Level Selection
+        # Practice Mode Section (endless waves)
         for i, lvl in enumerate(self.level_mgr.levels):
             self.buttons.append(
                 Button(
                     (center_x, start_y + i * (btn_h + gap), btn_w, btn_h),
-                    f"Start: {lvl.name}",
+                    f"Practice: {lvl.name}",
                     self.font_big,
                     lambda i=i: self.start_level(i)
                 )
             )
         
-        # Secondary Actions
+        # Story Mode Button
         y_offset = start_y + len(self.level_mgr.levels) * (btn_h + gap) + 20
+        self.buttons.append(
+            Button((center_x, y_offset, btn_w, btn_h), "🔥 Story Mode: Hell", self.font_big, self.goto_story_select)
+        )
+        
+        # Secondary Actions
+        y_offset += (btn_h + gap)
         
         self.buttons.append(
             Button((center_x, y_offset, btn_w, btn_h), "Carry Team", self.font_big, self.goto_loadout)
@@ -157,6 +171,25 @@ class Game:
         self.upg_back = Button(
             (24, SCREEN_H - 74, 180, 48), "Back", self.font_big, self.back_to_lobby
         )
+    
+    def goto_story_select(self) -> None:
+        """Switch to story stage selection screen."""
+        self.state = STATE_STORY_SELECT
+        self.story_back = Button(
+            (24, SCREEN_H - 74, 180, 48), "Back", self.font_big, self.back_to_lobby
+        )
+    
+    def start_story_stage(self, stage_id: str) -> None:
+        """Start a specific story stage."""
+        stage = self.story_mgr.get_stage(stage_id)
+        if stage:
+            self.current_story_stage = stage
+            self.story_max_waves = stage.waves
+            # Use stage's path as the level path
+            from level_manager import Level
+            self.level = Level(stage.name, stage.path_points, stage.difficulty)
+            self.reset_runtime()
+            self.state = STATE_STORY
 
     def back_to_lobby(self) -> None:
         """Return to lobby screen."""
@@ -176,6 +209,7 @@ class Game:
         self.spawn_cd = 0.0
         self.is_boss_wave = False
         self.trash_active = False
+        self.ingame_upgrades.reset()  # Reset in-game upgrades
 
     # --------------- Events ---------------
     def on_speed_change(self, idx: int) -> None:
@@ -186,6 +220,15 @@ class Game:
     def toggle_trash(self) -> None:
         """Toggle trash mode for deleting dice."""
         self.trash_active = not self.trash_active
+    
+    def purchase_ingame_upgrade(self, upgrade_type: str) -> None:
+        """Purchase an in-game upgrade with money."""
+        success, new_money, message = self.ingame_upgrades.purchase_upgrade(upgrade_type, self.money)
+        if success:
+            self.money = new_money
+            print(f"✓ {message}")
+        else:
+            print(f"✗ {message}")
 
     def handle_play(self, event: pygame.event.Event) -> None:
         """Handle events during gameplay."""
@@ -224,6 +267,23 @@ class Game:
         self.speed_ctrl.handle(event)
         self.btn_trash.handle(event)
         if event.type == pygame.MOUSEBUTTONDOWN:
+            # Check for upgrade button clicks
+            if event.button == 1:  # Left click
+                mx, my = event.pos
+                panel_x = SCREEN_W - 280
+                panel_y = 80
+                panel_w = 260
+                btn_h = 70
+                gap = 12
+                
+                upgrades = ["damage", "firerate", "range"]
+                for i, upgrade_type in enumerate(upgrades):
+                    y = panel_y + i * (btn_h + gap)
+                    rect = pygame.Rect(panel_x, y, panel_w, btn_h)
+                    if rect.collidepoint(mx, my):
+                        self.purchase_ingame_upgrade(upgrade_type)
+                        return
+            
             self.grid.handle_click(event)
 
     def gameover_handle(self, event: pygame.event.Event) -> None:
@@ -278,18 +338,103 @@ class Game:
                             self.upgrades.upgrade_fire(t)
                         else:
                             self.upgrades.upgrade_cost(t)
+    
+    def story_select_handle(self, event: pygame.event.Event) -> None:
+        """Handle events during story stage selection screen."""
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self.back_to_lobby()
+        self.story_back.handle(event)
+        
+        # Click on stage buttons
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            mx, my = event.pos
+            btn_w, btn_h = 320, 70
+            gap = 16
+            start_x, start_y = 420, 180
+            
+            hell_stages = self.story_mgr.get_chapter_stages("hell")
+            for i, stage in enumerate(hell_stages):
+                r = pygame.Rect(start_x, start_y + i * (btn_h + gap), btn_w, btn_h)
+                if r.collidepoint(mx, my):
+                    # Check if unlocked
+                    if self.story_mgr.is_stage_unlocked(stage.stage_id):
+                        self.start_story_stage(stage.stage_id)
+                    break
+    
+    def story_handle(self, event: pygame.event.Event) -> None:
+        """Handle events during story mode gameplay."""
+        # Similar to play mode but with story-specific logic
+        if event.type == pygame.KEYDOWN:
+            if event.unicode in ('1', '2', '3', '4', '5'):
+                idx = int(event.unicode) - 1
+                self.on_speed_change(idx)
+                return
+            elif event.key == pygame.K_t:
+                order = ["nearest", "first", "weak", "strong"]
+                i = order.index(self.target_mode)
+                self.target_mode = order[(i + 1) % len(order)]
+            elif event.key == pygame.K_r:
+                # Restart current story stage
+                if self.current_story_stage:
+                    self.start_story_stage(self.current_story_stage.stage_id)
+            elif event.key == pygame.K_ESCAPE:
+                self.goto_story_select()
+            elif event.key == pygame.K_SPACE:
+                # Random spawn
+                if self.money >= DIE_COST:
+                    empties = self.grid.get_empty_cells()
+                    if empties:
+                        c, r = random.choice(empties)
+                        pool = self.loadout.selected or DIE_TYPES
+                        t = random.choice(pool)
+                        die = make_die(self, c, r, t, level=1)
+                        self.grid.set(c, r, die)
+                        self.money -= DIE_COST
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+            self.grid.selected = None
+            self.trash_active = False
+            return
+        self.speed_ctrl.handle(event)
+        self.btn_trash.handle(event)
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            # Check for upgrade button clicks
+            if event.button == 1:  # Left click
+                mx, my = event.pos
+                panel_x = SCREEN_W - 280
+                panel_y = 80
+                panel_w = 260
+                btn_h = 70
+                gap = 12
+                
+                upgrades = ["damage", "firerate", "range"]
+                for i, upgrade_type in enumerate(upgrades):
+                    y = panel_y + i * (btn_h + gap)
+                    rect = pygame.Rect(panel_x, y, panel_w, btn_h)
+                    if rect.collidepoint(mx, my):
+                        self.purchase_ingame_upgrade(upgrade_type)
+                        return
+            
+            self.grid.handle_click(event)
 
     # --------------- Flow ---------------
     def start_wave(self) -> None:
         """Start the next wave of enemies."""
         self.telegraphs = []
         self.wave += 1
-        self.wave_timer = 0.0 # Reset timer
-        count, is_boss = self.level_mgr.wave_info(self.wave)
-        count = int(count * self.level.difficulty)
+        self.wave_timer = 0.0  # Reset timer
+        
+        # Story Mode: Use story-specific wave configuration
+        if self.state == STATE_STORY and self.current_story_stage:
+            # Simple scaling for story mode: base count + wave number
+            count = 7 + self.wave * 2  # Progressive difficulty
+        else:
+            # Practice Mode: Use level manager's wave info
+            count, is_boss = self.level_mgr.wave_info(self.wave)
+            count = int(count * self.level.difficulty)
+        
         self.to_spawn = count
         self.spawn_cd = 0.0
-        self.is_boss_wave = is_boss
+        # is_boss_wave is already set by the auto-wave logic in update()
 
     def spawn_enemy(self) -> None:
         """Spawn a single enemy."""
@@ -319,7 +464,7 @@ class Game:
     # --------------- Update ---------------
     def update(self, dt: float) -> None:
         """Update game logic."""
-        if self.state != STATE_PLAY:
+        if self.state not in (STATE_PLAY, STATE_STORY):
             return
 
         if self.to_spawn > 0:
@@ -358,9 +503,36 @@ class Game:
 
         # Auto-wave logic
         if self.to_spawn <= 0 and len(self.enemies) == 0:
-            self.wave_timer += dt * self.speed_mult
-            if self.wave_timer >= self.wave_delay:
-                self.start_wave()
+            # Story Mode: Check for victory or next wave
+            if self.state == STATE_STORY and self.current_story_stage:
+                # Check if stage is complete
+                if self.wave >= self.story_max_waves - 1:  # All waves including boss defeated
+                    # Victory!
+                    self.story_mgr.complete_stage(self.current_story_stage.stage_id)
+                    # Go back to stage select
+                    self.goto_story_select()
+                    return
+                elif self.wave >= self.story_max_waves - 2:  # This was the final regular wave
+                    # If this stage has a boss, spawn it next
+                    if self.current_story_stage.has_boss:
+                        self.wave_timer += dt * self.speed_mult
+                        if self.wave_timer >= self.wave_delay:
+                            self.is_boss_wave = True
+                            self.start_wave()
+                    else:
+                        self.wave_timer += dt * self.speed_mult
+                        if self.wave_timer >= self.wave_delay:
+                            self.start_wave()
+                else:
+                    # Regular wave progression
+                    self.wave_timer += dt * self.speed_mult
+                    if self.wave_timer >= self.wave_delay:
+                        self.start_wave()
+            else:
+                # Practice mode: endless waves
+                self.wave_timer += dt * self.speed_mult
+                if self.wave_timer >= self.wave_delay:
+                    self.start_wave()
 
         # bullets
         for b in list(self.bullets):
@@ -452,6 +624,62 @@ class Game:
             msg = f"Next wave in {time_left:.1f}s (Press N to skip)"
             top = self.font_big.render(msg, True, WHITE)
             self.screen.blit(top, (GRID_X, 42))
+        
+        # Draw in-game upgrades
+        self.draw_ingame_upgrades()
+    
+    def draw_ingame_upgrades(self) -> None:
+        """Draw the in-game upgrade panel."""
+        # Upgrade panel on the right side
+        panel_x = SCREEN_W - 280
+        panel_y = 80
+        panel_w = 260
+        btn_h = 70
+        gap = 12
+        
+        upgrades_data = [
+            ("damage", "🗡️ 攻擊力",  (200, 80, 40)),
+            ("firerate", "⚡ 射速", (80, 150, 200)),
+            ("range", "📏 射程", (100, 200, 100)),
+        ]
+        
+        for i, (upgrade_type, label, color) in enumerate(upgrades_data):
+            y = panel_y + i * (btn_h + gap)
+            rect = pygame.Rect(panel_x, y, panel_w, btn_h)
+            
+            # Get upgrade info
+            current_level = self.ingame_upgrades._get_level(upgrade_type)
+            can_upgrade = self.ingame_upgrades.can_upgrade(upgrade_type)
+            cost = self.ingame_upgrades.get_upgrade_cost(upgrade_type)
+            has_money = self.money >= cost
+            
+            # Determine button state
+            if current_level >= 5:
+                btn_color = (60, 60, 60)  # Gray for max level
+                text_color = (150, 150, 150)
+            elif can_upgrade and has_money:
+                btn_color = color  # Colored for available
+                text_color = WHITE
+            else:
+                btn_color = (80, 80, 80)  # Dark gray for not affordable
+                text_color = (150, 150, 150)
+            
+            # Draw button background
+            pygame.draw.rect(self.screen, btn_color, rect, border_radius=8)
+            pygame.draw.rect(self.screen, WHITE if can_upgrade and has_money else (100, 100, 100), 
+                           rect, width=2, border_radius=8)
+            
+            # Draw upgrade name and level
+            name_text = self.font_big.render(f"{label} Lv{current_level}", True, text_color)
+            self.screen.blit(name_text, (rect.x + 10, rect.y + 8))
+            
+            # Draw cost or MAX
+            if current_level >= 5:
+                cost_text = self.font.render("MAX", True, text_color)
+            else:
+                cost_color = WHITE if has_money else (255, 100, 100)
+                cost_text = self.font.render(f"升級: ${cost}", True, cost_color)
+            self.screen.blit(cost_text, (rect.x + 10, rect.y + 40))
 
     def gameover_draw(self) -> None:
         """Draw the game over screen."""
@@ -525,6 +753,133 @@ class Game:
                 )).draw(self.screen)
 
         self.upg_back.draw(self.screen)
+    
+    def story_select_draw(self) -> None:
+        """Draw the story stage selection screen."""
+        self.screen.fill((12, 10, 22))  # Darker theme for hell
+        
+        # Title with fire theme
+        title = self.font_huge.render("🔥 HELL CHAPTER 🔥", True, (255, 100, 50))
+        self.screen.blit(title, (SCREEN_W // 2 - title.get_width() // 2, 60))
+        
+        # Subtitle
+        sub = self.font_big.render("Select a stage to begin", True, (200, 200, 200))
+        self.screen.blit(sub, (SCREEN_W // 2 - sub.get_width() // 2, 130))
+        
+        # Stage buttons
+        btn_w, btn_h = 320, 70
+        gap = 16
+        start_x, start_y = 420, 180
+        
+        hell_stages = self.story_mgr.get_chapter_stages("hell")
+        for i, stage in enumerate(hell_stages):
+            r = pygame.Rect(start_x, start_y + i * (btn_h + gap), btn_w, btn_h)
+            unlocked = self.story_mgr.is_stage_unlocked(stage.stage_id)
+            completed = stage.stage_id in self.story_mgr.progress.completed_stages
+            
+            # Button color based on state
+            if completed:
+                color = (50, 150, 50)  # Green for completed
+                text_color = WHITE
+            elif unlocked:
+                color = (200, 80, 40)  # Orange/red for unlocked
+                text_color = WHITE
+            else:
+                color = (60, 60, 60)  # Gray for locked
+                text_color = (120, 120, 120)
+            
+            pygame.draw.rect(self.screen, color, r, border_radius=8)
+            pygame.draw.rect(self.screen, (255, 150, 100) if unlocked else (100, 100, 100), r, width=3, border_radius=8)
+            
+            # Stage text
+            stage_text = f"{stage.stage_id} {stage.name}"
+            if completed:
+                stage_text += " ✓"
+            elif not unlocked:
+                stage_text = f"{stage.stage_id} 🔒 Locked"
+            
+            txt = self.font_big.render(stage_text, True, text_color)
+            self.screen.blit(txt, (r.centerx - txt.get_width() // 2, r.centery - txt.get_height() // 2))
+        
+        self.story_back.draw(self.screen)
+    
+    def story_draw(self) -> None:
+        """Draw the story mode gameplay screen."""
+        # Reuse play_draw but with story-specific UI elements
+        self.screen.fill(DARK)
+        if self.level:
+            pygame.draw.lines(self.screen, GRAY, False, self.level.path, 6)
+
+        self.grid.draw(self.screen)
+        for e in self.enemies:
+            e.draw(self.screen, self.font)
+        for b in self.bullets:
+            b.draw(self.screen)
+
+        # telegraph swirl
+        for z in self.telegraphs:
+            color = (255, 60, 60) if not z.in_effect_phase() else (255, 120, 120)
+            pygame.draw.circle(self.screen, color, (int(z.x), int(z.y)), int(z.r), width=4)
+            for i in range(6):
+                ang = (z.t * 3 + i * math.pi / 3)
+                rx = int(z.x + (z.r - 10) * math.cos(ang))
+                ry = int(z.y + (z.r - 10) * math.sin(ang))
+                pygame.draw.circle(self.screen, color, (rx, ry), 6)
+
+        panel_rect = pygame.Rect(20, 10, 300, 280)
+
+        def _body() -> None:
+            y = panel_rect.y + 60
+            
+            # Story stage info
+            if self.current_story_stage:
+                stage_txt = self.font_big.render(f"Stage: {self.current_story_stage.stage_id}", True, (255, 150, 50))
+                self.screen.blit(stage_txt, (panel_rect.x + 20, y))
+                y += 32
+                
+                # Wave description
+                wave_desc = self.current_story_stage.get_wave_description(max(0, self.wave + 1))
+                desc_txt = self.font.render(wave_desc, True, WHITE)
+                self.screen.blit(desc_txt, (panel_rect.x + 20, y))
+                y += 28
+            
+            pairs = [
+                ("Money", f"${self.money}"),
+                ("Wave", f"{max(0, self.wave + 1)}/{self.story_max_waves}"),
+                ("Base HP", str(self.base_hp)),
+                ("Speed", f"{self.speed_mult}×"),
+            ]
+            for name, val in pairs:
+                txt = self.font.render(f"{name}: {val}", True, WHITE)
+                self.screen.blit(txt, (panel_rect.x + 20, y))
+                y += 24
+
+            y += 10
+            tips = [
+                "Story Mode: Complete all waves!",
+                "ESC to return to stage select",
+            ]
+            for s in tips:
+                t = self.font.render(s, True, WHITE)
+                self.screen.blit(t, (panel_rect.x + 20, y))
+                y += 20
+
+        draw_panel(self.screen, panel_rect, "Mission", self.font_big, _body)
+
+        self.speed_ctrl.draw(self.screen)
+        self.btn_trash.draw(self.screen)
+
+        if self.to_spawn <= 0 and len(self.enemies) == 0:
+            time_left = max(0.0, self.wave_delay - self.wave_timer)
+            if self.wave < self.story_max_waves - 1:
+                msg = f"Next wave in {time_left:.1f}s"
+            else:
+                msg = "Victory! Returning to stage select..."
+            top = self.font_big.render(msg, True, (255, 200, 100))
+            self.screen.blit(top, (GRID_X, 42))
+        
+        # Draw in-game upgrades
+        self.draw_ingame_upgrades()
 
     # --------------- Frame ---------------
     def draw(self) -> None:
@@ -541,6 +896,10 @@ class Game:
             self.loadout_draw()
         elif self.state == STATE_UPGRADES:
             self.upgrades_draw()
+        elif self.state == STATE_STORY_SELECT:
+            self.story_select_draw()
+        elif self.state == STATE_STORY:
+            self.story_draw()
         pygame.display.flip()
 
     def run(self) -> None:
@@ -565,6 +924,10 @@ class Game:
                     self.loadout_handle(event)
                 elif self.state == STATE_UPGRADES:
                     self.upgrades_handle(event)
+                elif self.state == STATE_STORY_SELECT:
+                    self.story_select_handle(event)
+                elif self.state == STATE_STORY:
+                    self.story_handle(event)
 
             self.update(dt)
             self.draw()

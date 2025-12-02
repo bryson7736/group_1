@@ -26,7 +26,7 @@ class LevelManager:
                 ], 
                 1.2
             ),
-            Level("Lava",   
+            Level("Story Mode",   
                 [
                     (1200, 80),   # Start Top-Right (Above grid)
                     (100, 80),    # Left (Above grid)

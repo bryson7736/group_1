@@ -74,3 +74,50 @@ class ChainBolt(Bullet):
     def draw(self, surf):
         pygame.draw.circle(surf, ORANGE, (int(self.x), int(self.y)), 6)
         pygame.draw.circle(surf, CYAN, (int(self.x), int(self.y)), 3)
+
+
+class ExplosiveBullet(Bullet):
+    """Explodes on impact, dealing damage to nearby enemies."""
+    def __init__(self, game, x, y, target, dmg, splash_dmg, splash_radius, *, speed_mult_provider=lambda:1.0):
+        super().__init__(game, x, y, target, dmg, speed_mult_provider=speed_mult_provider)
+        self.splash_dmg = splash_dmg
+        self.splash_radius = splash_radius
+
+    def update(self, dt):
+        # Override update to handle explosion on hit
+        if not self.target or self.target.dead:
+            return True
+
+        speed = self.base_speed * self.speed_mult_provider()
+        tx, ty = self.target.x, self.target.y
+        dx, dy = tx - self.x, ty - self.y
+        dist = math.hypot(dx, dy)
+        
+        hit = False
+        if dist <= 0.0001:
+            hit = True
+        else:
+            step = speed * dt
+            if step >= dist:
+                self.x, self.y = tx, ty
+                hit = True
+            else:
+                nx, ny = dx / dist, dy / dist
+                self.x += nx * step
+                self.y += ny * step
+        
+        if hit:
+            # Main target hit
+            self.target.hit(self.dmg)
+            # Splash damage
+            for e in self.game.enemies:
+                if e is not self.target and not e.dead:
+                    edx, edy = e.x - self.x, e.y - self.y
+                    if math.hypot(edx, edy) <= self.splash_radius:
+                        e.hit(self.splash_dmg)
+            return True
+        return False
+
+    def draw(self, surf):
+        pygame.draw.circle(surf, (255, 50, 0), (int(self.x), int(self.y)), 7)
+        pygame.draw.circle(surf, (255, 200, 0), (int(self.x), int(self.y)), 4)
