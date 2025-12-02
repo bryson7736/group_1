@@ -17,6 +17,8 @@ from colors import WHITE, DARKER, GRAY, RED, DARK
 from story_mode import StoryManager
 from ingame_upgrades import InGameUpgrades
 from effects import TelegraphZone
+from colors import DICE_COLORS
+
 
 STATE_LOBBY = "lobby"
 STATE_PLAY = "play"
@@ -39,6 +41,7 @@ class Game:
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.HWSURFACE | pygame.DOUBLEBUF)
         self.clock = pygame.time.Clock()
         self.font = pygame.font.SysFont("arial", 22)
+        self.font_small = pygame.font.SysFont("arial", 16)
         self.font_big = pygame.font.SysFont("arial", 28, bold=True)
         self.font_huge = pygame.font.SysFont("arial", 48, bold=True)
 
@@ -50,7 +53,7 @@ class Game:
         self.story_max_waves: int = 0  # Max waves for current story stage
 
         self.grid = Grid(self)
-        self.loadout = Loadout(["single", "multi", "freeze"])
+        self.loadout = Loadout(["single", "iron", "fire", "multi", "freeze"])
         self.upgrades = UpgradeState()
         self.ingame_upgrades = InGameUpgrades()  # In-game upgrades
         self.enemies: List[Enemy] = []
@@ -270,19 +273,30 @@ class Game:
             # Check for upgrade button clicks
             if event.button == 1:  # Left click
                 mx, my = event.pos
-                panel_x = SCREEN_W - 280
-                panel_y = 80
-                panel_w = 260
-                btn_h = 70
-                gap = 12
+                # New Grid Layout Logic
+                btn_size = 60
+                gap = 10
+                panel_x = 20
+                panel_y = SCREEN_H - (btn_size * 2 + gap + 20)
                 
-                upgrades = ["damage", "firerate", "range"]
-                for i, upgrade_type in enumerate(upgrades):
-                    y = panel_y + i * (btn_h + gap)
-                    rect = pygame.Rect(panel_x, y, panel_w, btn_h)
-                    if rect.collidepoint(mx, my):
-                        self.purchase_ingame_upgrade(upgrade_type)
-                        return
+                dice_types = self.loadout.selected
+                
+                # Check if click is generally in the panel area
+                if panel_x <= mx <= panel_x + (btn_size + gap) * 3 and \
+                   panel_y <= my <= panel_y + (btn_size + gap) * 2:
+                    
+                    col = (mx - panel_x) // (btn_size + gap)
+                    row = (my - panel_y) // (btn_size + gap)
+                    
+                    # Check if click is inside the button (not in gap)
+                    rel_x = (mx - panel_x) % (btn_size + gap)
+                    rel_y = (my - panel_y) % (btn_size + gap)
+                    
+                    if rel_x < btn_size and rel_y < btn_size:
+                        idx = row * 3 + col
+                        if 0 <= idx < len(dice_types):
+                            self.purchase_ingame_upgrade(dice_types[idx])
+                            return
             
             self.grid.handle_click(event)
 
@@ -310,7 +324,7 @@ class Game:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
             bx, by, w, h, gap = 420, 200, 220, 60, 16
-            for i, t in enumerate(["single", "multi", "freeze"]):
+            for i, t in enumerate(DIE_TYPES):
                 r = pygame.Rect(bx, by + i * (h + gap), w, h)
                 if r.collidepoint(mx, my):
                     self.loadout.toggle(t)
@@ -326,7 +340,7 @@ class Game:
             base_x, base_y = 420, 200
             btn_w, btn_h = 220, 50
             gap_x, gap_y = 30, 16
-            types = ["single", "multi", "freeze"]
+            types = DIE_TYPES
             labels = [("Damage +10%", "dmg"), ("Fire rate +8%", "fire"), ("Cost -10%", "cost")]
             for row, t in enumerate(types):
                 for col, (lab, kind) in enumerate(labels):
@@ -400,19 +414,30 @@ class Game:
             # Check for upgrade button clicks
             if event.button == 1:  # Left click
                 mx, my = event.pos
-                panel_x = SCREEN_W - 280
-                panel_y = 80
-                panel_w = 260
-                btn_h = 70
-                gap = 12
+                # New Grid Layout Logic
+                btn_size = 60
+                gap = 10
+                panel_x = 20
+                panel_y = SCREEN_H - (btn_size * 2 + gap + 20)
                 
-                upgrades = ["damage", "firerate", "range"]
-                for i, upgrade_type in enumerate(upgrades):
-                    y = panel_y + i * (btn_h + gap)
-                    rect = pygame.Rect(panel_x, y, panel_w, btn_h)
-                    if rect.collidepoint(mx, my):
-                        self.purchase_ingame_upgrade(upgrade_type)
-                        return
+                dice_types = self.loadout.selected
+                
+                # Check if click is generally in the panel area
+                if panel_x <= mx <= panel_x + (btn_size + gap) * 3 and \
+                   panel_y <= my <= panel_y + (btn_size + gap) * 2:
+                    
+                    col = (mx - panel_x) // (btn_size + gap)
+                    row = (my - panel_y) // (btn_size + gap)
+                    
+                    # Check if click is inside the button (not in gap)
+                    rel_x = (mx - panel_x) % (btn_size + gap)
+                    rel_y = (my - panel_y) % (btn_size + gap)
+                    
+                    if rel_x < btn_size and rel_y < btn_size:
+                        idx = row * 3 + col
+                        if 0 <= idx < len(dice_types):
+                            self.purchase_ingame_upgrade(dice_types[idx])
+                            return
             
             self.grid.handle_click(event)
 
@@ -438,7 +463,10 @@ class Game:
 
     def spawn_enemy(self) -> None:
         """Spawn a single enemy."""
-        hp = (8 + self.wave * 4) * self.level.difficulty
+        # Polynomial HP scaling: Base * (Wave^1.3) * Difficulty
+        # Using Base=30 as recommended for balanced difficulty
+        wave_num = max(1, self.wave + 1)
+        hp = 30 * (wave_num ** 1.3) * self.level.difficulty
         speed = (36 + min(140, self.wave * 6)) * (0.9 + 0.2 * random.random())
         path = list(self.level.path)
         if self.is_boss_wave and self.to_spawn == 1:
@@ -629,57 +657,61 @@ class Game:
         self.draw_ingame_upgrades()
     
     def draw_ingame_upgrades(self) -> None:
-        """Draw the in-game upgrade panel."""
-        # Upgrade panel on the right side
-        panel_x = SCREEN_W - 280
-        panel_y = 80
-        panel_w = 260
-        btn_h = 70
-        gap = 12
+        """Draw the in-game upgrade panel (2x3 grid)."""
+        # Position: Bottom Left
+        btn_size = 60
+        gap = 10
+        panel_x = 20
+        panel_y = SCREEN_H - (btn_size * 2 + gap + 20)  # Align to bottom
         
-        upgrades_data = [
-            ("damage", "🗡️ 攻擊力",  (200, 80, 40)),
-            ("firerate", "⚡ 射速", (80, 150, 200)),
-            ("range", "📏 射程", (100, 200, 100)),
-        ]
+        # Use current loadout dice
+        dice_types = self.loadout.selected
         
-        for i, (upgrade_type, label, color) in enumerate(upgrades_data):
-            y = panel_y + i * (btn_h + gap)
-            rect = pygame.Rect(panel_x, y, panel_w, btn_h)
+        for i, die_type in enumerate(dice_types):
+            col = i % 3
+            row = i // 3
+            x = panel_x + col * (btn_size + gap)
+            y = panel_y + row * (btn_size + gap)
+            rect = pygame.Rect(x, y, btn_size, btn_size)
             
             # Get upgrade info
-            current_level = self.ingame_upgrades._get_level(upgrade_type)
-            can_upgrade = self.ingame_upgrades.can_upgrade(upgrade_type)
-            cost = self.ingame_upgrades.get_upgrade_cost(upgrade_type)
+            current_level = self.ingame_upgrades.get_level(die_type)
+            can_upgrade = self.ingame_upgrades.can_upgrade(die_type)
+            cost = self.ingame_upgrades.get_upgrade_cost(die_type)
             has_money = self.money >= cost
             
-            # Determine button state
+            # Button color (based on dice color)
+            base_color = DICE_COLORS.get(die_type, GRAY)
+            
             if current_level >= 5:
-                btn_color = (60, 60, 60)  # Gray for max level
-                text_color = (150, 150, 150)
-            elif can_upgrade and has_money:
-                btn_color = color  # Colored for available
-                text_color = WHITE
+                # Maxed out: Darker version of base color
+                btn_color = (max(0, base_color[0]-100), max(0, base_color[1]-100), max(0, base_color[2]-100))
+                border_color = (100, 100, 100)
+            elif has_money:
+                # Available: Bright base color
+                btn_color = base_color
+                border_color = WHITE
             else:
-                btn_color = (80, 80, 80)  # Dark gray for not affordable
-                text_color = (150, 150, 150)
+                # Too expensive: Desaturated/Darker
+                btn_color = (max(0, base_color[0]-60), max(0, base_color[1]-60), max(0, base_color[2]-60))
+                border_color = (100, 100, 100)
             
-            # Draw button background
+            # Draw button
             pygame.draw.rect(self.screen, btn_color, rect, border_radius=8)
-            pygame.draw.rect(self.screen, WHITE if can_upgrade and has_money else (100, 100, 100), 
-                           rect, width=2, border_radius=8)
+            pygame.draw.rect(self.screen, border_color, rect, width=2, border_radius=8)
             
-            # Draw upgrade name and level
-            name_text = self.font_big.render(f"{label} Lv{current_level}", True, text_color)
-            self.screen.blit(name_text, (rect.x + 10, rect.y + 8))
+            # Draw Text
+            # Level (Large, Center)
+            lvl_txt = self.font_big.render(f"Lv{current_level}", True, WHITE)
+            self.screen.blit(lvl_txt, (rect.centerx - lvl_txt.get_width()//2, rect.y + 5))
             
-            # Draw cost or MAX
+            # Cost (Small, Bottom)
             if current_level >= 5:
-                cost_text = self.font.render("MAX", True, text_color)
+                cost_txt = self.font_small.render("MAX", True, WHITE)
             else:
                 cost_color = WHITE if has_money else (255, 100, 100)
-                cost_text = self.font.render(f"升級: ${cost}", True, cost_color)
-            self.screen.blit(cost_text, (rect.x + 10, rect.y + 40))
+                cost_txt = self.font_small.render(f"${cost}", True, cost_color)
+            self.screen.blit(cost_txt, (rect.centerx - cost_txt.get_width()//2, rect.bottom - 18))
 
     def gameover_draw(self) -> None:
         """Draw the game over screen."""
@@ -715,11 +747,11 @@ class Game:
         self.screen.fill(DARKER)
         title = self.font_huge.render("Carry Team", True, (255, 255, 255))
         self.screen.blit(title, (40, 60))
-        sub = self.font.render("Pick up to 5 dice types for this run (currently 3 available).", True, WHITE)
+        sub = self.font.render("Pick up to 5 dice types for this run.", True, WHITE)
         self.screen.blit(sub, (40, 120))
 
         bx, by, w, h, gap = 420, 200, 220, 60, 16
-        types = ["single", "multi", "freeze"]
+        types = DIE_TYPES
         for i, t in enumerate(types):
             r = pygame.Rect(bx, by + i * (h + gap), w, h)
             active = (t in self.loadout.selected)
@@ -740,7 +772,7 @@ class Game:
         base_x, base_y = 420, 200
         btn_w, btn_h = 220, 50
         gap_x, gap_y = 30, 16
-        types = ["single", "multi", "freeze"]
+        types = DIE_TYPES
         labels = [("Damage +10% (2c)", "dmg"), ("Fire rate +8% (2c)", "fire"), ("Cost -10% (2c)", "cost")]
         for row, t in enumerate(types):
             name = self.font_big.render(t.capitalize(), True, WHITE)

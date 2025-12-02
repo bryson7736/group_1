@@ -25,4 +25,5 @@ DICE_COLORS = {
     "wind": (50, 255, 200),     # Teal/Mint
     "poison": (180, 50, 255),   # Deep Purple
     "iron": (200, 200, 200),    # Silver/Iron
+    "fire": (255, 100, 0),      # Orange-Red
 }

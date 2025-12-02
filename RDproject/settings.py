@@ -29,9 +29,9 @@ WAVE_BASE_COUNT = 7
 WAVE_GROWTH = 3
 
 # Boss
-BOSS_HP_MULT = 4.5
+BOSS_HP_MULT = 6.0
 BOSS_SPAWN_WAVE = 5           # every Nth wave is a boss wave
-BOSS_TELEGRAPH_WARN = 0.8     # seconds warning before ability
+BOSS_TELEGRAPH_WARN = 1.0     # seconds warning before ability
 BOSS_DEBUFF_DURATION = 3.0    # seconds slow/debuff duration
 BOSS_DESTROY_RADIUS = 1       # tiles Manhattan radius (1 = 3x3)
 BOSS_ZONE_SLOW_ENEMY = 0.6    # enemies speed multiplier inside zone
@@ -39,11 +39,11 @@ BOSS_ZONE_SLOW_DICE = 1.2     # dice fire period multiplier (>1 = slower)
 
 # Projectiles
 BULLET_SPEED = 660.0
-CHAIN_MAX_DISTANCE = 180      # Multi chain max distance
+CHAIN_MAX_DISTANCE = 220      # Multi chain max distance
 
 # Slow effect (Freeze dice)
-FREEZE_SLOW_RATIO = 0.55
-FREEZE_DURATION = 2.2
+FREEZE_SLOW_RATIO = 0.65      # 35% slow (higher value = less slow)
+FREEZE_DURATION = 2.0
 
 # UI
 TITLE = "Random Dice Tower Defense v2.3a (RDpro7a)"

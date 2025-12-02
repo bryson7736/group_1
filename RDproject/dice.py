@@ -45,8 +45,9 @@ class Die:
     
     @property
     def range(self):
-        """Effective range with in-game upgrades applied."""
-        return self.base_range * self.game.ingame_upgrades.get_range_multiplier()
+        """Effective range."""
+        # Base range is constant for now, or could be upgraded
+        return self.base_range
 
     @property
     def x(self):
@@ -107,14 +108,21 @@ class Die:
     def fire_rate_factor(self):
         # Combine permanent upgrades with in-game upgrades
         perm_mult = self.game.upgrades.get_fire_rate_mult(self.type)
-        ingame_mult = self.game.ingame_upgrades.get_firerate_multiplier()
-        # Fire rate multiplier reduces period (faster = smaller period)
+        
+        # In-game upgrade: +10% speed per level
+        ingame_level = self.game.ingame_upgrades.get_level(self.type)
+        ingame_mult = 1.0 + (ingame_level - 1) * 0.10
+        
         return perm_mult / ingame_mult
 
     def damage_multiplier(self):
         # Combine permanent upgrades with in-game upgrades
         perm_mult = self.game.upgrades.get_damage_mult(self.type)
-        ingame_mult = self.game.ingame_upgrades.get_damage_multiplier()
+        
+        # In-game upgrade: +20% damage per level
+        ingame_level = self.game.ingame_upgrades.get_level(self.type)
+        ingame_mult = 1.0 + (ingame_level - 1) * 0.20
+        
         return perm_mult * ingame_mult
 
     def try_fire(self):
@@ -156,9 +164,9 @@ class SingleDice(Die):
         self.type = DIE_SINGLE
         
         # Stats:
-        # Base: 20 Dmg, 0.45s AS, +10% AS bonus
+        # Base: 15 Dmg (nerfed from 20), 0.45s AS, +10% AS bonus
         # Per Level: +3 Dmg, +2% AS bonus
-        self.base_dmg = 20 + (self.level - 1) * 3
+        self.base_dmg = 15 + (self.level - 1) * 3
         
         base_period = 0.45
         as_bonus = 0.10 + (self.level - 1) * 0.02
@@ -168,7 +176,7 @@ class SingleDice(Die):
     def set_level(self, lv):
         super().set_level(lv)
         # Recalculate stats
-        self.base_dmg = 20 + (self.level - 1) * 3
+        self.base_dmg = 15 + (self.level - 1) * 3
         base_period = 0.45
         as_bonus = 0.10 + (self.level - 1) * 0.02
         self.base_period_sec = base_period / (1.0 + as_bonus)
@@ -185,8 +193,10 @@ class MultiDice(Die):
         self.type = DIE_MULTI
 
     def fire_at(self, target):
-        jumps = max(0, self.level - 1)
-        base = 2 ** (self.level - 1)
+        # Buff: Jumps = level (so Lv1 has 1 jump, hitting 2 targets total)
+        jumps = self.level
+        # Buff: Base damage starts at 3 instead of 1
+        base = 3 * (2 ** (self.level - 1))
         dmg = base * self.damage_multiplier()
         self.game.bullets.append(ChainBolt(self.game, self.x, self.y, target, dmg, jumps, self.game.enemies, speed_mult_provider=lambda: self.game.speed_mult))
 
@@ -214,7 +224,7 @@ class WindDice(Die):
     def set_level(self, lv):
         super().set_level(lv)
         self.base_fire_rate = max(4, int(self.base_fire_rate * 0.4))
-        self.base_period_sec = self.base_fire_rate / FPS
+        self.base_period_sec = max(0.15, self.base_fire_rate / FPS)  # Cap at 0.15s min period
 
 
 class PoisonDice(Die):
@@ -227,8 +237,12 @@ class PoisonDice(Die):
         dmg = base * self.damage_multiplier()
         # Initial hit
         self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
-        # Apply poison: dmg per sec for 3s
-        poison_dps = dmg * 0.5
+        # Apply poison: dmg per sec for 3s (Buffed to 0.6x)
+        # In-game upgrade: +10% dot ratio per level
+        ingame_level = self.game.ingame_upgrades.get_level(self.type)
+        dot_ratio = 0.6 + (ingame_level - 1) * 0.1
+        
+        poison_dps = dmg * dot_ratio
         target.apply_poison(poison_dps, 3.0)
 
 
@@ -238,16 +252,16 @@ class IronDice(Die):
         self.type = DIE_IRON
         
         # Stats:
-        # Base: 100 Dmg, 2.0s AS, Boss Dmg x2
+        # Base: 100 Dmg, 1.5s AS (Buffed from 2.0s), Boss Dmg x2
         # Per Level: +10 Dmg
         self.base_dmg = 100 + (self.level - 1) * 10
-        self.base_period_sec = 2.0
+        self.base_period_sec = 1.5
         self.base_fire_rate = self.base_period_sec * FPS
 
     def set_level(self, lv):
         super().set_level(lv)
         self.base_dmg = 100 + (self.level - 1) * 10
-        self.base_period_sec = 2.0
+        self.base_period_sec = 1.5
         self.base_fire_rate = self.base_period_sec * FPS
 
     def try_fire(self):
@@ -276,7 +290,10 @@ class IronDice(Die):
         # Bonus vs Boss
         from enemy import Boss
         if isinstance(target, Boss):
-            dmg *= 2.0
+            # Base 2.0x, +0.5x per in-game level
+            ingame_level = self.game.ingame_upgrades.get_level(self.type)
+            boss_mult = 2.0 + (ingame_level - 1) * 0.5
+            dmg *= boss_mult
         
         self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
 
@@ -310,7 +327,8 @@ class FireDice(Die):
 
     def fire_at(self, target):
         dmg = self.base_dmg * self.damage_multiplier()
-        splash = self.splash_dmg * self.damage_multiplier()
+        # Splash damage is 75% of main damage (Nerfed from 100%)
+        splash = self.splash_dmg * self.damage_multiplier() * 0.75
         
         self.game.bullets.append(ExplosiveBullet(
             self.game, self.x, self.y, target, 
