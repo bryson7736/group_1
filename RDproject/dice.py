@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import math, os, pygame, random
-from colors import WHITE, DICE_COLORS
+from colors import WHITE, DICE_COLORS, BLUE
 from settings import BASE_RANGE, BASE_FIRE_RATE, FIRE_RATE_STEP, MAX_DIE_LEVEL, ASSET_FILES, FPS
 from settings import BOSS_ZONE_SLOW_DICE, FREEZE_DURATION, FREEZE_SLOW_RATIO
 from settings import BOSS_ZONE_SLOW_DICE, FREEZE_DURATION, FREEZE_SLOW_RATIO
@@ -72,7 +72,8 @@ class Die:
         base_col = DICE_COLORS.get(self.type, (140, 140, 160))
         if selected:
             # Brighten the color: blend 50% with WHITE
-            base_col = tuple(min(255, int(c * 0.5 + 255 * 0.5)) for c in base_col)
+            # base_col = tuple(min(255, int(c * 0.5 + 255 * 0.5)) for c in base_col)
+            base_col = BLUE
         pygame.draw.rect(surf, base_col, rect, border_radius=14)
         if selected:
             pygame.draw.rect(surf, WHITE, rect, width=3, border_radius=14)
