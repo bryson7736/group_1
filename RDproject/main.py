@@ -98,7 +98,7 @@ class Game:
         self.buttons: List[Button] = []
         
         # Center layout configuration
-        btn_w, btn_h = 280, 60
+        btn_w, btn_h = 250, 50
         gap = 20
         start_y = 200
         center_x = SCREEN_W // 2 - btn_w // 2
@@ -117,7 +117,7 @@ class Game:
         # Story Mode Button
         y_offset = start_y + len(self.level_mgr.levels) * (btn_h + gap) + 20
         self.buttons.append(
-            Button((center_x, y_offset, btn_w, btn_h), "🔥 Story Mode: Hell", self.font_big, self.goto_story_select)
+            Button((center_x, y_offset, btn_w, btn_h), "Story Mode: Hell", self.font_big, self.goto_story_select)
         )
         
         # Secondary Actions
@@ -582,12 +582,6 @@ class Game:
         # Title
         title = self.font_huge.render("RANDOM DICE DEFENSE", True, WHITE)
         self.screen.blit(title, (SCREEN_W // 2 - title.get_width() // 2, 100))
-        
-        # Subtitle / Info
-        info_text = "Select a level to start"
-        sub = self.font_big.render(info_text, True, GRAY)
-        self.screen.blit(sub, (SCREEN_W // 2 - sub.get_width() // 2, 180))
-
         for b in self.buttons:
             b.draw(self.screen)
         self.quit_btn.draw(self.screen)
