@@ -1,0 +1,89 @@
+name: Windows CI/CD Pipeline
+
+# 1. Trigger Rules
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # 2. CI Pipeline (Continuous Integration)
+  ci_pipeline:
+    name: Build & Test (Windows)
+    runs-on: windows-latest
+    
+    steps:
+      # Checkout Code
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Setup Python Environment
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: 'pip' # Cache pip dependencies for speed
+
+      # Install Dependencies
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if (Test-Path RDproject/requirements.txt) { pip install -r RDproject/requirements.txt }
+          pip install flake8 pytest
+
+      # Linter configuration (flake8)
+      - name: Lint with flake8
+        run: |
+          # Check for syntax errors or undefined names
+          flake8 RDproject --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings.
+          flake8 RDproject --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+      # Testing (pytest)
+      # Note: Will look for tests in the repository.
+      - name: Run Tests with pytest
+        run: |
+          # Add current directory to PYTHONPATH so modules in RDproject can be found
+          $env:PYTHONPATH = "RDproject"
+          pytest
+
+  # 3. CD Pipeline (Continuous Deployment)
+  cd_pipeline:
+    name: Build & Deploy
+    needs: ci_pipeline # Depends on success of CI pipeline
+    # Condition: Only run on Push to Main (not on PR)
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: 'pip'
+
+      - name: Install Dependencies & Build Tools
+        run: |
+          python -m pip install --upgrade pip
+          if (Test-Path RDproject/requirements.txt) { pip install -r RDproject/requirements.txt }
+          pip install pyinstaller
+
+      # Build EXE using PyInstaller
+      - name: Build Executable with PyInstaller
+        run: |
+          # --onefile: Create a single exe file
+          # --name: Name of the output file
+          # --noconsole: Optional, generally for GUI apps (remove prompt if needed, but keeping for debug)
+          pyinstaller --onefile --name "GameBuild" RDproject/main.py
+
+      # Upload Artifact (Deployment)
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release-build
+          path: dist/*.exe
+          retention-days: 5
