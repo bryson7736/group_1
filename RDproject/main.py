@@ -591,13 +591,52 @@ class Game:
     def lobby_draw(self) -> None:
         """Draw the lobby screen."""
         self.screen.fill(DARK)
-        
         # Title
         title = self.font_huge.render("RANDOM DICE DEFENSE", True, WHITE)
         self.screen.blit(title, (SCREEN_W // 2 - title.get_width() // 2, 100))
+        # Show persistent coins at top right
+        coin_txt = self.font_big.render(f"Coins: {self.upgrades.coins}", True, (255, 220, 80))
+        self.screen.blit(coin_txt, (SCREEN_W - coin_txt.get_width() - 40, 40))
         for b in self.buttons:
             b.draw(self.screen)
         self.quit_btn.draw(self.screen)
+    def earn_coins(self, amount):
+        self.upgrades.add_coin(amount)
+
+        # Award coins after each gameover (example: 10 coins per wave reached)
+        if self.state == STATE_GAMEOVER and not hasattr(self, '_coins_awarded'):
+            earned = max(5, self.wave * 10)
+            self.earn_coins(earned)
+            self._coins_awarded = True
+    def upgrades_draw(self) -> None:
+        """Draw the upgrades screen (persistent upgrades)."""
+        self.screen.fill(DARKER)
+        title = self.font_huge.render("Upgrades (Lobby)", True, (255, 255, 255))
+        self.screen.blit(title, (40, 60))
+        coins = self.font_big.render(f"Coins: {self.upgrades.coins}", True, (255, 220, 80))
+        self.screen.blit(coins, (40, 120))
+        base_x, base_y = 420, 200
+        btn_w, btn_h = 220, 50
+        gap_x, gap_y = 30, 16
+        types = DIE_TYPES
+        for row, t in enumerate(types):
+            name = self.font_big.render(t.capitalize(), True, WHITE)
+            self.screen.blit(name, (base_x - 150, base_y + row * (btn_h + gap_y) + 8))
+            # Upgrade button for damage
+            r = pygame.Rect(base_x, base_y + row * (btn_h + gap_y), btn_w, btn_h)
+            btn_label = f"Damage +10% (50c)"
+            can_buy = self.upgrades.coins >= 50
+            color = (80, 200, 80) if can_buy else (100, 100, 100)
+            pygame.draw.rect(self.screen, color, r, border_radius=8)
+            pygame.draw.rect(self.screen, WHITE, r, width=2, border_radius=8)
+            label = self.font.render(btn_label, True, WHITE)
+            self.screen.blit(label, (r.centerx - label.get_width() // 2, r.centery - label.get_height() // 2))
+            # Handle click (simple, not full button logic)
+            mouse = pygame.mouse.get_pressed()
+            mx, my = pygame.mouse.get_pos()
+            if mouse[0] and r.collidepoint(mx, my) and can_buy:
+                self.upgrades.upgrade_class_damage(t)
+        self.upg_back.draw(self.screen)
 
     def play_draw(self) -> None:
         """Draw the gameplay screen."""
