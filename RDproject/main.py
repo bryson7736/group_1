@@ -621,6 +621,9 @@ class Game:
         types = DIE_TYPES
         # Show not enough coins message
         not_enough_msg = ""
+        # Only trigger upgrade on mouse button down event
+        events = pygame.event.get(pygame.MOUSEBUTTONDOWN)
+        mx, my = pygame.mouse.get_pos()
         for row, t in enumerate(types):
             name = self.font_big.render(t.capitalize(), True, WHITE)
             self.screen.blit(name, (base_x - 150, base_y + row * (btn_h + gap_y) + 8))
@@ -633,14 +636,13 @@ class Game:
             pygame.draw.rect(self.screen, WHITE, r, width=2, border_radius=8)
             label = self.font.render(btn_label, True, WHITE)
             self.screen.blit(label, (r.centerx - label.get_width() // 2, r.centery - label.get_height() // 2))
-            # Handle click (simple, not full button logic)
-            mouse = pygame.mouse.get_pressed()
-            mx, my = pygame.mouse.get_pos()
-            if mouse[0] and r.collidepoint(mx, my):
-                if can_buy:
-                    self.upgrades.upgrade_class_damage(t)
-                else:
-                    not_enough_msg = "Not enough coins!"
+            # Handle click only on mouse down
+            for event in events:
+                if event.button == 1 and r.collidepoint(event.pos):
+                    if can_buy:
+                        self.upgrades.upgrade_class_damage(t)
+                    else:
+                        not_enough_msg = "Not enough coins!"
         if not_enough_msg:
             warn = self.font_big.render(not_enough_msg, True, (255, 80, 80))
             self.screen.blit(warn, (base_x, base_y - 60))
