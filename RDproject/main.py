@@ -143,10 +143,10 @@ class Game:
         # Re-calculating for side-by-side
         row_y = y_offset + 2 * (btn_h + gap) + 20
         self.buttons.pop() # Remove Help from previous append
-           self.buttons.append(
-               Button((center_x, row_y, btn_w // 2 - 10, btn_h), "Help", self.font_big, self.goto_help)
-           )
-           self.quit_btn = Button((center_x + btn_w // 2 + 10, row_y, btn_w // 2 - 10, btn_h), "Quit", self.font_big, self.quit)
+        self.buttons.append(
+            Button((center_x, row_y, btn_w // 2 - 10, btn_h), "Help", self.font_big, self.goto_help)
+        )
+        self.quit_btn = Button((center_x + btn_w // 2 + 10, row_y, btn_w // 2 - 10, btn_h), "Quit", self.font_big, self.quit)
 
 
     def start_level(self, idx: int) -> None:
