@@ -99,7 +99,7 @@ class Game:
         self.buttons: List[Button] = []
         
         # Center layout configuration
-        btn_w, btn_h = 250, 50
+        btn_w, btn_h = 340, 60
         gap = 20
         start_y = 200
         center_x = SCREEN_W // 2 - btn_w // 2
@@ -134,19 +134,19 @@ class Game:
         # Bottom Actions
         bottom_y = SCREEN_H - 100
         self.buttons.append(
-            Button((center_x - 160, bottom_y, 140, 50), "Help", self.font_big, self.goto_help)
+            Button((center_x - 180, bottom_y, 170, 60), "Help", self.font_big, self.goto_help)
         )
-        self.quit_btn = Button((center_x + 160 + btn_w - 140, bottom_y, 140, 50), "Quit", self.font_big, self.quit)
+        self.quit_btn = Button((center_x + 180 + btn_w - 170, bottom_y, 170, 60), "Quit", self.font_big, self.quit)
         # Adjust quit button position logic if needed, but let's keep it simple for now:
         # Actually, let's put Help and Quit side-by-side below Upgrades
         
         # Re-calculating for side-by-side
         row_y = y_offset + 2 * (btn_h + gap) + 20
         self.buttons.pop() # Remove Help from previous append
-        self.buttons.append(
-             Button((center_x, row_y, btn_w // 2 - 10, btn_h), "Help", self.font_big, self.goto_help)
-        )
-        self.quit_btn = Button((center_x + btn_w // 2 + 10, row_y, btn_w // 2 - 10, btn_h), "Quit", self.font_big, self.quit)
+           self.buttons.append(
+               Button((center_x, row_y, btn_w // 2 - 10, btn_h), "Help", self.font_big, self.goto_help)
+           )
+           self.quit_btn = Button((center_x + btn_w // 2 + 10, row_y, btn_w // 2 - 10, btn_h), "Quit", self.font_big, self.quit)
 
 
     def start_level(self, idx: int) -> None:
