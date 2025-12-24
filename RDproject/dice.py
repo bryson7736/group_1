@@ -74,8 +74,9 @@ class Die:
             # base_col = tuple(min(255, int(c * 0.5 + 255 * 0.5)) for c in base_col)
             base_col = BLUE
         pygame.draw.rect(surf, base_col, rect, border_radius=14)
+        # Draw a white frame (not a solid fill) if selected
         if selected:
-            pygame.draw.rect(surf, WHITE, rect, width=3, border_radius=14)
+            pygame.draw.rect(surf, WHITE, rect, width=5, border_radius=14)
 
         font = self.game.font_big
         lvl = font.render(f"Lv {self.level}", True, WHITE)
