@@ -759,10 +759,23 @@ class Game:
 
         bx, by, w, h, gap = 420, 200, 220, 60, 16
         types = DIE_TYPES
+        dice_brief = {
+            "single": "Single: High base damage, fast fire.",
+            "multi": "Multi: Hits multiple enemies in chain.",
+            "freeze": "Freeze: Slows enemies on hit.",
+            "wind": "Wind: Very rapid fire, low damage.",
+            "poison": "Poison: Deals damage over time.",
+            "iron": "Iron: Huge damage, bonus vs bosses.",
+            "fire": "Fire: Splash damage to nearby enemies."
+        }
         for i, t in enumerate(types):
             r = pygame.Rect(bx, by + i * (h + gap), w, h)
             active = (t in self.loadout.selected)
             self.loadout.draw_chip(self.screen, r, t, self.font_big, active)
+            # Draw brief info to the right
+            info_txt = dice_brief.get(t, "")
+            info_surf = self.font.render(info_txt, True, (220, 220, 220))
+            self.screen.blit(info_surf, (bx + w + 24, by + i * (h + gap) + h // 2 - info_surf.get_height() // 2))
         sel = ", ".join(self.loadout.selected) if self.loadout.selected else "(none)"
         info = self.font.render(f"Selected: {sel}", True, WHITE)
         # Move info to top right, above the chips
