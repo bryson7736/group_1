@@ -765,7 +765,10 @@ class Game:
             self.loadout.draw_chip(self.screen, r, t, self.font_big, active)
         sel = ", ".join(self.loadout.selected) if self.loadout.selected else "(none)"
         info = self.font.render(f"Selected: {sel}", True, WHITE)
-        self.screen.blit(info, (bx, by + 3 * (h + gap) + 20))
+        # Move info to top right, above the chips
+        info_x = bx + 10
+        info_y = by - 60
+        self.screen.blit(info, (info_x, info_y))
 
         self.loadout_back.draw(self.screen)
 
