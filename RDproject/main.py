@@ -619,6 +619,8 @@ class Game:
         btn_w, btn_h = 220, 50
         gap_x, gap_y = 30, 16
         types = DIE_TYPES
+        # Show not enough coins message
+        not_enough_msg = ""
         for row, t in enumerate(types):
             name = self.font_big.render(t.capitalize(), True, WHITE)
             self.screen.blit(name, (base_x - 150, base_y + row * (btn_h + gap_y) + 8))
@@ -634,8 +636,14 @@ class Game:
             # Handle click (simple, not full button logic)
             mouse = pygame.mouse.get_pressed()
             mx, my = pygame.mouse.get_pos()
-            if mouse[0] and r.collidepoint(mx, my) and can_buy:
-                self.upgrades.upgrade_class_damage(t)
+            if mouse[0] and r.collidepoint(mx, my):
+                if can_buy:
+                    self.upgrades.upgrade_class_damage(t)
+                else:
+                    not_enough_msg = "Not enough coins!"
+        if not_enough_msg:
+            warn = self.font_big.render(not_enough_msg, True, (255, 80, 80))
+            self.screen.blit(warn, (base_x, base_y - 60))
         self.upg_back.draw(self.screen)
 
     def play_draw(self) -> None:
