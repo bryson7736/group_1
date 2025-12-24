@@ -159,28 +159,28 @@ class Game:
         """Switch to help screen."""
         self.state = STATE_HELP
         self.help_back = Button(
-            (24, SCREEN_H - 74, 180, 48), "Back to Lobby", self.font_big, self.back_to_lobby
+            (24, SCREEN_H - 94, 260, 64), "Back to Lobby", self.font_big, self.back_to_lobby
         )
 
     def goto_loadout(self) -> None:
         """Switch to loadout screen."""
         self.state = STATE_LOADOUT
         self.loadout_back = Button(
-            (24, SCREEN_H - 74, 180, 48), "Back", self.font_big, self.back_to_lobby
+            (24, SCREEN_H - 94, 260, 64), "Back", self.font_big, self.back_to_lobby
         )
 
     def goto_upgrades(self) -> None:
         """Switch to upgrades screen."""
         self.state = STATE_UPGRADES
         self.upg_back = Button(
-            (24, SCREEN_H - 74, 180, 48), "Back", self.font_big, self.back_to_lobby
+            (24, SCREEN_H - 94, 260, 64), "Back", self.font_big, self.back_to_lobby
         )
     
     def goto_story_select(self) -> None:
         """Switch to story stage selection screen."""
         self.state = STATE_STORY_SELECT
         self.story_back = Button(
-            (24, SCREEN_H - 74, 180, 48), "Back", self.font_big, self.back_to_lobby
+            (24, SCREEN_H - 94, 260, 64), "Back", self.font_big, self.back_to_lobby
         )
     
     def start_story_stage(self, stage_id: str) -> None:
