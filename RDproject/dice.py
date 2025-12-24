@@ -2,8 +2,7 @@
 import math, os, pygame, random
 from colors import WHITE, DICE_COLORS, BLUE
 from settings import BASE_RANGE, BASE_FIRE_RATE, FIRE_RATE_STEP, MAX_DIE_LEVEL, ASSET_FILES, FPS
-from settings import BOSS_ZONE_SLOW_DICE, FREEZE_DURATION, FREEZE_SLOW_RATIO
-from settings import BOSS_ZONE_SLOW_DICE, FREEZE_DURATION, FREEZE_SLOW_RATIO
+from settings import BIG_ENEMY_ZONE_SLOW_DICE, FREEZE_DURATION, FREEZE_SLOW_RATIO
 from projectiles import Bullet, ChainBolt, ExplosiveBullet
 
 DIE_SINGLE = "single"
@@ -292,8 +291,8 @@ class IronDice(Die):
         dmg = self.base_dmg * self.damage_multiplier()
         
         # Bonus vs Boss
-        from enemy import Boss
-        if isinstance(target, Boss):
+        from enemy import BigEnemy, TrueBoss
+        if isinstance(target, (BigEnemy, TrueBoss)):
             # Base 2.0x, +0.5x per in-game level
             ingame_level = self.game.ingame_upgrades.get_level(self.type)
             boss_mult = 2.0 + (ingame_level - 1) * 0.5

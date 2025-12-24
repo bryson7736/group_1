@@ -11,7 +11,7 @@ from grid import Grid
 from level_manager import LevelManager
 from loadout import Loadout
 from upgrades import UpgradeState
-from enemy import Enemy, Boss
+from enemy import Enemy, BigEnemy, TrueBoss
 from dice import DIE_TYPES, make_die
 from colors import WHITE, DARKER, GRAY, RED, DARK
 from story_mode import StoryManager
@@ -65,7 +65,8 @@ class Game:
         self.to_spawn: int = 0
         self.spawn_cd: float = 0.0
         self.spawn_interval: float = 0.9
-        self.is_boss_wave: bool = False
+        self.is_big_enemy_wave: bool = False
+        self.is_true_boss_wave: bool = False
         
         # Auto-wave system
         self.wave_timer: float = 0.0
@@ -210,7 +211,8 @@ class Game:
         self.wave = -1
         self.to_spawn = 0
         self.spawn_cd = 0.0
-        self.is_boss_wave = False
+        self.is_big_enemy_wave = False
+        self.is_true_boss_wave = False
         self.trash_active = False
         self.ingame_upgrades.reset()  # Reset in-game upgrades
 
@@ -451,7 +453,7 @@ class Game:
         # Story Mode: Use story-specific wave configuration
         if self.state == STATE_STORY and self.current_story_stage:
             # Simple scaling for story mode: base count + wave number
-            count = 7 + self.wave * 2  # Progressive difficulty
+            count = 10 + self.wave * 3  # Increased difficulty
         else:
             # Practice Mode: Use level manager's wave info
             count, is_boss = self.level_mgr.wave_info(self.wave)
@@ -459,7 +461,7 @@ class Game:
         
         self.to_spawn = count
         self.spawn_cd = 0.0
-        # is_boss_wave is already set by the auto-wave logic in update()
+        # is_big_enemy_wave and is_true_boss_wave are already set by the auto-wave logic
 
     def spawn_enemy(self) -> None:
         """Spawn a single enemy."""
@@ -469,9 +471,12 @@ class Game:
         hp = 30 * (wave_num ** 1.3) * self.level.difficulty
         speed = (36 + min(140, self.wave * 6)) * (0.9 + 0.2 * random.random())
         path = list(self.level.path)
-        if self.is_boss_wave and self.to_spawn == 1:
-            hp *= BOSS_HP_MULT
-            e = Boss(path, hp, speed * 0.85)
+        if self.is_true_boss_wave and self.to_spawn == 1:
+            hp *= BIG_ENEMY_HP_MULT * 2.0 # TrueBoss has more HP
+            e = TrueBoss(path, hp, speed * 0.7, game=self)
+        elif self.is_big_enemy_wave and self.to_spawn == 1:
+            hp *= BIG_ENEMY_HP_MULT
+            e = BigEnemy(path, hp, speed * 0.85)
         else:
             e = Enemy(path, hp, speed)
         if self.to_spawn == 1:
@@ -481,11 +486,11 @@ class Game:
         self.enemies.append(e)
 
     def spawn_telegraph(self, px: float, py: float) -> None:
-        """Spawn a telegraph zone for boss attacks."""
-        rpx = CELL_SIZE * (BOSS_DESTROY_RADIUS + 0.5)
+        """Spawn a telegraph zone for big enemy attacks."""
+        rpx = CELL_SIZE * (BIG_ENEMY_DESTROY_RADIUS + 0.5)
         z = TelegraphZone(
-            px, py, rpx, BOSS_TELEGRAPH_WARN, BOSS_DEBUFF_DURATION,
-            enemy_speed_mult=BOSS_ZONE_SLOW_ENEMY, dice_period_mult=BOSS_ZONE_SLOW_DICE
+            px, py, rpx, BIG_ENEMY_TELEGRAPH_WARN, BIG_ENEMY_DEBUFF_DURATION,
+            enemy_speed_mult=BIG_ENEMY_ZONE_SLOW_ENEMY, dice_period_mult=BIG_ENEMY_ZONE_SLOW_DICE
         )
         self.telegraphs.append(z)
 
@@ -515,10 +520,13 @@ class Game:
                 if z.in_effect_phase() and z.contains(e.x, e.y):
                     zone_mult *= z.enemy_speed_mult
             e.update(dt, speed_mult=self.speed_mult, zone_mult=zone_mult)
-            if isinstance(e, Boss):
-                if e.ability_cd >= BOSS_TELEGRAPH_WARN + BOSS_DEBUFF_DURATION + 5.0:
+            if isinstance(e, BigEnemy):
+                if e.ability_cd >= BIG_ENEMY_TELEGRAPH_WARN + BIG_ENEMY_DEBUFF_DURATION + 5.0:
                     e.ability_cd = 0.0
                     e.try_ability(self)
+            elif isinstance(e, TrueBoss):
+                # Update game ref if needed, though passed in init
+                pass
 
             if e.dead:
                 self.money += int(e.money_drop + self.wave)
@@ -541,11 +549,16 @@ class Game:
                     self.goto_story_select()
                     return
                 elif self.wave >= self.story_max_waves - 2:  # This was the final regular wave
-                    # If this stage has a boss, spawn it next
-                    if self.current_story_stage.has_boss:
+                    # If this stage has a big enemy or true boss, spawn it next
+                    if self.current_story_stage.has_true_boss:
                         self.wave_timer += dt * self.speed_mult
                         if self.wave_timer >= self.wave_delay:
-                            self.is_boss_wave = True
+                            self.is_true_boss_wave = True
+                            self.start_wave()
+                    elif self.current_story_stage.has_big_enemy:
+                        self.wave_timer += dt * self.speed_mult
+                        if self.wave_timer >= self.wave_delay:
+                            self.is_big_enemy_wave = True
                             self.start_wave()
                     else:
                         self.wave_timer += dt * self.speed_mult
