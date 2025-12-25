@@ -19,7 +19,7 @@ BASE_HP = 10
 MAX_DIE_LEVEL = 7
 
 # Dice balance
-BASE_RANGE = 350  # Increased from 200 for better coverage
+BASE_RANGE = 1000  # Increased from 200 for better coverage
 BASE_FIRE_RATE = 50  # smaller = faster (frame-equivalent ticks)
 FIRE_RATE_STEP = 4
 
