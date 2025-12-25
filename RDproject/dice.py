@@ -72,7 +72,7 @@ class Die:
         # Do not change color if selected; only draw a white frame
         pygame.draw.rect(surf, base_col, rect, border_radius=14)
         if selected:
-            pygame.draw.rect(surf, WHITE, rect, width=5, border_radius=14)
+            pygame.draw.rect(surf, BLUE, rect, width=5, border_radius=14)
 
         font = self.game.font_big
         lvl = font.render(f"Lv {self.level}", True, WHITE)
