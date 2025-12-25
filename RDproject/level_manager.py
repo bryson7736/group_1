@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from settings import WAVE_BASE_COUNT, WAVE_GROWTH
 class Level:
-    def __init__(self, name, path_points, difficulty=1.0):
+    def __init__(self, name, path_points, difficulty=1.0, path_color=(80, 85, 100)): # Default GRAY from colors.py
         self.name = name
         self.path = list(path_points)
         self.difficulty = float(difficulty)
+        self.path_color = path_color
 
 class LevelManager:
     def __init__(self):
