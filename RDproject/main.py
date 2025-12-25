@@ -654,6 +654,8 @@ class Game:
         """Draw the gameplay screen."""
         self.screen.fill(DARK)
         if self.level:
+            if self.to_spawn % 60 == 0: # Print occasionally
+                print(f"DEBUG: Path color: {self.level.path_color}")
             pygame.draw.lines(self.screen, self.level.path_color, False, self.level.path, 6)
 
         self.grid.draw(self.screen)
