@@ -58,6 +58,10 @@ ASSET_FILES = {
     "dice": {
         "single": "dice_single.png",
         "multi": "dice_multi.png",
-        "freeze": "dice_freeze.png"
+        "freeze": "dice_freeze.png",
+        "wind": "dice_wind.png",
+        "poison": "dice_poison.png",
+        "iron": "dice_iron.png",
+        "fire": "dice_fire.png"
     }
 }
