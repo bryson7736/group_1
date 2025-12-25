@@ -99,7 +99,8 @@ class StoryManager:
                 path_points=[
                     (1280, 100), (900, 100), (900, 300), (600, 300), (600, 600), (1280, 600)
                 ],
-                difficulty=1.0
+                difficulty=1.0,
+                path_color=(60, 160, 255) # BLUE
             ),
             StoryStage(
                 stage_id="1-2",
