@@ -191,13 +191,7 @@ class Game:
             self.story_max_waves = stage.waves
             # Use stage's path as the level path
             from level_manager import Level
-            p_color = getattr(stage, 'path_color', (80, 85, 100))
-            print(f"DEBUG: Stage {stage_id} loaded. Path Color from Stage: {p_color}")
-            if stage_id == "1-2":
-                print("DEBUG: Forcing RED for 1-2")
-                p_color = (255, 0, 0)
-            
-            self.level = Level(stage.name, stage.path_points, stage.difficulty, p_color)
+            self.level = Level(stage.name, stage.path_points, stage.difficulty, getattr(stage, 'path_color', (80, 85, 100)))
             
             # Must set state to STORY before reset_runtime so Grid knows to use dynamic layout
             self.state = STATE_STORY
@@ -660,8 +654,6 @@ class Game:
         """Draw the gameplay screen."""
         self.screen.fill(DARK)
         if self.level:
-            if self.to_spawn % 60 == 0: # Print occasionally
-                print(f"DEBUG: Path color: {self.level.path_color}")
             pygame.draw.lines(self.screen, self.level.path_color, False, self.level.path, 6)
 
         self.grid.draw(self.screen)
