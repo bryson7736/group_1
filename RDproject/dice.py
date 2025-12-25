@@ -69,27 +69,34 @@ class Die:
     def draw(self, surf, selected):
         rect = self.game.grid.rect_at(self.c, self.r).inflate(-12, -12)
         base_col = DICE_COLORS.get(self.type, (140, 140, 160))
-        if selected:
-            # Brighten the color: blend 50% with WHITE
-            # base_col = tuple(min(255, int(c * 0.5 + 255 * 0.5)) for c in base_col)
-            base_col = BLUE
+        # Do not change color if selected; only draw a white frame
         pygame.draw.rect(surf, base_col, rect, border_radius=14)
-        if selected:
-            pygame.draw.rect(surf, WHITE, rect, width=3, border_radius=14)
+
+        if not self.image:
+            self.image = _load_die_image(self.type)
+        if self.image:
+            # Draw icon in background with transparency
+            ir = self.image.get_rect()
+            # Scale to fit 70% of the cell width
+            target_w = rect.w * 0.7
+            scale = target_w / ir.w
+            
+            # Use original image for scaling quality
+            img = pygame.transform.smoothscale(self.image, (int(ir.w * scale), int(ir.h * scale)))
+            
+            # Make it transparent (alpha 0-255, using 80/255 approx 30% opacity)
+            img.set_alpha(80) 
+            
+            surf.blit(img, (rect.centerx - img.get_width() // 2, rect.centery - img.get_height() // 2))
 
         font = self.game.font_big
         lvl = font.render(f"Lv {self.level}", True, WHITE)
         surf.blit(lvl, (rect.centerx - lvl.get_width() // 2, rect.centery - lvl.get_height() // 2))
 
-        if not self.image:
-            self.image = _load_die_image(self.type)
-        if self.image:
-            ir = self.image.get_rect()
-            scale = min(rect.w * 0.6 / ir.w, rect.h * 0.45 / ir.h)
-            img = pygame.transform.smoothscale(self.image, (int(ir.w * scale), int(ir.h * scale)))
-            surf.blit(img, (rect.centerx - img.get_width() // 2, rect.y + 8))
-
-        pygame.draw.rect(surf, (255,255,255), rect, width=2, border_radius=14)
+        if selected:
+            pygame.draw.rect(surf, BLUE, rect, width=5, border_radius=14)
+        else:
+            pygame.draw.rect(surf, (255,255,255), rect, width=2, border_radius=14)
         glow = rect.copy()
         glow.h = int(rect.h * 0.35)
         highlight = pygame.Surface((glow.w, glow.h), pygame.SRCALPHA)

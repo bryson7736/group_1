@@ -12,7 +12,8 @@ class StoryStage:
     
     def __init__(self, stage_id: str, name: str, description: str, 
                  waves: int, has_big_enemy: bool, path_points: List[tuple], 
-                 has_true_boss: bool = False, difficulty: float = 1.0):
+                 has_true_boss: bool = False, difficulty: float = 1.0,
+                 path_color: tuple = (80, 85, 100)): # Default GRAY
         self.stage_id = stage_id  # e.g., "1-1", "1-2"
         self.name = name
         self.description = description
@@ -21,6 +22,7 @@ class StoryStage:
         self.has_true_boss = has_true_boss  # True Boss appears (overrides BigEnemy)
         self.path_points = path_points
         self.difficulty = difficulty
+        self.path_color = path_color
         
     def get_wave_description(self, wave_num: int) -> str:
         """Get description text for a specific wave."""
@@ -95,12 +97,10 @@ class StoryManager:
                 waves=5,
                 has_big_enemy=False,
                 path_points=[
-                    (1280, 125),
-                    (500, 125),
-                    (500, 650),
-                    (1280, 650)
+                    (1280, 100), (900, 100), (900, 300), (600, 300), (600, 600), (1280, 600)
                 ],
-                difficulty=1.0
+                difficulty=1.0,
+                path_color=(60, 160, 255) # BLUE
             ),
             StoryStage(
                 stage_id="1-2",
@@ -109,11 +109,11 @@ class StoryManager:
                 waves=5,
                 has_big_enemy=False,
                 path_points=[
-                    (100, 100),
-                    (100, 650),
-                    (1200, 650)
+                    # Shifted Right (+250)
+                    (350, 100), (650, 100), (650, 400), (450, 400), (450, 650), (1280, 650)
                 ],
-                difficulty=1.1
+                difficulty=1.1,
+                path_color=(255, 0, 0) # RED
             ),
             StoryStage(
                 stage_id="1-3",
@@ -122,10 +122,7 @@ class StoryManager:
                 waves=5,
                 has_big_enemy=False,
                 path_points=[
-                    (1200, 80),
-                    (100, 80),
-                    (100, 650),
-                    (600, 650)
+                    (1200, 80), (800, 80), (800, 500), (400, 500), (400, 300), (100, 300), (100, 650), (600, 650)
                 ],
                 difficulty=1.2
             ),
@@ -136,10 +133,7 @@ class StoryManager:
                 waves=5,
                 has_big_enemy=True,
                 path_points=[
-                    (1280, 400),
-                    (500, 400),
-                    (500, 650),
-                    (1280, 650)
+                    (1280, 400), (900, 400), (900, 200), (600, 200), (600, 600), (1280, 600)
                 ],
                 difficulty=1.3
             ),
@@ -151,10 +145,7 @@ class StoryManager:
                 has_big_enemy=True,
                 has_true_boss=True,
                 path_points=[
-                    (1280, 400),
-                    (500, 400),
-                    (500, 650),
-                    (1280, 650)
+                    (1280, 400), (1000, 400), (1000, 100), (400, 100), (400, 600), (1280, 600)
                 ],
                 difficulty=1.5
             ),

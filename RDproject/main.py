@@ -100,7 +100,7 @@ class Game:
         self.buttons: List[Button] = []
         
         # Center layout configuration
-        btn_w, btn_h = 250, 50
+        btn_w, btn_h = 340, 60
         gap = 20
         start_y = 200
         center_x = SCREEN_W // 2 - btn_w // 2
@@ -135,9 +135,9 @@ class Game:
         # Bottom Actions
         bottom_y = SCREEN_H - 100
         self.buttons.append(
-            Button((center_x - 160, bottom_y, 140, 50), "Help", self.font_big, self.goto_help)
+            Button((center_x - 180, bottom_y, 170, 60), "Help", self.font_big, self.goto_help)
         )
-        self.quit_btn = Button((center_x + 160 + btn_w - 140, bottom_y, 140, 50), "Quit", self.font_big, self.quit)
+        self.quit_btn = Button((center_x + 180 + btn_w - 170, bottom_y, 170, 60), "Quit", self.font_big, self.quit)
         # Adjust quit button position logic if needed, but let's keep it simple for now:
         # Actually, let's put Help and Quit side-by-side below Upgrades
         
@@ -145,7 +145,7 @@ class Game:
         row_y = y_offset + 2 * (btn_h + gap) + 20
         self.buttons.pop() # Remove Help from previous append
         self.buttons.append(
-             Button((center_x, row_y, btn_w // 2 - 10, btn_h), "Help", self.font_big, self.goto_help)
+            Button((center_x, row_y, btn_w // 2 - 10, btn_h), "Help", self.font_big, self.goto_help)
         )
         self.quit_btn = Button((center_x + btn_w // 2 + 10, row_y, btn_w // 2 - 10, btn_h), "Quit", self.font_big, self.quit)
 
@@ -160,28 +160,28 @@ class Game:
         """Switch to help screen."""
         self.state = STATE_HELP
         self.help_back = Button(
-            (24, SCREEN_H - 74, 180, 48), "Back to Lobby", self.font_big, self.back_to_lobby
+            (24, SCREEN_H - 94, 260, 64), "Back to Lobby", self.font_big, self.back_to_lobby
         )
 
     def goto_loadout(self) -> None:
         """Switch to loadout screen."""
         self.state = STATE_LOADOUT
         self.loadout_back = Button(
-            (24, SCREEN_H - 74, 180, 48), "Back", self.font_big, self.back_to_lobby
+            (24, SCREEN_H - 94, 260, 64), "Back", self.font_big, self.back_to_lobby
         )
 
     def goto_upgrades(self) -> None:
         """Switch to upgrades screen."""
         self.state = STATE_UPGRADES
         self.upg_back = Button(
-            (24, SCREEN_H - 74, 180, 48), "Back", self.font_big, self.back_to_lobby
+            (24, SCREEN_H - 94, 260, 64), "Back", self.font_big, self.back_to_lobby
         )
     
     def goto_story_select(self) -> None:
         """Switch to story stage selection screen."""
         self.state = STATE_STORY_SELECT
         self.story_back = Button(
-            (24, SCREEN_H - 74, 180, 48), "Back", self.font_big, self.back_to_lobby
+            (24, SCREEN_H - 94, 260, 64), "Back", self.font_big, self.back_to_lobby
         )
     
     def start_story_stage(self, stage_id: str) -> None:
@@ -192,9 +192,11 @@ class Game:
             self.story_max_waves = stage.waves
             # Use stage's path as the level path
             from level_manager import Level
-            self.level = Level(stage.name, stage.path_points, stage.difficulty)
-            self.reset_runtime()
+            self.level = Level(stage.name, stage.path_points, stage.difficulty, getattr(stage, 'path_color', (80, 85, 100)))
+            
+            # Must set state to STORY before reset_runtime so Grid knows to use dynamic layout
             self.state = STATE_STORY
+            self.reset_runtime()
 
     def back_to_lobby(self) -> None:
         """Return to lobby screen."""
@@ -367,7 +369,8 @@ class Game:
             mx, my = event.pos
             btn_w, btn_h = 320, 70
             gap = 16
-            start_x, start_y = 420, 180
+            start_x = (SCREEN_W - btn_w) // 2
+            start_y = 180
             
             hell_stages = self.story_mgr.get_chapter_stages("hell")
             for i, stage in enumerate(hell_stages):
@@ -593,19 +596,68 @@ class Game:
     def lobby_draw(self) -> None:
         """Draw the lobby screen."""
         self.screen.fill(DARK)
-        
         # Title
         title = self.font_huge.render("RANDOM DICE DEFENSE", True, WHITE)
         self.screen.blit(title, (SCREEN_W // 2 - title.get_width() // 2, 100))
+        # Show persistent coins at top right
+        coin_txt = self.font_big.render(f"Coins: {self.upgrades.coins}", True, (255, 220, 80))
+        self.screen.blit(coin_txt, (SCREEN_W - coin_txt.get_width() - 40, 40))
         for b in self.buttons:
             b.draw(self.screen)
         self.quit_btn.draw(self.screen)
+    def earn_coins(self, amount):
+        self.upgrades.add_coin(amount)
+
+        # Award coins after each gameover (example: 10 coins per wave reached)
+        if self.state == STATE_GAMEOVER and not hasattr(self, '_coins_awarded'):
+            earned = max(5, self.wave * 10)
+            self.earn_coins(earned)
+            self._coins_awarded = True
+    def upgrades_draw(self) -> None:
+        """Draw the upgrades screen (persistent upgrades)."""
+        self.screen.fill(DARKER)
+        title = self.font_huge.render("Upgrades (Lobby)", True, (255, 255, 255))
+        self.screen.blit(title, (40, 60))
+        coins = self.font_big.render(f"Coins: {self.upgrades.coins}", True, (255, 220, 80))
+        self.screen.blit(coins, (40, 120))
+        base_x, base_y = 420, 200
+        btn_w, btn_h = 220, 50
+        gap_x, gap_y = 30, 16
+        types = DIE_TYPES
+        # Show not enough coins message
+        not_enough_msg = ""
+        # Only trigger upgrade on mouse button down event
+        events = pygame.event.get(pygame.MOUSEBUTTONDOWN)
+        mx, my = pygame.mouse.get_pos()
+        for row, t in enumerate(types):
+            name = self.font_big.render(t.capitalize(), True, WHITE)
+            self.screen.blit(name, (base_x - 150, base_y + row * (btn_h + gap_y) + 8))
+            # Upgrade button for damage
+            r = pygame.Rect(base_x, base_y + row * (btn_h + gap_y), btn_w, btn_h)
+            btn_label = f"Damage +10% (50c)"
+            can_buy = self.upgrades.coins >= 50
+            color = (80, 200, 80) if can_buy else (100, 100, 100)
+            pygame.draw.rect(self.screen, color, r, border_radius=8)
+            pygame.draw.rect(self.screen, WHITE, r, width=2, border_radius=8)
+            label = self.font.render(btn_label, True, WHITE)
+            self.screen.blit(label, (r.centerx - label.get_width() // 2, r.centery - label.get_height() // 2))
+            # Handle click only on mouse down
+            for event in events:
+                if event.button == 1 and r.collidepoint(event.pos):
+                    if can_buy:
+                        self.upgrades.upgrade_class_damage(t)
+                    else:
+                        not_enough_msg = "Not enough coins!"
+        if not_enough_msg:
+            warn = self.font_big.render(not_enough_msg, True, (255, 80, 80))
+            self.screen.blit(warn, (base_x, base_y - 60))
+        self.upg_back.draw(self.screen)
 
     def play_draw(self) -> None:
         """Draw the gameplay screen."""
         self.screen.fill(DARK)
         if self.level:
-            pygame.draw.lines(self.screen, GRAY, False, self.level.path, 6)
+            pygame.draw.lines(self.screen, self.level.path_color, False, self.level.path, 6)
 
         self.grid.draw(self.screen)
         for e in self.enemies:
@@ -623,7 +675,7 @@ class Game:
                 ry = int(z.y + (z.r - 10) * math.sin(ang))
                 pygame.draw.circle(self.screen, color, (rx, ry), 6)
 
-        panel_rect = pygame.Rect(20, 10, 300, 260)
+        panel_rect = pygame.Rect(20, 10, 370, 280)
 
         def _body() -> None:
             y = panel_rect.y + 60
@@ -761,13 +813,29 @@ class Game:
 
         bx, by, w, h, gap = 420, 200, 220, 60, 16
         types = DIE_TYPES
+        dice_brief = {
+            "single": "Single: High base damage, fast fire.",
+            "multi": "Multi: Hits multiple enemies in chain.",
+            "freeze": "Freeze: Slows enemies on hit.",
+            "wind": "Wind: Very rapid fire, low damage.",
+            "poison": "Poison: Deals damage over time.",
+            "iron": "Iron: Huge damage, bonus vs bosses.",
+            "fire": "Fire: Splash damage to nearby enemies."
+        }
         for i, t in enumerate(types):
             r = pygame.Rect(bx, by + i * (h + gap), w, h)
             active = (t in self.loadout.selected)
             self.loadout.draw_chip(self.screen, r, t, self.font_big, active)
+            # Draw brief info to the right
+            info_txt = dice_brief.get(t, "")
+            info_surf = self.font.render(info_txt, True, (220, 220, 220))
+            self.screen.blit(info_surf, (bx + w + 24, by + i * (h + gap) + h // 2 - info_surf.get_height() // 2))
         sel = ", ".join(self.loadout.selected) if self.loadout.selected else "(none)"
         info = self.font.render(f"Selected: {sel}", True, WHITE)
-        self.screen.blit(info, (bx, by + 3 * (h + gap) + 20))
+        # Move info to top right, above the chips
+        info_x = bx + 10
+        info_y = by - 60
+        self.screen.blit(info, (info_x, info_y))
 
         self.loadout_back.draw(self.screen)
 
@@ -810,7 +878,8 @@ class Game:
         # Stage buttons
         btn_w, btn_h = 320, 70
         gap = 16
-        start_x, start_y = 420, 180
+        start_x = (SCREEN_W - btn_w) // 2
+        start_y = 180
         
         hell_stages = self.story_mgr.get_chapter_stages("hell")
         for i, stage in enumerate(hell_stages):
@@ -867,7 +936,7 @@ class Game:
                 ry = int(z.y + (z.r - 10) * math.sin(ang))
                 pygame.draw.circle(self.screen, color, (rx, ry), 6)
 
-        panel_rect = pygame.Rect(20, 10, 300, 280)
+        panel_rect = pygame.Rect(20, 10, 370, 320)
 
         def _body() -> None:
             y = panel_rect.y + 60
