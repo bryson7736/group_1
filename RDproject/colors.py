@@ -23,7 +23,7 @@ DICE_COLORS = {
     "multi": (0, 200, 255),     # Cyan/Blue
     "freeze": (100, 100, 255),  # Periwinkle/Blue
     "wind": (50, 255, 200),     # Teal/Mint
-    "poison": (180, 50, 255),   # Deep Purple
+    "poison": (150, 255, 50),   # Toxic Green
     "iron": (200, 200, 200),    # Silver/Iron
     "fire": (255, 100, 0),      # Orange-Red
 }

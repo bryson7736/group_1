@@ -7,7 +7,7 @@ class Loadout:
     def __init__(self, available_types, *, max_slots=5):
         self.available = list(available_types)
         self.max_slots = max_slots
-        self.selected = list(self.available[:min(3, max_slots)])
+        self.selected = list(self.available[:min(5, max_slots)])
 
     def toggle(self, t):
         if t in self.selected:

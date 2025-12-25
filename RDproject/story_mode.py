@@ -95,7 +95,7 @@ class StoryManager:
                 name="Hell Gate",
                 description="The entrance to the infernal realm. Demons pour forth!",
                 waves=5,
-                has_big_enemy=False,
+                has_big_enemy=True,
                 path_points=[
                     (1280, 100), (900, 100), (900, 300), (600, 300), (600, 600), (1280, 600)
                 ],
@@ -107,12 +107,12 @@ class StoryManager:
                 name="Burning Path",
                 description="Walk the scorched path through rivers of lava.",
                 waves=5,
-                has_big_enemy=False,
+                has_big_enemy=True,
                 path_points=[
                     # Shifted Right (+250)
                     (350, 100), (650, 100), (650, 400), (450, 400), (450, 650), (1280, 650)
                 ],
-                difficulty=1.1,
+                difficulty=1.5,
                 path_color=(255, 0, 0) # RED
             ),
             StoryStage(
@@ -120,11 +120,11 @@ class StoryManager:
                 name="Demon Fortress",
                 description="A fortress built by the damned. Steel yourself!",
                 waves=5,
-                has_big_enemy=False,
+                has_big_enemy=True,
                 path_points=[
                     (1200, 80), (800, 80), (800, 500), (400, 500), (400, 300), (100, 300), (100, 650), (600, 650)
                 ],
-                difficulty=1.2
+                difficulty=1.8
             ),
             StoryStage(
                 stage_id="1-4",
@@ -135,7 +135,7 @@ class StoryManager:
                 path_points=[
                     (1280, 400), (900, 400), (900, 200), (600, 200), (600, 600), (1280, 600)
                 ],
-                difficulty=1.3
+                difficulty=2.0
             ),
             StoryStage(
                 stage_id="1-5",
@@ -147,7 +147,7 @@ class StoryManager:
                 path_points=[
                     (1280, 400), (1000, 400), (1000, 100), (400, 100), (400, 600), (1280, 600)
                 ],
-                difficulty=1.5
+                difficulty=2.5
             ),
         ]
         

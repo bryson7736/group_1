@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pygame, random
-from colors import GRAY, ACCENT
+from colors import GRAY, ACCENT, BLUE
 from settings import GRID_COLS, GRID_ROWS, CELL_SIZE, GRID_X, GRID_Y, DIE_COST, MERGE_REFUND, MAX_DIE_LEVEL
 from dice import DIE_TYPES, make_die
 
@@ -159,10 +159,9 @@ class Grid:
                     selected = (self.selected == (c, r))
                     die.draw(surf, selected)
                     
-        # Draw hover effect (subtle highlight, not selection)
-        if hover_cell:
-            pygame.draw.rect(surf, (255, 255, 255, 30), self.rect_at(*hover_cell), border_radius=10)
-            pygame.draw.rect(surf, ACCENT, self.rect_at(*hover_cell), width=2, border_radius=10)
+        # Draw hover effect (blue border only, like selection)
+        if hover_cell and hover_cell != self.selected:
+            pygame.draw.rect(surf, BLUE, self.rect_at(*hover_cell).inflate(-12, -12), width=3, border_radius=14)
 
     def handle_click(self, event):
         if event.button != 1:

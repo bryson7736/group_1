@@ -88,10 +88,24 @@ class Die:
             img.set_alpha(80) 
             
             surf.blit(img, (rect.centerx - img.get_width() // 2, rect.centery - img.get_height() // 2))
-
-        font = self.game.font_big
-        lvl = font.render(f"Lv {self.level}", True, WHITE)
-        surf.blit(lvl, (rect.centerx - lvl.get_width() // 2, rect.centery - lvl.get_height() // 2))
+        if 1 <= self.level <= 6:
+            pip_radius = 6
+            gap = rect.width // 4
+            patterns = {
+                1: [(0, 0)],
+                2: [(-gap, -gap), (gap, gap)],
+                3: [(-gap, -gap), (0, 0), (gap, gap)],
+                4: [(-gap, -gap), (gap, -gap), (-gap, gap), (gap, gap)],
+                5: [(-gap, -gap), (gap, -gap), (0, 0), (-gap, gap), (gap, gap)],
+                6: [(-gap, -gap), (-gap, 0), (gap, 0), (-gap, gap), (0, gap), (gap, gap)],
+            }
+            for dx, dy in patterns[self.level]:
+                pygame.draw.circle(surf, WHITE, (rect.centerx + dx, rect.centery + dy), pip_radius) 
+        elif self.level == 7:
+            # Level 7 shows star
+            font = self.game.font_big
+            lvl = font.render("★", True, WHITE)
+            surf.blit(lvl, (rect.centerx - lvl.get_width() // 2, rect.centery - lvl.get_height() // 2))
 
         if selected:
             pygame.draw.rect(surf, BLUE, rect, width=5, border_radius=14)
@@ -136,7 +150,7 @@ class Die:
         return perm_mult * ingame_mult
 
     def try_fire(self):
-        mode = self.game.target_mode
+        # All dice except Iron: Priority attack frontmost enemy ("first" mode)
         best = None
         bestv = None
         for e in self.game.enemies:
@@ -147,14 +161,9 @@ class Die:
             if d > self.range:
                 continue
 
-            if mode == "nearest":
-                v = d; cond = (best is None) or (v < bestv)
-            elif mode == "first":
-                v = (e.idx, -d); cond = (best is None) or (v > bestv)
-            elif mode == "weak":
-                v = e.hp; cond = (best is None) or (v < bestv)
-            else:
-                v = e.hp; cond = (best is None) or (v > bestv)
+            # First mode: higher idx = further along path, prioritize frontmost
+            v = (e.idx, -d)
+            cond = (best is None) or (v > bestv)
 
             if cond:
                 best = e; bestv = v

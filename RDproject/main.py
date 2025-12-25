@@ -61,6 +61,7 @@ class Game:
         self.bullets: List[Any] = []  # Projectile objects
         self.telegraphs: List[TelegraphZone] = []
         self.money: int = START_MONEY
+        self.die_cost: int = DIE_COST  # Dynamic cost, increases by 10 each summon
         self.base_hp: int = BASE_HP
         self.wave: int = -1
         self.to_spawn: int = 0
@@ -75,7 +76,7 @@ class Game:
 
         self.speed_index: int = DEFAULT_SPEED_INDEX
         self.speed_mult: float = GAME_SPEEDS[self.speed_index]
-        self.target_mode: str = "nearest"  # nearest / first / weak / strong
+
         self.trash_active: bool = False
 
         self.speed_ctrl = Segmented(
@@ -245,10 +246,7 @@ class Game:
                 idx = int(event.unicode) - 1
                 self.on_speed_change(idx)
                 return
-            elif event.key == pygame.K_t:
-                order = ["nearest", "first", "weak", "strong"]
-                i = order.index(self.target_mode)
-                self.target_mode = order[(i + 1) % len(order)]
+
             elif event.key == pygame.K_r:
                 self.reset_runtime()
                 self.state = STATE_PLAY
@@ -259,7 +257,7 @@ class Game:
                     self.start_wave()
             elif event.key == pygame.K_SPACE:
                 # Random spawn
-                if self.money >= DIE_COST:
+                if self.money >= self.die_cost:
                     empties = self.grid.get_empty_cells()
                     if empties:
                         c, r = random.choice(empties)
@@ -267,7 +265,8 @@ class Game:
                         t = random.choice(pool)
                         die = make_die(self, c, r, t, level=1)
                         self.grid.set(c, r, die)
-                        self.money -= DIE_COST
+                        self.money -= self.die_cost
+                        self.die_cost += 10  # Increase cost by 10
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             self.grid.selected = None
             self.trash_active = False
@@ -389,10 +388,7 @@ class Game:
                 idx = int(event.unicode) - 1
                 self.on_speed_change(idx)
                 return
-            elif event.key == pygame.K_t:
-                order = ["nearest", "first", "weak", "strong"]
-                i = order.index(self.target_mode)
-                self.target_mode = order[(i + 1) % len(order)]
+
             elif event.key == pygame.K_r:
                 # Restart current story stage
                 if self.current_story_stage:
@@ -401,7 +397,7 @@ class Game:
                 self.goto_story_select()
             elif event.key == pygame.K_SPACE:
                 # Random spawn
-                if self.money >= DIE_COST:
+                if self.money >= self.die_cost:
                     empties = self.grid.get_empty_cells()
                     if empties:
                         c, r = random.choice(empties)
@@ -409,7 +405,8 @@ class Game:
                         t = random.choice(pool)
                         die = make_die(self, c, r, t, level=1)
                         self.grid.set(c, r, die)
-                        self.money -= DIE_COST
+                        self.money -= self.die_cost
+                        self.die_cost += 10  # Increase cost by 10
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             self.grid.selected = None
             self.trash_active = False
@@ -681,10 +678,10 @@ class Game:
             y = panel_rect.y + 60
             pairs = [
                 ("Money", f"${self.money}"),
+                ("Summon Cost", f"${self.die_cost}"),
                 ("Wave", str(max(0, self.wave))),
                 ("Base HP", str(self.base_hp)),
                 ("Speed", f"{self.speed_mult}×"),
-                ("Target", {"nearest": "Nearest", "first": "Front", "weak": "Weak", "strong": "Strong"}[self.target_mode]),
                 ("Coins", str(self.upgrades.coins)),
             ]
             for name, val in pairs:
@@ -694,7 +691,7 @@ class Game:
 
             y += 10
             tips = [
-                "Hotkeys: 1~5 speed, T target, N next wave",
+                "Hotkeys: 1~5 speed, N next wave",
                 "Right click cancels / exits Trash",
                 "Press ESC for lobby",
             ]

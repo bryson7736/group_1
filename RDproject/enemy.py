@@ -17,7 +17,7 @@ class Enemy:
         self.reached = False
         self.idx = 0           # path index (larger = further along)
         self.x, self.y = self.path[0]
-        self.money_drop = 1.0
+        self.money_drop = 10.0
         self.slow_ratio = 1.0
         self.slow_timer = 0.0
         self.carries_coin = False
@@ -84,7 +84,7 @@ class BigEnemy(Enemy):
     def __init__(self, path_points, hp, speed):
         # BigEnemy is 3x larger than normal enemy (as per user customization)
         super().__init__(path_points, hp, speed, size=ENEMY_SIZE * 3)
-        self.money_drop = 3.0
+        self.money_drop = 50.0
         self.ability_cd = 0.0
 
     def update(self, dt, speed_mult=1.0, zone_mult=1.0):

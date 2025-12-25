@@ -21,7 +21,7 @@ STATE_HEAL = "heal"
 # Boss Settings (Configurable)
 # =============================================================================
 BOSS_SIZE_MULT = 3          # Boss is 3x larger than normal enemy
-BOSS_MONEY_DROP = 100.0     # Money reward for killing boss
+BOSS_MONEY_DROP = 200.0     # Money reward for killing boss
 BOSS_SPEED_MULT = 0.7       # Boss moves slower than normal enemies
 
 # Boss HP Formula Settings

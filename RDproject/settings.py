@@ -16,7 +16,7 @@ DIE_COST = 10
 MERGE_REFUND = 3
 START_MONEY = 60
 BASE_HP = 10
-MAX_DIE_LEVEL = 15
+MAX_DIE_LEVEL = 7
 
 # Dice balance
 BASE_RANGE = 350  # Increased from 200 for better coverage
