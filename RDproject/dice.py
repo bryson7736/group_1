@@ -71,8 +71,6 @@ class Die:
         base_col = DICE_COLORS.get(self.type, (140, 140, 160))
         # Do not change color if selected; only draw a white frame
         pygame.draw.rect(surf, base_col, rect, border_radius=14)
-        if selected:
-            pygame.draw.rect(surf, BLUE, rect, width=5, border_radius=14)
 
         font = self.game.font_big
         lvl = font.render(f"Lv {self.level}", True, WHITE)
@@ -86,7 +84,10 @@ class Die:
             img = pygame.transform.smoothscale(self.image, (int(ir.w * scale), int(ir.h * scale)))
             surf.blit(img, (rect.centerx - img.get_width() // 2, rect.y + 8))
 
-        pygame.draw.rect(surf, (255,255,255), rect, width=2, border_radius=14)
+        if selected:
+            pygame.draw.rect(surf, BLUE, rect, width=5, border_radius=14)
+        else:
+            pygame.draw.rect(surf, (255,255,255), rect, width=2, border_radius=14)
         glow = rect.copy()
         glow.h = int(rect.h * 0.35)
         highlight = pygame.Surface((glow.w, glow.h), pygame.SRCALPHA)

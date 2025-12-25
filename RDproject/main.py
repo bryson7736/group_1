@@ -368,7 +368,8 @@ class Game:
             mx, my = event.pos
             btn_w, btn_h = 320, 70
             gap = 16
-            start_x, start_y = 420, 180
+            start_x = (SCREEN_W - btn_w) // 2
+            start_y = 180
             
             hell_stages = self.story_mgr.get_chapter_stages("hell")
             for i, stage in enumerate(hell_stages):
@@ -875,7 +876,8 @@ class Game:
         # Stage buttons
         btn_w, btn_h = 320, 70
         gap = 16
-        start_x, start_y = 420, 180
+        start_x = (SCREEN_W - btn_w) // 2
+        start_y = 180
         
         hell_stages = self.story_mgr.get_chapter_stages("hell")
         for i, stage in enumerate(hell_stages):
