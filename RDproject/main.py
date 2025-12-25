@@ -191,7 +191,13 @@ class Game:
             self.story_max_waves = stage.waves
             # Use stage's path as the level path
             from level_manager import Level
-            self.level = Level(stage.name, stage.path_points, stage.difficulty, getattr(stage, 'path_color', (80, 85, 100)))
+            p_color = getattr(stage, 'path_color', (80, 85, 100))
+            print(f"DEBUG: Stage {stage_id} loaded. Path Color from Stage: {p_color}")
+            if stage_id == "1-2":
+                print("DEBUG: Forcing RED for 1-2")
+                p_color = (255, 0, 0)
+            
+            self.level = Level(stage.name, stage.path_points, stage.difficulty, p_color)
             
             # Must set state to STORY before reset_runtime so Grid knows to use dynamic layout
             self.state = STATE_STORY
