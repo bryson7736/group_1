@@ -53,6 +53,12 @@ class Grid:
                 d.update(dt)
 
     def draw(self, surf):
+        mx, my = pygame.mouse.get_pos()
+        hover_cell = None
+        if GRID_X <= mx < GRID_X + self.cols * CELL_SIZE and GRID_Y <= my < GRID_Y + self.rows * CELL_SIZE:
+            hc = (mx - GRID_X) // CELL_SIZE
+            hr = (my - GRID_Y) // CELL_SIZE
+            hover_cell = (hc, hr)
         for c in range(self.cols):
             for r in range(self.rows):
                 rect = self.rect_at(c, r)
@@ -60,16 +66,13 @@ class Grid:
                 pygame.draw.rect(surf, (40, 45, 60), rect, width=2, border_radius=10)
                 die = self.get(c, r)
                 if die:
+                    # Only draw as selected if actually selected, not just hovered
                     selected = (self.selected == (c, r))
                     die.draw(surf, selected)
-
-        mx, my = pygame.mouse.get_pos()
-        if GRID_X <= mx < GRID_X + self.cols * CELL_SIZE and GRID_Y <= my < GRID_Y + self.rows * CELL_SIZE:
-            hc = (mx - GRID_X) // CELL_SIZE
-            hr = (my - GRID_Y) // CELL_SIZE
-            # Hover effect
-            pygame.draw.rect(surf, (255, 255, 255, 30), self.rect_at(hc, hr), border_radius=10)
-            pygame.draw.rect(surf, ACCENT, self.rect_at(hc, hr), width=2, border_radius=10)
+        # Draw hover effect (subtle highlight, not selection)
+        if hover_cell:
+            pygame.draw.rect(surf, (255, 255, 255, 30), self.rect_at(*hover_cell), border_radius=10)
+            pygame.draw.rect(surf, ACCENT, self.rect_at(*hover_cell), width=2, border_radius=10)
 
     def handle_click(self, event):
         if event.button != 1:

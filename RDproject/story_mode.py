@@ -11,13 +11,14 @@ class StoryStage:
     """Represents a single story stage in a chapter."""
     
     def __init__(self, stage_id: str, name: str, description: str, 
-                 waves: int, has_boss: bool, path_points: List[tuple], 
-                 difficulty: float = 1.0):
+                 waves: int, has_big_enemy: bool, path_points: List[tuple], 
+                 has_true_boss: bool = False, difficulty: float = 1.0):
         self.stage_id = stage_id  # e.g., "1-1", "1-2"
         self.name = name
         self.description = description
         self.waves = waves  # Total waves in this stage
-        self.has_boss = has_boss  # Boss appears after final wave
+        self.has_big_enemy = has_big_enemy  # BigEnemy appears after final wave
+        self.has_true_boss = has_true_boss  # True Boss appears (overrides BigEnemy)
         self.path_points = path_points
         self.difficulty = difficulty
         
@@ -92,12 +93,9 @@ class StoryManager:
                 name="Hell Gate",
                 description="The entrance to the infernal realm. Demons pour forth!",
                 waves=5,
-                has_boss=False,
+                has_big_enemy=False,
                 path_points=[
-                    (1280, 125),
-                    (500, 125),
-                    (500, 650),
-                    (1280, 650)
+                    (1280, 100), (900, 100), (900, 300), (600, 300), (600, 600), (1280, 600)
                 ],
                 difficulty=1.0
             ),
@@ -106,11 +104,9 @@ class StoryManager:
                 name="Burning Path",
                 description="Walk the scorched path through rivers of lava.",
                 waves=5,
-                has_boss=False,
+                has_big_enemy=False,
                 path_points=[
-                    (100, 100),
-                    (100, 650),
-                    (1200, 650)
+                    (100, 100), (400, 100), (400, 400), (200, 400), (200, 650), (1200, 650)
                 ],
                 difficulty=1.1
             ),
@@ -119,12 +115,9 @@ class StoryManager:
                 name="Demon Fortress",
                 description="A fortress built by the damned. Steel yourself!",
                 waves=5,
-                has_boss=False,
+                has_big_enemy=False,
                 path_points=[
-                    (1200, 80),
-                    (100, 80),
-                    (100, 650),
-                    (600, 650)
+                    (1200, 80), (800, 80), (800, 500), (400, 500), (400, 300), (100, 300), (100, 650), (600, 650)
                 ],
                 difficulty=1.2
             ),
@@ -133,12 +126,9 @@ class StoryManager:
                 name="Chamber of Torment",
                 description="The air itself burns. The boss chamber awaits...",
                 waves=5,
-                has_boss=False,
+                has_big_enemy=True,
                 path_points=[
-                    (1280, 400),
-                    (500, 400),
-                    (500, 650),
-                    (1280, 650)
+                    (1280, 400), (900, 400), (900, 200), (600, 200), (600, 600), (1280, 600)
                 ],
                 difficulty=1.3
             ),
@@ -147,13 +137,10 @@ class StoryManager:
                 name="Hell Lord's Throne",
                 description="Face the Hell Lord himself! Prepare for the ultimate test!",
                 waves=5,
-                has_boss=True,  # Boss appears after wave 5
+                has_big_enemy=True,
+                has_true_boss=True,
                 path_points=[
-                    (1200, 80),
-                    (500, 80),
-                    (500, 400),
-                    (1200, 400),
-                    (1200, 650)
+                    (1280, 400), (1000, 400), (1000, 100), (400, 100), (400, 600), (1280, 600)
                 ],
                 difficulty=1.5
             ),

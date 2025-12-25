@@ -28,14 +28,14 @@ ENEMY_SIZE = 30
 WAVE_BASE_COUNT = 7
 WAVE_GROWTH = 3
 
-# Boss
-BOSS_HP_MULT = 6.0
-BOSS_SPAWN_WAVE = 5           # every Nth wave is a boss wave
-BOSS_TELEGRAPH_WARN = 1.0     # seconds warning before ability
-BOSS_DEBUFF_DURATION = 3.0    # seconds slow/debuff duration
-BOSS_DESTROY_RADIUS = 1       # tiles Manhattan radius (1 = 3x3)
-BOSS_ZONE_SLOW_ENEMY = 0.6    # enemies speed multiplier inside zone
-BOSS_ZONE_SLOW_DICE = 1.2     # dice fire period multiplier (>1 = slower)
+# Big Enemy
+BIG_ENEMY_HP_MULT = 6.0
+BIG_ENEMY_SPAWN_WAVE = 5           # every Nth wave is a big enemy wave
+BIG_ENEMY_TELEGRAPH_WARN = 1.0     # seconds warning before ability
+BIG_ENEMY_DEBUFF_DURATION = 3.0    # seconds slow/debuff duration
+BIG_ENEMY_DESTROY_RADIUS = 1       # tiles Manhattan radius (1 = 3x3)
+BIG_ENEMY_ZONE_SLOW_ENEMY = 0.6    # enemies speed multiplier inside zone
+BIG_ENEMY_ZONE_SLOW_DICE = 1.2     # dice fire period multiplier (>1 = slower)
 
 # Projectiles
 BULLET_SPEED = 660.0
