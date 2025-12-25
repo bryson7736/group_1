@@ -1,6 +1,6 @@
 
 import pytest
-from enemy import TrueBoss, STATE_IDLE, STATE_DEFENSE, STATE_ATTACK, STATE_HEAL
+from boss import TrueBoss, STATE_IDLE, STATE_DEFENSE, STATE_ATTACK, STATE_HEAL
 
 class MockGrid:
     def __init__(self):

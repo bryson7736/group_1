@@ -291,7 +291,8 @@ class IronDice(Die):
         dmg = self.base_dmg * self.damage_multiplier()
         
         # Bonus vs Boss
-        from enemy import BigEnemy, TrueBoss
+        from enemy import BigEnemy
+        from boss import TrueBoss
         if isinstance(target, (BigEnemy, TrueBoss)):
             # Base 2.0x, +0.5x per in-game level
             ingame_level = self.game.ingame_upgrades.get_level(self.type)

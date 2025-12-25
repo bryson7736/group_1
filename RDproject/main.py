@@ -11,7 +11,8 @@ from grid import Grid
 from level_manager import LevelManager
 from loadout import Loadout
 from upgrades import UpgradeState
-from enemy import Enemy, BigEnemy, TrueBoss
+from enemy import Enemy, BigEnemy
+from boss import TrueBoss, calculate_boss_hp, calculate_boss_speed
 from dice import DIE_TYPES, make_die
 from colors import WHITE, DARKER, GRAY, RED, DARK
 from story_mode import StoryManager
@@ -472,8 +473,9 @@ class Game:
         speed = (36 + min(140, self.wave * 6)) * (0.9 + 0.2 * random.random())
         path = list(self.level.path)
         if self.is_true_boss_wave and self.to_spawn == 1:
-            hp *= BIG_ENEMY_HP_MULT * 2.0 # TrueBoss has more HP
-            e = TrueBoss(path, hp, speed * 0.7, game=self)
+            boss_hp = calculate_boss_hp(self.wave, self.level.difficulty)
+            boss_speed = calculate_boss_speed(speed)
+            e = TrueBoss(path, boss_hp, boss_speed, game=self)
         elif self.is_big_enemy_wave and self.to_spawn == 1:
             hp *= BIG_ENEMY_HP_MULT
             e = BigEnemy(path, hp, speed * 0.85)
