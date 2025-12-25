@@ -60,7 +60,7 @@ class Game:
         self.enemies: List[Enemy] = []
         self.bullets: List[Any] = []  # Projectile objects
         self.telegraphs: List[TelegraphZone] = []
-        self.money: int = START_MONEY
+        self.money: int = START_MONEY = 100.0 
         self.die_cost: int = DIE_COST  # Dynamic cost, increases by 10 each summon
         self.base_hp: int = BASE_HP
         self.wave: int = -1
