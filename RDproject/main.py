@@ -192,8 +192,10 @@ class Game:
             # Use stage's path as the level path
             from level_manager import Level
             self.level = Level(stage.name, stage.path_points, stage.difficulty)
-            self.reset_runtime()
+            
+            # Must set state to STORY before reset_runtime so Grid knows to use dynamic layout
             self.state = STATE_STORY
+            self.reset_runtime()
 
     def back_to_lobby(self) -> None:
         """Return to lobby screen."""
