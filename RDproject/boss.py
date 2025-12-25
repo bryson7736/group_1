@@ -89,7 +89,12 @@ class TrueBoss(Enemy):
         
         # Skill cooldowns and durations
         self.durations = dict(SKILL_DURATION)
-        self.global_cooldown = INITIAL_SKILL_COOLDOWN  # Single shared cooldown
+        # Per-state cooldown timers (tested via boss.timers[STATE_X])
+        self.timers = {
+            STATE_DEFENSE: INITIAL_SKILL_COOLDOWN,
+            STATE_ATTACK: INITIAL_SKILL_COOLDOWN,
+            STATE_HEAL: INITIAL_SKILL_COOLDOWN,
+        }
 
     def hit(self, dmg):
         """Override hit to apply defense damage reduction."""
@@ -102,8 +107,9 @@ class TrueBoss(Enemy):
         if self.dead or self.reached:
             return
 
-        # Update global cooldown
-        self.global_cooldown = max(0, self.global_cooldown - dt * speed_mult)
+        # Update per-state cooldown timers
+        for state in self.timers:
+            self.timers[state] = max(0, self.timers[state] - dt * speed_mult)
             
         # State Machine timer
         self.state_timer = max(0, self.state_timer - dt * speed_mult)
@@ -129,14 +135,14 @@ class TrueBoss(Enemy):
         """DEFENSE: Move slowly, reduce damage taken."""
         super().update(dt, speed_mult * DEFENSE_MOVE_SPEED_MULT, zone_mult)
         if self.state_timer <= 0:
-            self.global_cooldown = GLOBAL_SKILL_COOLDOWN
+            self._reset_all_timers()
             self.state = STATE_IDLE
 
     def _state_attack(self, dt, speed_mult, zone_mult):
         """ATTACK: Stop moving, cast attack when timer ends."""
         if self.state_timer <= 0:
             self._cast_attack()
-            self.global_cooldown = GLOBAL_SKILL_COOLDOWN
+            self._reset_all_timers()
             self.state = STATE_IDLE
 
     def _state_heal(self, dt, speed_mult, zone_mult):
@@ -145,7 +151,7 @@ class TrueBoss(Enemy):
         self.hp = min(self.max_hp, self.hp + heal_rate * dt * speed_mult)
         
         if self.state_timer <= 0:
-            self.global_cooldown = GLOBAL_SKILL_COOLDOWN
+            self._reset_all_timers()
             self.state = STATE_IDLE
 
     # -------------------------------------------------------------------------
@@ -153,8 +159,8 @@ class TrueBoss(Enemy):
     # -------------------------------------------------------------------------
     def _try_skill(self):
         """Attempt to activate a skill based on priority."""
-        # Check global cooldown first
-        if self.global_cooldown > 0:
+        # Check global cooldown - if ANY timer > 0, all skills are on cooldown
+        if any(t > 0 for t in self.timers.values()):
             return
         
         # Priority: Heal (if low HP) > Defense > Attack
@@ -168,6 +174,11 @@ class TrueBoss(Enemy):
             self._enter_state(STATE_DEFENSE)
         else:
             self._enter_state(STATE_ATTACK)
+
+    def _reset_all_timers(self):
+        """Reset all skill timers to global cooldown (shared cooldown)."""
+        for state in self.timers:
+            self.timers[state] = GLOBAL_SKILL_COOLDOWN
 
     def _enter_state(self, new_state):
         """Transition to a new state."""
