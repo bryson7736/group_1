@@ -718,33 +718,33 @@ class Game:
         """Draw the upgrades screen (persistent upgrades)."""
         self.screen.fill(DARKER)
         title = self.font_huge.render("Upgrades (Lobby)", True, (255, 255, 255))
-        self.screen.blit(title, (40, 60))
+        self.screen.blit(title, (40, 40))
         coins = self.font_big.render(f"Coins: {self.upgrades.coins}", True, (255, 220, 80))
-        self.screen.blit(coins, (40, 120))
-        base_x, base_y = 720, 100
-        btn_w, btn_h = 260, 60
-        gap_y = 20
+        self.screen.blit(coins, (40, 100))
+        
+        base_y = 160
+        row_h = 70
+        gap_y = 10
+        
+        # Columns
+        col_icon = 40
+        col_name = 120
+        col_dmg = 300
+        col_spd = 500
+        col_crit = 700
+        btn_w = 180
+        btn_h = 50
         cost = 50
+
         for row, t in enumerate(DIE_TYPES):
-            y_pos = base_y + row * (btn_h + gap_y)
+            y_pos = base_y + row * (row_h + gap_y)
             color = DICE_COLORS.get(t, (150, 150, 150))
             
-            # 1. Icon Box (Stylized like Loadout chip)
-            icon_size = btn_h
-            icon_rect = pygame.Rect(base_x - 170, y_pos, icon_size, icon_size)
-            
-            # Background
-            pygame.draw.rect(self.screen, color, icon_rect, border_radius=10)
-            
-            # Glossy Highlight
-            highlight = pygame.Surface((icon_size, icon_size // 2), pygame.SRCALPHA)
-            highlight.fill((255, 255, 255, 35))
-            self.screen.blit(highlight, (icon_rect.x, icon_rect.y))
-            
-            # Border
-            pygame.draw.rect(self.screen, WHITE, icon_rect, width=3, border_radius=10)
-            
-            # Image
+            # 1. Icon Box
+            icon_size = 50
+            icon_rect = pygame.Rect(col_icon, y_pos, icon_size, icon_size)
+            pygame.draw.rect(self.screen, color, icon_rect, border_radius=8)
+            pygame.draw.rect(self.screen, WHITE, icon_rect, width=2, border_radius=8)
             img = get_die_image(t)
             if img:
                 io = int(icon_size * 0.75)
@@ -753,24 +753,34 @@ class Game:
 
             # 2. Name
             name = self.font_big.render(t.capitalize(), True, WHITE)
-            self.screen.blit(name, (icon_rect.right + 15, icon_rect.centery - name.get_height() // 2))
+            self.screen.blit(name, (col_name, y_pos + 10))
 
-            # Upgrade button for damage
-            btn_x = base_x + 120
-            r = pygame.Rect(btn_x, y_pos, btn_w, btn_h)
-            btn_label = f"Damage +10% ({cost}c)"
-            can_buy = self.upgrades.coins >= cost
-            color = (80, 200, 80) if can_buy else (100, 100, 100)
-            pygame.draw.rect(self.screen, color, r, border_radius=8)
-            pygame.draw.rect(self.screen, WHITE, r, width=2, border_radius=8)
-            label = self.font.render(btn_label, True, WHITE)
-            self.screen.blit(label, (r.centerx - label.get_width() // 2, r.centery - label.get_height() // 2))
+            # 3. Buttons
+            # Damage
+            r_dmg = pygame.Rect(col_dmg, y_pos, btn_w, btn_h)
+            self._draw_upgrade_btn(r_dmg, f"Dmg +10% ({cost}c)", cost)
+            
+            # Speed
+            r_spd = pygame.Rect(col_spd, y_pos, btn_w, btn_h)
+            self._draw_upgrade_btn(r_spd, f"Spd +5% ({cost}c)", cost)
+            
+            # Crit
+            r_crit = pygame.Rect(col_crit, y_pos, btn_w, btn_h)
+            self._draw_upgrade_btn(r_crit, f"Crit +5% ({cost}c)", cost)
 
         if self._upgrade_msg and self._upgrade_msg_t > 0:
             col = (255, 80, 80) if "Not enough" in self._upgrade_msg else (120, 255, 140)
             warn = self.font_big.render(self._upgrade_msg, True, col)
-            self.screen.blit(warn, (base_x, base_y - 60))
+            self.screen.blit(warn, (col_dmg, base_y - 40))
         self.upg_back.draw(self.screen)
+
+    def _draw_upgrade_btn(self, rect, text, cost):
+        can_buy = self.upgrades.coins >= cost
+        color = (80, 200, 80) if can_buy else (100, 100, 100)
+        pygame.draw.rect(self.screen, color, rect, border_radius=6)
+        pygame.draw.rect(self.screen, WHITE, rect, width=2, border_radius=6)
+        label = self.font.render(text, True, WHITE)
+        self.screen.blit(label, (rect.centerx - label.get_width() // 2, rect.centery - label.get_height() // 2))
 
     def play_draw(self) -> None:
         """Draw the gameplay screen."""
