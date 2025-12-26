@@ -193,7 +193,9 @@ class Game:
             self.story_max_waves = stage.waves
             # Use stage's path as the level path
             from level_manager import Level
-            self.level = Level(stage.name, stage.path_points, stage.difficulty, getattr(stage, 'path_color', (80, 85, 100)))
+            # Ensure path_color is used. Default to GRAY if missing.
+            p_color = getattr(stage, 'path_color', (80, 85, 100))
+            self.level = Level(stage.name, stage.path_points, stage.difficulty, p_color)
             
             # Must set state to STORY before reset_runtime so Grid knows to use dynamic layout
             self.state = STATE_STORY
@@ -211,6 +213,7 @@ class Game:
         self.bullets = []
         self.telegraphs = []
         self.money = START_MONEY
+        self.die_cost = DIE_COST  # Reset to base cost
         self.base_hp = BASE_HP
         self.wave = -1
         self.to_spawn = 0
@@ -865,7 +868,7 @@ class Game:
         self.screen.fill((12, 10, 22))  # Darker theme for hell
         
         # Title with fire theme
-        title = self.font_huge.render("🔥 HELL CHAPTER 🔥", True, (255, 100, 50))
+        title = self.font_huge.render("/// HELL CHAPTER ///", True, (255, 100, 50))
         self.screen.blit(title, (SCREEN_W // 2 - title.get_width() // 2, 60))
         
         # Subtitle
@@ -901,9 +904,9 @@ class Game:
             # Stage text
             stage_text = f"{stage.stage_id} {stage.name}"
             if completed:
-                stage_text += " ✓"
+                stage_text += " [Clear]"
             elif not unlocked:
-                stage_text = f"{stage.stage_id} 🔒 Locked"
+                stage_text = f"{stage.stage_id} [Locked]"
             
             txt = self.font_big.render(stage_text, True, text_color)
             self.screen.blit(txt, (r.centerx - txt.get_width() // 2, r.centery - txt.get_height() // 2))
@@ -915,7 +918,7 @@ class Game:
         # Reuse play_draw but with story-specific UI elements
         self.screen.fill(DARK)
         if self.level:
-            pygame.draw.lines(self.screen, GRAY, False, self.level.path, 6)
+            pygame.draw.lines(self.screen, self.level.path_color, False, self.level.path, 6)
 
         self.grid.draw(self.screen)
         for e in self.enemies:
