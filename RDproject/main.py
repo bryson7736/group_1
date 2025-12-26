@@ -395,20 +395,48 @@ class Game:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.back_to_lobby()
         self.upg_back.handle(event)
-        # One persistent upgrade button per dice (damage +10%)
+        
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
-            base_x, base_y = 880, 80
-            btn_w, btn_h = 260, 60
-            gap_y = 20
+            base_y = 160
+            row_h = 70
+            gap_y = 10
+            
+            col_dmg = 300
+            col_spd = 500
+            col_crit = 700
+            btn_w = 180
+            btn_h = 50
             cost = 50
-            btn_x = base_x + 120
+            
             for row, t in enumerate(DIE_TYPES):
-                r = pygame.Rect(btn_x, base_y + row * (btn_h + gap_y), btn_w, btn_h)
-                if r.collidepoint(mx, my):
-                    ok = self.upgrades.upgrade_class_damage(t, cost=cost)
-                    if ok:
+                y_pos = base_y + row * (row_h + gap_y)
+                
+                # Damage
+                r_dmg = pygame.Rect(col_dmg, y_pos, btn_w, btn_h)
+                if r_dmg.collidepoint(mx, my):
+                    if self.upgrades.upgrade_class_damage(t, cost=cost):
                         self._upgrade_msg = f"Upgraded {t.capitalize()} Damage!"
+                    else:
+                        self._upgrade_msg = "Not enough coins!"
+                    self._upgrade_msg_t = 1.6
+                    return
+
+                # Speed
+                r_spd = pygame.Rect(col_spd, y_pos, btn_w, btn_h)
+                if r_spd.collidepoint(mx, my):
+                    if self.upgrades.upgrade_class_fire_rate(t, cost=cost):
+                        self._upgrade_msg = f"Upgraded {t.capitalize()} Speed!"
+                    else:
+                        self._upgrade_msg = "Not enough coins!"
+                    self._upgrade_msg_t = 1.6
+                    return
+
+                # Crit
+                r_crit = pygame.Rect(col_crit, y_pos, btn_w, btn_h)
+                if r_crit.collidepoint(mx, my):
+                    if self.upgrades.upgrade_class_crit_rate(t, cost=cost):
+                        self._upgrade_msg = f"Upgraded {t.capitalize()} Crit!"
                     else:
                         self._upgrade_msg = "Not enough coins!"
                     self._upgrade_msg_t = 1.6
