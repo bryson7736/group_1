@@ -17,16 +17,16 @@ DIE_TYPES = [DIE_SINGLE, DIE_MULTI, DIE_FREEZE, DIE_WIND, DIE_POISON, DIE_IRON, 
 
 _dice_images_cache = {}
 
+ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
+
 def get_die_image(die_type):
     if die_type in _dice_images_cache:
         return _dice_images_cache[die_type]
     p = ASSET_FILES.get("dice", {}).get(die_type)
-    if p:
-        img_path = os.path.join(ASSETS_DIR, p)
-        if os.path.exists(img_path):
-            img = pygame.image.load(img_path).convert_alpha()
-            _dice_images_cache[die_type] = img
-            return img
+    if p and os.path.exists(os.path.join("assets", p)):
+        img = pygame.image.load(os.path.join("assets", p)).convert_alpha()
+        _dice_images_cache[die_type] = img
+        return img
     _dice_images_cache[die_type] = None
     return None
 
