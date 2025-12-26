@@ -81,6 +81,7 @@ class Game:
         self.speed_index: int = DEFAULT_SPEED_INDEX
         self.speed_mult: float = GAME_SPEEDS[self.speed_index]
 
+        self.game_time: float = 0.0  # Total real-time seconds elapsed in game
         self.trash_active: bool = False
         
         # Lobby background dice decoration
@@ -274,6 +275,7 @@ class Game:
         self.spawn_cd = 0.0
         self.is_big_enemy_wave = False
         self.is_true_boss_wave = False
+        self.game_time = 0.0
         self.trash_active = False
         self.ingame_upgrades.reset()  # Reset in-game upgrades
 
@@ -292,9 +294,9 @@ class Game:
         success, new_money, message = self.ingame_upgrades.purchase_upgrade(upgrade_type, self.money)
         if success:
             self.money = new_money
-            print(f"✓ {message}")
+            print(f"[OK] {message}")
         else:
-            print(f"✗ {message}")
+            print(f"[FAIL] {message}")
 
     def handle_play(self, event: pygame.event.Event) -> None:
         """Handle events during gameplay."""
@@ -593,6 +595,8 @@ class Game:
         if self.state not in (STATE_PLAY, STATE_STORY):
             return
 
+        self.game_time += dt
+
         if self.to_spawn > 0:
             self.spawn_cd += dt * self.speed_mult
             if self.spawn_cd >= self.spawn_interval:
@@ -818,7 +822,12 @@ class Game:
 
         def _body() -> None:
             y = panel_rect.y + 60
+            mins = int(self.game_time) // 60
+            secs = int(self.game_time) % 60
+            time_str = f"{mins:02d}:{secs:02d}"
+
             pairs = [
+                ("Time", time_str),
                 ("Money", f"${self.money}"),
                 ("Summon Cost", f"${self.die_cost}"),
                 ("Wave", str(max(0, self.wave))),
