@@ -398,25 +398,18 @@ class Game:
         
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
-            base_y = 160
-            row_h = 70
-            gap_y = 10
-            
-            col_dmg = 300
-            col_spd = 500
-            col_crit = 700
-            btn_w = 180
-            btn_h = 50
-            base_x, base_y = 600, 150
-            btn_w, btn_h = 320, 60
-            gap_y = 20
+            # Shared layout variables (Keep in sync with upgrades_draw)
+            base_x, base_y = 460, 160
+            btn_w, btn_h = 160, 50
+            gap_x, gap_y = 20, 15
+            row_h = btn_h + gap_y
             cost = 50
             
             for row, t in enumerate(DIE_TYPES):
-                y_pos = base_y + row * (row_h + gap_y)
+                y_pos = base_y + row * row_h
                 
-                # Damage
-                r_dmg = pygame.Rect(col_dmg, y_pos, btn_w, btn_h)
+                # Damage (Col 0)
+                r_dmg = pygame.Rect(base_x, y_pos, btn_w, btn_h)
                 if r_dmg.collidepoint(mx, my):
                     if self.upgrades.upgrade_class_damage(t, cost=cost):
                         self._upgrade_msg = f"Upgraded {t.capitalize()} Damage!"
@@ -425,8 +418,8 @@ class Game:
                     self._upgrade_msg_t = 1.6
                     return
 
-                # Speed
-                r_spd = pygame.Rect(col_spd, y_pos, btn_w, btn_h)
+                # Speed (Col 1)
+                r_spd = pygame.Rect(base_x + (btn_w + gap_x), y_pos, btn_w, btn_h)
                 if r_spd.collidepoint(mx, my):
                     if self.upgrades.upgrade_class_fire_rate(t, cost=cost):
                         self._upgrade_msg = f"Upgraded {t.capitalize()} Speed!"
@@ -435,8 +428,8 @@ class Game:
                     self._upgrade_msg_t = 1.6
                     return
 
-                # Crit
-                r_crit = pygame.Rect(col_crit, y_pos, btn_w, btn_h)
+                # Crit (Col 2)
+                r_crit = pygame.Rect(base_x + 2 * (btn_w + gap_x), y_pos, btn_w, btn_h)
                 if r_crit.collidepoint(mx, my):
                     if self.upgrades.upgrade_class_crit_rate(t, cost=cost):
                         self._upgrade_msg = f"Upgraded {t.capitalize()} Crit!"
@@ -724,12 +717,22 @@ class Game:
         self.screen.blit(title, (40, 60))
         coins = self.font_big.render(f"Coins: {self.upgrades.coins}", True, (255, 220, 80))
         self.screen.blit(coins, (40, 120))
-        base_x, base_y = 480, 200
-        btn_w, btn_h = 320, 60
-        gap_y = 20
+        
+        # Shared layout variables (Keep in sync with upgrades_handle)
+        base_x, base_y = 460, 160
+        btn_w, btn_h = 160, 50
+        gap_x, gap_y = 20, 15
+        row_h = btn_h + gap_y
         cost = 50
+        
+        # Labels for columns
+        col_labels = ["Damage +10%", "Speed +5%", "Crit +5%"]
+        for i, lab in enumerate(col_labels):
+            ltxt = self.font.render(lab, True, (200, 200, 200))
+            self.screen.blit(ltxt, (base_x + i * (btn_w + gap_x) + (btn_w - ltxt.get_width()) // 2, base_y - 25))
+
         for row, t in enumerate(DIE_TYPES):
-            y_pos = base_y + row * (btn_h + gap_y)
+            y_pos = base_y + row * row_h
             color = DICE_COLORS.get(t, (150, 150, 150))
             
             # 1. Icon Box (Stylized like Loadout chip)
@@ -758,20 +761,29 @@ class Game:
             name = self.font_big.render(t.capitalize(), True, WHITE)
             self.screen.blit(name, (icon_rect.right + 15, icon_rect.centery - name.get_height() // 2))
 
-            # Upgrade button for damage
-            btn_x = base_x + 120
-            r = pygame.Rect(btn_x, y_pos, btn_w, btn_h)
-            btn_label = f"Damage +10% ({cost} coins)"
-            can_buy = self.upgrades.coins >= cost
-            color = (80, 200, 80) if can_buy else (100, 100, 100)
-            pygame.draw.rect(self.screen, color, r, border_radius=8)
-            pygame.draw.rect(self.screen, WHITE, r, width=2, border_radius=8)
-            label = self.font.render(btn_label, True, WHITE)
-            self.screen.blit(label, (r.centerx - label.get_width() // 2, r.centery - label.get_height() // 2))
+            # Upgrade buttons (Damage, Speed, Crit)
+            for col in range(3):
+                bx = base_x + col * (btn_w + gap_x)
+                r = pygame.Rect(bx, y_pos, btn_w, btn_h)
+                
+                can_buy = self.upgrades.coins >= cost
+                # Check for crit cap
+                if col == 2 and self.upgrades.get_crit_rate(t) >= 0.50:
+                    btn_label = "MAX Crit"
+                    btn_color = (150, 50, 50)
+                else:
+                    btn_label = f"{cost} coins"
+                    btn_color = (80, 200, 80) if can_buy else (100, 100, 100)
+                
+                pygame.draw.rect(self.screen, btn_color, r, border_radius=8)
+                pygame.draw.rect(self.screen, WHITE, r, width=2, border_radius=8)
+                
+                label = self.font.render(btn_label, True, WHITE)
+                self.screen.blit(label, (r.centerx - label.get_width() // 2, r.centery - label.get_height() // 2))
 
         if self._upgrade_msg and self._upgrade_msg_t > 0:
-            col = (255, 80, 80) if "Not enough" in self._upgrade_msg else (120, 255, 140)
-            warn = self.font_big.render(self._upgrade_msg, True, col)
+            col_msg = (255, 80, 80) if "Not enough" in self._upgrade_msg else (120, 255, 140)
+            warn = self.font_big.render(self._upgrade_msg, True, col_msg)
             self.screen.blit(warn, (base_x, base_y - 60))
         self.upg_back.draw(self.screen)
 
