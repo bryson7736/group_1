@@ -1,14 +1,13 @@
 CRASH REPORT
 ====================
-Error: 'UpgradeState' object has no attribute 'upgrade_damage'
+Error: No file 'assets/dice_iron.png' found in working directory 'C:\Users\洪崧祐\github_project\group_1'.
 
 Traceback:
 Traceback (most recent call last):
-  File "c:\Users\5594i\group_1\RDproject\main.py", line 1138, in <module>
+  File "c:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 1142, in <module>
     Game().run()
-  File "c:\Users\5594i\group_1\RDproject\main.py", line 1121, in run
-    self.upgrades_handle(event)
-  File "c:\Users\5594i\group_1\RDproject\main.py", line 404, in upgrades_handle
-    self.upgrades.upgrade_damage(t)
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-AttributeError: 'UpgradeState' object has no attribute 'upgrade_damage'
+    ^^^^^^
+  File "c:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 121, in __init__
+    img = pygame.image.load(img_path).convert_alpha()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: No file 'assets/dice_iron.png' found in working directory 'C:\Users\洪崧祐\github_project\group_1'.
