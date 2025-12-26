@@ -64,7 +64,7 @@ def test_true_boss_defense(boss):
     assert boss.hp == 1000 - 50 # 50% reduction
 
 def test_true_boss_heal(boss):
-    boss.hp = 500 # Injured (< 80% of max, will trigger heal)
+    boss.hp = 400 # Injured (< 50% of max, will trigger heal)
     # All timers must be 0 for shared cooldown
     boss.timers[STATE_HEAL] = 0
     boss.timers[STATE_DEFENSE] = 0
@@ -79,7 +79,7 @@ def test_true_boss_heal(boss):
     # Check healing occurred
     # rate is 5% of 1000 = 50 per sec
     # dt = 0.1 -> +5 HP
-    expected = 500 + 5
+    expected = 400 + 5
     assert abs(boss.hp - expected) < 0.1
 
 def test_true_boss_attack(boss):
