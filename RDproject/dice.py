@@ -343,7 +343,7 @@ class FireDice(Die):
         self.base_fire_rate = self.base_period_sec * FPS
 
     def fire_at(self, target):
-        dmg = self.base_dmg * self.damage_multiplier()
+        dmg = self.apply_crit(self.base_dmg * self.damage_multiplier())
         # Splash damage is 75% of main damage (Nerfed from 100%)
         splash = self.splash_dmg * self.damage_multiplier() * 0.75
         
