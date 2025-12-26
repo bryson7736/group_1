@@ -1,0 +1,15 @@
+CRASH REPORT
+====================
+Error: 'cp950' codec can't encode character '\u2713' in position 0: illegal multibyte sequence
+
+Traceback:
+Traceback (most recent call last):
+  File "C:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 1184, in <module>
+    Game().run()
+  File "C:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 1159, in run
+    self.handle_play(event)
+  File "C:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 361, in handle_play
+    self.purchase_ingame_upgrade(dice_types[idx])
+  File "C:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 297, in purchase_ingame_upgrade
+    print(f"✓ {message}")
+UnicodeEncodeError: 'cp950' codec can't encode character '\u2713' in position 0: illegal multibyte sequence
