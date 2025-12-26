@@ -407,6 +407,9 @@ class Game:
             col_crit = 700
             btn_w = 180
             btn_h = 50
+            base_x, base_y = 600, 150
+            btn_w, btn_h = 320, 60
+            gap_y = 20
             cost = 50
             
             for row, t in enumerate(DIE_TYPES):
@@ -720,20 +723,10 @@ class Game:
         title = self.font_huge.render("Upgrades (Lobby)", True, (255, 255, 255))
         self.screen.blit(title, (40, 40))
         coins = self.font_big.render(f"Coins: {self.upgrades.coins}", True, (255, 220, 80))
-        self.screen.blit(coins, (40, 100))
-        
-        base_y = 160
-        row_h = 70
-        gap_y = 10
-        
-        # Columns
-        col_icon = 40
-        col_name = 120
-        col_dmg = 300
-        col_spd = 500
-        col_crit = 700
-        btn_w = 180
-        btn_h = 50
+        self.screen.blit(coins, (40, 120))
+        base_x, base_y = 720, 100
+        btn_w, btn_h = 260, 60
+        gap_y = 20
         cost = 50
 
         for row, t in enumerate(DIE_TYPES):
@@ -755,18 +748,16 @@ class Game:
             name = self.font_big.render(t.capitalize(), True, WHITE)
             self.screen.blit(name, (col_name, y_pos + 10))
 
-            # 3. Buttons
-            # Damage
-            r_dmg = pygame.Rect(col_dmg, y_pos, btn_w, btn_h)
-            self._draw_upgrade_btn(r_dmg, f"Dmg +10% ({cost}c)", cost)
-            
-            # Speed
-            r_spd = pygame.Rect(col_spd, y_pos, btn_w, btn_h)
-            self._draw_upgrade_btn(r_spd, f"Spd +5% ({cost}c)", cost)
-            
-            # Crit
-            r_crit = pygame.Rect(col_crit, y_pos, btn_w, btn_h)
-            self._draw_upgrade_btn(r_crit, f"Crit +5% ({cost}c)", cost)
+            # Upgrade button for damage
+            btn_x = base_x + 120
+            r = pygame.Rect(btn_x, y_pos, btn_w, btn_h)
+            btn_label = f"Damage +10% ({cost}c)"
+            can_buy = self.upgrades.coins >= cost
+            color = (80, 200, 80) if can_buy else (100, 100, 100)
+            pygame.draw.rect(self.screen, color, r, border_radius=8)
+            pygame.draw.rect(self.screen, WHITE, r, width=2, border_radius=8)
+            label = self.font.render(btn_label, True, WHITE)
+            self.screen.blit(label, (r.centerx - label.get_width() // 2, r.centery - label.get_height() // 2))
 
         if self._upgrade_msg and self._upgrade_msg_t > 0:
             col = (255, 80, 80) if "Not enough" in self._upgrade_msg else (120, 255, 140)
