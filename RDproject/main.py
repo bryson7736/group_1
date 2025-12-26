@@ -687,18 +687,36 @@ class Game:
         gap_y = 16
         cost = 50
         for row, t in enumerate(DIE_TYPES):
-            name = self.font_big.render(t.capitalize(), True, WHITE)
             y_pos = base_y + row * (btn_h + gap_y)
+            color = DICE_COLORS.get(t, (150, 150, 150))
+            
+            # 1. Icon Box (Stylized like Loadout chip)
+            icon_size = btn_h
+            icon_rect = pygame.Rect(base_x - 170, y_pos, icon_size, icon_size)
+            
+            # Background
+            pygame.draw.rect(self.screen, color, icon_rect, border_radius=10)
+            
+            # Glossy Highlight
+            highlight = pygame.Surface((icon_size, icon_size // 2), pygame.SRCALPHA)
+            highlight.fill((255, 255, 255, 35))
+            self.screen.blit(highlight, (icon_rect.x, icon_rect.y))
+            
+            # Border
+            pygame.draw.rect(self.screen, WHITE, icon_rect, width=3, border_radius=10)
+            
+            # Image
             img = get_die_image(t)
             if img:
-                # Icon on the left of the name
-                icon_s = 40
-                icon = pygame.transform.smoothscale(img, (icon_s, icon_s))
-                self.screen.blit(icon, (base_x - 200, y_pos + (btn_h - icon_s) // 2))
-                self.screen.blit(name, (base_x - 150, y_pos + (btn_h - name.get_height()) // 2))
-            else:
-                self.screen.blit(name, (base_x - 150, y_pos + (btn_h - name.get_height()) // 2))
+                io = int(icon_size * 0.75)
+                isurf = pygame.transform.smoothscale(img, (io, io))
+                self.screen.blit(isurf, (icon_rect.centerx - io//2, icon_rect.centery - io//2))
 
+            # 2. Name
+            name = self.font_big.render(t.capitalize(), True, WHITE)
+            self.screen.blit(name, (icon_rect.right + 15, icon_rect.centery - name.get_height() // 2))
+
+            # Upgrade button for damage
             r = pygame.Rect(base_x, y_pos, btn_w, btn_h)
             btn_label = f"Damage +10% ({cost}c)"
             can_buy = self.upgrades.coins >= cost
