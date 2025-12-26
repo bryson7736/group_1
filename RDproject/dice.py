@@ -92,7 +92,7 @@ class Die:
             img.set_alpha(180) # Better visibility than before
             surf.blit(img, (rect.centerx - img.get_width() // 2, rect.centery - img.get_height() // 2))
 
-        # 3. Level indicator (Pips/Dots)
+        # 3. Level indicator (Pips/Dots restored for field dice)
         draw_pips(surf, rect, self.level, WHITE)
 
         # 4. Selection/Border logic
