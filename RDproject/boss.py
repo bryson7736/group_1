@@ -95,11 +95,19 @@ class TrueBoss(Enemy):
             STATE_ATTACK: INITIAL_SKILL_COOLDOWN,
             STATE_HEAL: INITIAL_SKILL_COOLDOWN,
         }
+        
+        # Damage Tracking for FSM Priority
+        self.damage_events = []  # List of [time_remaining, amount]
+        self.damage_taken_last_5s = 0.0
 
     def hit(self, dmg):
-        """Override hit to apply defense damage reduction."""
+        """Override hit to apply defense damage reduction and track damage."""
         if self.state == STATE_DEFENSE:
             dmg *= DEFENSE_DAMAGE_REDUCTION
+        
+        # Track damage event (5 second window)
+        self.damage_events.append([5.0, dmg])
+        
         super().hit(dmg)
 
     def update(self, dt, speed_mult=1.0, zone_mult=1.0):
@@ -113,6 +121,12 @@ class TrueBoss(Enemy):
             
         # State Machine timer
         self.state_timer = max(0, self.state_timer - dt * speed_mult)
+        
+        # Update damage tracking
+        # Reduce time left for all events
+        self.damage_events = [[t - dt * speed_mult, amt] for t, amt in self.damage_events if t - dt * speed_mult > 0]
+        # Sum up current damage
+        self.damage_taken_last_5s = sum(amt for t, amt in self.damage_events)
         
         if self.state == STATE_IDLE:
             self._state_idle(dt, speed_mult, zone_mult)
