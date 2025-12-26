@@ -168,7 +168,7 @@ class Die:
 
     def fire_at(self, target):
         base = 2 ** (self.level - 1)
-        dmg = base * self.damage_multiplier()
+        dmg = self.apply_crit(base * self.damage_multiplier())
         self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
 
 
@@ -199,7 +199,7 @@ class SingleDice(Die):
         self.base_fire_rate = self.base_period_sec * FPS
 
     def fire_at(self, target):
-        dmg = self.base_dmg * self.damage_multiplier()
+        dmg = self.apply_crit(self.base_dmg * self.damage_multiplier())
         self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
 
 
