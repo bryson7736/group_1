@@ -507,18 +507,28 @@ class Game:
         self.wave += 1
         self.wave_timer = 0.0  # Reset timer
         
+        # Reset special wave flags (unless set by Story Mode logic below)
+        # Actually, Story Mode logic sets them BEFORE calling start_wave.
+        # So we should only reset them if we are NOT in Story Mode?
+        # Or better: Story Mode sets them, Practice Mode sets them here.
+        # But if we reset them here, we overwrite Story Mode's setting.
+        
         # Story Mode: Use story-specific wave configuration
         if self.state == STATE_STORY and self.current_story_stage:
             # Simple scaling for story mode: base count + wave number
             count = 10 + self.wave * 3  # Increased difficulty
+            # Flags are already set by update() logic
         else:
             # Practice Mode: Use level manager's wave info
             count, is_boss = self.level_mgr.wave_info(self.wave)
             count = int(count * self.level.difficulty)
+            
+            # Set flags for Practice Mode
+            self.is_big_enemy_wave = is_boss
+            self.is_true_boss_wave = False # No True Boss in Practice for now
         
         self.to_spawn = count
         self.spawn_cd = 0.0
-        # is_big_enemy_wave and is_true_boss_wave are already set by the auto-wave logic
 
     def spawn_enemy(self) -> None:
         """Spawn a single enemy."""
@@ -528,16 +538,16 @@ class Game:
         hp = 30 * (wave_num ** 1.3) * self.level.difficulty
         speed = (36 + min(140, self.wave * 6)) * (0.9 + 0.2 * random.random())
         path = list(self.level.path)
-        if self.is_true_boss_wave and self.to_spawn == 1:
+        if self.is_true_boss_wave and self.to_spawn == 0:
             boss_hp = calculate_boss_hp(self.wave, self.level.difficulty)
             boss_speed = calculate_boss_speed(speed)
             e = TrueBoss(path, boss_hp, boss_speed, game=self)
-        elif self.is_big_enemy_wave and self.to_spawn == 1:
+        elif self.is_big_enemy_wave and self.to_spawn == 0:
             hp *= BIG_ENEMY_HP_MULT
             e = BigEnemy(path, hp, speed * 0.85)
         else:
             e = Enemy(path, hp, speed)
-        if self.to_spawn == 1:
+        if self.to_spawn == 0:
             e.carries_coin = True
         if len(path) == 2:
             e.y += random.randint(-60, 60)
