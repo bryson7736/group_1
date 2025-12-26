@@ -213,7 +213,7 @@ class MultiDice(Die):
         jumps = self.level
         # Buff: Base damage starts at 3 instead of 1
         base = 3 * (2 ** (self.level - 1))
-        dmg = base * self.damage_multiplier()
+        dmg = self.apply_crit(base * self.damage_multiplier())
         self.game.bullets.append(ChainBolt(self.game, self.x, self.y, target, dmg, jumps, self.game.enemies, speed_mult_provider=lambda: self.game.speed_mult))
 
 
@@ -224,7 +224,7 @@ class FreezeDice(Die):
 
     def fire_at(self, target):
         base = 2 ** max(0, self.level - 2)
-        dmg = base * self.damage_multiplier()
+        dmg = self.apply_crit(base * self.damage_multiplier())
         self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
         target.apply_slow(FREEZE_SLOW_RATIO, FREEZE_DURATION + 0.2 * (self.level - 1))
 
@@ -251,7 +251,7 @@ class PoisonDice(Die):
 
     def fire_at(self, target):
         base = 2 ** (self.level - 1)
-        dmg = base * self.damage_multiplier()
+        dmg = self.apply_crit(base * self.damage_multiplier())
         # Initial hit
         self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
         # Apply poison: dmg per sec for 3s (Buffed to 0.6x)
@@ -313,6 +313,7 @@ class IronDice(Die):
             boss_mult = 2.0 + (ingame_level - 1) * 0.5
             dmg *= boss_mult
         
+        dmg = self.apply_crit(dmg)
         self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
 
 
