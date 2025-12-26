@@ -22,6 +22,9 @@ from effects import TelegraphZone
 from colors import DICE_COLORS
 
 
+ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
+
+
 STATE_LOBBY = "lobby"
 STATE_PLAY = "play"
 STATE_GAMEOVER = "gameover"
