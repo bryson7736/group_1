@@ -69,3 +69,25 @@ class UpgradeState:
             self.class_damage_mult[t] *= (1.0 + step)
             return True
         return False
+
+    def upgrade_class_fire_rate(self, t, *, step=0.05, cost=50):
+        self.ensure_type(t)
+        if self.spend(cost):
+            # Reduces delay, so multiplier < 1.0
+            self.class_fire_rate_mult[t] *= (1.0 - step)
+            return True
+        return False
+
+    def upgrade_class_crit_rate(self, t, *, step=0.05, cost=50):
+        self.ensure_type(t)
+        self.class_crit_rate.setdefault(t, 0.0)
+        if self.class_crit_rate[t] >= 0.50: # Cap at 50%
+            return False
+        if self.spend(cost):
+            self.class_crit_rate[t] += step
+            return True
+        return False
+
+    def get_crit_rate(self, t):
+        self.ensure_type(t)
+        return self.class_crit_rate.get(t, 0.0)
