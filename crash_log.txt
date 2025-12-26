@@ -1,0 +1,13 @@
+CRASH REPORT
+====================
+Error: No file 'assets/dice_iron.png' found in working directory 'C:\Users\5594i\group_1'.
+
+Traceback:
+Traceback (most recent call last):
+  File "c:\Users\5594i\group_1\RDproject\main.py", line 1137, in <module>
+    Game().run()
+    ^^^^^^
+  File "c:\Users\5594i\group_1\RDproject\main.py", line 116, in __init__
+    img = pygame.image.load(img_path).convert_alpha()
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: No file 'assets/dice_iron.png' found in working directory 'C:\Users\5594i\group_1'.

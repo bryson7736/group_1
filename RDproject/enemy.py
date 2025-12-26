@@ -33,9 +33,29 @@ class Enemy:
         self.poison_timer = max(self.poison_timer, duration)
 
     def hit(self, dmg):
+        import time
         self.hp -= dmg
+        if not hasattr(self, 'damage_history'):
+            self.damage_history = []
+        self.damage_history.append((time.time(), dmg))
         if self.hp <= 0 and not self.dead:
             self.dead = True
+
+    @property
+    def damage_taken_last_5s(self) -> float:
+        import time
+        now = time.time()
+        if not hasattr(self, 'damage_history'):
+            return 0.0
+        # Filter and sum damage in the last 5 seconds
+        return sum(dmg for ts, dmg in self.damage_history if now - ts <= 5.0)
+
+    def update_damage_history(self, dt):
+        """Prune old damage history entries."""
+        import time
+        now = time.time()
+        if hasattr(self, 'damage_history'):
+            self.damage_history = [(ts, dmg) for ts, dmg in self.damage_history if now - ts <= 5.0]
 
     def update(self, dt, speed_mult=1.0, zone_mult=1.0):
         if self.dead or self.reached or self.idx >= len(self.path) - 1:
