@@ -6,6 +6,7 @@ Manages story stages, progression, and save/load functionality.
 import json
 import os
 from typing import List, Optional, Dict, Any
+from settings import BASE_DIR
 
 class StoryStage:
     """Represents a single story stage in a chapter."""
@@ -76,8 +77,8 @@ class StoryProgress:
 class StoryManager:
     """Manages story mode chapters and stages."""
     
-    def __init__(self, save_path: str = "story_progress.json"):
-        self.save_path = save_path
+    def __init__(self, save_path: Optional[str] = None):
+        self.save_path = save_path or os.path.join(BASE_DIR, "story_progress.json")
         self.progress = StoryProgress()
         self.chapters: Dict[str, List[StoryStage]] = {}
         

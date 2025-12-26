@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pygame
 import sys
+import os
 import random
 import math
 from typing import List, Tuple, Optional, Dict, Any
@@ -112,7 +113,7 @@ class Game:
                 
                 if not too_close:
                     t = random.choice(types)
-                    img_path = f"assets/{dice_pool[t]}"
+                    img_path = os.path.join(ASSETS_DIR, dice_pool[t])
                     img = pygame.image.load(img_path).convert_alpha()
                     s = random.randint(70, 130)
                     img = pygame.transform.smoothscale(img, (s, s))
@@ -571,6 +572,7 @@ class Game:
                 if z.in_effect_phase() and z.contains(e.x, e.y):
                     zone_mult *= z.enemy_speed_mult
             e.update(dt, speed_mult=self.speed_mult, zone_mult=zone_mult)
+            e.update_damage_history(dt)
             if isinstance(e, BigEnemy):
                 if e.ability_cd >= BIG_ENEMY_TELEGRAPH_WARN + BIG_ENEMY_DEBUFF_DURATION + 5.0:
                     e.ability_cd = 0.0
@@ -637,6 +639,7 @@ class Game:
         # end
         if self.base_hp <= 0:
             self.state = STATE_GAMEOVER
+            self.check_game_over_coins()
 
     # --------------- Draw ---------------
     def lobby_draw(self) -> None:
@@ -657,13 +660,15 @@ class Game:
             b.draw(self.screen)
         self.quit_btn.draw(self.screen)
     def earn_coins(self, amount):
-        self.upgrades.add_coin(amount)
+        if not hasattr(self, '_coins_awarded'):
+            self.upgrades.add_coin(amount)
+            self._coins_awarded = True
 
+    def check_game_over_coins(self):
         # Award coins after each gameover (example: 10 coins per wave reached)
         if self.state == STATE_GAMEOVER and not hasattr(self, '_coins_awarded'):
-            earned = max(5, self.wave * 10)
+            earned = max(5, (self.wave + 1) * 10)
             self.earn_coins(earned)
-            self._coins_awarded = True
     def upgrades_draw(self) -> None:
         """Draw the upgrades screen (persistent upgrades)."""
         self.screen.fill(DARKER)
@@ -940,29 +945,6 @@ class Game:
 
         self.loadout_back.draw(self.screen)
 
-    def upgrades_draw(self) -> None:
-        """Draw the upgrades screen."""
-        self.screen.fill(DARKER)
-        title = self.font_huge.render("Upgrades", True, (255, 255, 255))
-        self.screen.blit(title, (40, 60))
-        coins = self.font_big.render(f"Coins: {self.upgrades.coins}", True, WHITE)
-        self.screen.blit(coins, (40, 120))
-        base_x, base_y = 420, 200
-        btn_w, btn_h = 220, 50
-        gap_x, gap_y = 30, 16
-        types = DIE_TYPES
-        labels = [("Damage +10% (2c)", "dmg"), ("Fire rate +8% (2c)", "fire"), ("Cost -10% (2c)", "cost")]
-        for row, t in enumerate(types):
-            name = self.font_big.render(t.capitalize(), True, WHITE)
-            self.screen.blit(name, (base_x - 150, base_y + row * (btn_h + gap_y) + 8))
-            for col, (lab, kind) in enumerate(labels):
-                r = pygame.Rect(base_x + col * (btn_w + gap_x), base_y + row * (btn_h + gap_y), btn_w, btn_h)
-                Button(r, lab, self.font, lambda t=t, kind=kind: (
-                    self.upgrades.upgrade_damage(t) if kind == "dmg" else
-                    (self.upgrades.upgrade_fire(t) if kind == "fire" else self.upgrades.upgrade_cost(t))
-                )).draw(self.screen)
-
-        self.upg_back.draw(self.screen)
     
     def story_select_draw(self) -> None:
         """Draw the story stage selection screen."""
@@ -1152,4 +1134,15 @@ class Game:
 
 
 if __name__ == "__main__":
-    Game().run()
+    try:
+        Game().run()
+    except Exception as e:
+        import traceback
+        log_path = os.path.join(BASE_DIR, "crash_log.txt")
+        with open(log_path, "w", encoding="utf-8") as f:
+            f.write(f"CRASH REPORT\n{'='*20}\n")
+            f.write(f"Error: {str(e)}\n\n")
+            f.write("Traceback:\n")
+            f.write(traceback.format_exc())
+        print(f"Game crashed! Details saved to {log_path}: {e}")
+        sys.exit(1)

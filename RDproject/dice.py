@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import math, os, pygame, random
 from colors import WHITE, DICE_COLORS, BLUE
-from settings import BASE_RANGE, BASE_FIRE_RATE, FIRE_RATE_STEP, MAX_DIE_LEVEL, ASSET_FILES, FPS
+from settings import BASE_RANGE, BASE_FIRE_RATE, FIRE_RATE_STEP, MAX_DIE_LEVEL, ASSET_FILES, FPS, ASSETS_DIR
 from settings import BIG_ENEMY_ZONE_SLOW_DICE, FREEZE_DURATION, FREEZE_SLOW_RATIO
 from projectiles import Bullet, ChainBolt, ExplosiveBullet
 from ui import draw_pips
@@ -21,10 +21,12 @@ def get_die_image(die_type):
     if die_type in _dice_images_cache:
         return _dice_images_cache[die_type]
     p = ASSET_FILES.get("dice", {}).get(die_type)
-    if p and os.path.exists(os.path.join("assets", p)):
-        img = pygame.image.load(os.path.join("assets", p)).convert_alpha()
-        _dice_images_cache[die_type] = img
-        return img
+    if p:
+        img_path = os.path.join(ASSETS_DIR, p)
+        if os.path.exists(img_path):
+            img = pygame.image.load(img_path).convert_alpha()
+            _dice_images_cache[die_type] = img
+            return img
     _dice_images_cache[die_type] = None
     return None
 
