@@ -2,7 +2,6 @@
 import os
 import pygame
 import sys
-import os
 import random
 import math
 from typing import List, Tuple, Optional, Dict, Any
@@ -117,7 +116,7 @@ class Game:
                 
                 if not too_close:
                     t = random.choice(types)
-                    img_path = f"assets/{dice_pool[t]}"
+                    img_path = os.path.join(ASSET_DIR, dice_pool[t])
                     img = pygame.image.load(img_path).convert_alpha()
                     s = random.randint(70, 130)
                     img = pygame.transform.smoothscale(img, (s, s))
