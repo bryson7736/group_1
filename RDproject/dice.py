@@ -16,7 +16,7 @@ DIE_TYPES = [DIE_SINGLE, DIE_MULTI, DIE_FREEZE, DIE_WIND, DIE_POISON, DIE_IRON, 
 
 _dice_images_cache = {}
 
-def _load_die_image(die_type):
+def get_die_image(die_type):
     if die_type in _dice_images_cache:
         return _dice_images_cache[die_type]
     p = ASSET_FILES.get("dice", {}).get(die_type)
@@ -73,7 +73,7 @@ class Die:
         pygame.draw.rect(surf, base_col, rect, border_radius=14)
 
         if not self.image:
-            self.image = _load_die_image(self.type)
+            self.image = get_die_image(self.type)
         if self.image:
             # Draw icon in background with transparency
             ir = self.image.get_rect()
