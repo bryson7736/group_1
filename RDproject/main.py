@@ -6,7 +6,7 @@ import math
 from typing import List, Tuple, Optional, Dict, Any
 
 from settings import *
-from ui import Button, draw_panel, Segmented
+from ui import Button, draw_panel, Segmented, draw_pips
 from grid import Grid
 from level_manager import LevelManager
 from loadout import Loadout
@@ -376,7 +376,7 @@ class Game:
         # click on chips
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
-            bx, by, w, h, gap = 420, 200, 220, 60, 16
+            bx, by, w, h, gap = 520, 140, 240, 72, 12
             for i, t in enumerate(DIE_TYPES):
                 r = pygame.Rect(bx, by + i * (h + gap), w, h)
                 if r.collidepoint(mx, my):
@@ -415,7 +415,7 @@ class Game:
         # Click on stage buttons
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
-            btn_w, btn_h = 320, 70
+            btn_w, btn_h = 480, 80
             gap = 16
             start_x = (SCREEN_W - btn_w) // 2
             start_y = 180
@@ -831,10 +831,10 @@ class Game:
 
             pygame.draw.rect(self.screen, border_color, rect, width=2, border_radius=8)
             
-            # Draw Text
-            # Level (Large, Center)
-            lvl_txt = self.font_big.render(f"Lv{current_level}", True, WHITE)
-            self.screen.blit(lvl_txt, (rect.centerx - lvl_txt.get_width()//2, rect.y + 5))
+            # Draw Pips/Dots instead of LvX text
+            # Add a small buffer for the pips area
+            pip_rect = rect.inflate(-10, -30)
+            draw_pips(self.screen, pip_rect, current_level, WHITE)
             
             # Cost (Small, Bottom)
             if current_level >= 5:

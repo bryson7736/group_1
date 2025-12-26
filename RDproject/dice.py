@@ -4,6 +4,7 @@ from colors import WHITE, DICE_COLORS, BLUE
 from settings import BASE_RANGE, BASE_FIRE_RATE, FIRE_RATE_STEP, MAX_DIE_LEVEL, ASSET_FILES, FPS
 from settings import BIG_ENEMY_ZONE_SLOW_DICE, FREEZE_DURATION, FREEZE_SLOW_RATIO
 from projectiles import Bullet, ChainBolt, ExplosiveBullet
+from ui import draw_pips
 
 DIE_SINGLE = "single"
 DIE_MULTI = "multi"
@@ -90,11 +91,8 @@ class Die:
             img.set_alpha(180) # Better visibility than before
             surf.blit(img, (rect.centerx - img.get_width() // 2, rect.centery - img.get_height() // 2))
 
-        # 3. Level indicator (Number instead of Pips)
-        lvl_font = self.game.font_small
-        lvl_surf = lvl_font.render(str(self.level) if self.level < 7 else "★", True, WHITE)
-        # Position in bottom right
-        surf.blit(lvl_surf, (rect.right - lvl_surf.get_width() - 8, rect.bottom - lvl_surf.get_height() - 6))
+        # 3. Level indicator (Pips/Dots)
+        draw_pips(surf, rect, self.level, WHITE)
 
         # 4. Selection/Border logic
         if selected:
