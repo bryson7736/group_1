@@ -398,12 +398,13 @@ class Game:
         # One persistent upgrade button per dice (damage +10%)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
-            base_x, base_y = 420, 200
-            btn_w, btn_h = 220, 50
-            gap_y = 16
+            base_x, base_y = 880, 80
+            btn_w, btn_h = 260, 60
+            gap_y = 20
             cost = 50
+            btn_x = base_x + 120
             for row, t in enumerate(DIE_TYPES):
-                r = pygame.Rect(base_x, base_y + row * (btn_h + gap_y), btn_w, btn_h)
+                r = pygame.Rect(btn_x, base_y + row * (btn_h + gap_y), btn_w, btn_h)
                 if r.collidepoint(mx, my):
                     ok = self.upgrades.upgrade_class_damage(t, cost=cost)
                     if ok:
@@ -682,9 +683,9 @@ class Game:
         self.screen.blit(title, (40, 60))
         coins = self.font_big.render(f"Coins: {self.upgrades.coins}", True, (255, 220, 80))
         self.screen.blit(coins, (40, 120))
-        base_x, base_y = 420, 200
-        btn_w, btn_h = 220, 50
-        gap_y = 16
+        base_x, base_y = 720, 100
+        btn_w, btn_h = 260, 60
+        gap_y = 20
         cost = 50
         for row, t in enumerate(DIE_TYPES):
             y_pos = base_y + row * (btn_h + gap_y)
@@ -717,7 +718,8 @@ class Game:
             self.screen.blit(name, (icon_rect.right + 15, icon_rect.centery - name.get_height() // 2))
 
             # Upgrade button for damage
-            r = pygame.Rect(base_x, y_pos, btn_w, btn_h)
+            btn_x = base_x + 120
+            r = pygame.Rect(btn_x, y_pos, btn_w, btn_h)
             btn_label = f"Damage +10% ({cost}c)"
             can_buy = self.upgrades.coins >= cost
             color = (80, 200, 80) if can_buy else (100, 100, 100)
