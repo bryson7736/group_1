@@ -69,44 +69,34 @@ class Die:
     def draw(self, surf, selected):
         rect = self.game.grid.rect_at(self.c, self.r).inflate(-12, -12)
         base_col = DICE_COLORS.get(self.type, (140, 140, 160))
-        # Do not change color if selected; only draw a white frame
+        
+        # 1. Background (Glossy Square Style)
         pygame.draw.rect(surf, base_col, rect, border_radius=14)
+        
+        # Glossy Highlight (Top 40%)
+        highlight_rect = pygame.Rect(rect.x, rect.y, rect.w, int(rect.h * 0.4))
+        highlight = pygame.Surface((highlight_rect.w, highlight_rect.h), pygame.SRCALPHA)
+        highlight.fill((255, 255, 255, 45))
+        surf.blit(highlight, highlight_rect.topleft)
 
+        # 2. Main Icon
         if not self.image:
             self.image = get_die_image(self.type)
         if self.image:
-            # Draw icon in background with transparency
             ir = self.image.get_rect()
-            # Scale to fit 70% of the cell width
-            target_w = rect.w * 0.7
+            target_w = rect.w * 0.75
             scale = target_w / ir.w
-            
-            # Use original image for scaling quality
             img = pygame.transform.smoothscale(self.image, (int(ir.w * scale), int(ir.h * scale)))
-            
-            # Make it transparent (alpha 0-255, using 80/255 approx 30% opacity)
-            img.set_alpha(80) 
-            
+            img.set_alpha(180) # Better visibility than before
             surf.blit(img, (rect.centerx - img.get_width() // 2, rect.centery - img.get_height() // 2))
-        if 1 <= self.level <= 6:
-            pip_radius = 6
-            gap = rect.width // 4
-            patterns = {
-                1: [(0, 0)],
-                2: [(-gap, -gap), (gap, gap)],
-                3: [(-gap, -gap), (0, 0), (gap, gap)],
-                4: [(-gap, -gap), (gap, -gap), (-gap, gap), (gap, gap)],
-                5: [(-gap, -gap), (gap, -gap), (0, 0), (-gap, gap), (gap, gap)],
-                6: [(-gap, -gap), (-gap, 0), (gap, 0), (-gap, gap), (0, gap), (gap, gap)],
-            }
-            for dx, dy in patterns[self.level]:
-                pygame.draw.circle(surf, WHITE, (rect.centerx + dx, rect.centery + dy), pip_radius) 
-        elif self.level == 7:
-            # Level 7 shows star
-            font = self.game.font_big
-            lvl = font.render("★", True, WHITE)
-            surf.blit(lvl, (rect.centerx - lvl.get_width() // 2, rect.centery - lvl.get_height() // 2))
 
+        # 3. Level indicator (Number instead of Pips)
+        lvl_font = self.game.font_small
+        lvl_surf = lvl_font.render(str(self.level) if self.level < 7 else "★", True, WHITE)
+        # Position in bottom right
+        surf.blit(lvl_surf, (rect.right - lvl_surf.get_width() - 8, rect.bottom - lvl_surf.get_height() - 6))
+
+        # 4. Selection/Border logic
         if selected:
             pygame.draw.rect(surf, BLUE, rect, width=5, border_radius=14)
         else:

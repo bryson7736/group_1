@@ -881,7 +881,7 @@ class Game:
         sub = self.font.render("Pick up to 5 dice types for this run.", True, WHITE)
         self.screen.blit(sub, (40, 120))
 
-        bx, by, w, h, gap = 420, 200, 220, 60, 16
+        bx, by, w, h, gap = 520, 140, 240, 72, 12
         types = DIE_TYPES
         dice_brief = {
             "single": "Single: High base damage, fast fire.",
@@ -899,18 +899,10 @@ class Game:
             # Draw brief info to the right
             info_txt = dice_brief.get(t, "")
             y_pos = by + i * (h + gap)
-            img = get_die_image(t)
-            if img:
-                # Small icon before the description text
-                icon_s = 32
-                icon = pygame.transform.smoothscale(img, (icon_s, icon_s))
-                self.screen.blit(icon, (bx + w + 24, y_pos + (h - icon_s) // 2))
-                
-                info_surf = self.font.render(info_txt, True, (220, 220, 220))
-                self.screen.blit(info_surf, (bx + w + 24 + icon_s + 10, y_pos + (h - info_surf.get_height()) // 2))
-            else:
-                info_surf = self.font.render(info_txt, True, (220, 220, 220))
-                self.screen.blit(info_surf, (bx + w + 24, y_pos + (h - info_surf.get_height()) // 2))
+            
+            info_surf = self.font.render(info_txt, True, (220, 220, 220))
+            # Align info text starting after the name box area
+            self.screen.blit(info_surf, (bx + w + 20, y_pos + (h - info_surf.get_height()) // 2))
         sel = ", ".join(self.loadout.selected) if self.loadout.selected else "(none)"
         info = self.font.render(f"Selected: {sel}", True, WHITE)
         # Move info to top right, above the chips
