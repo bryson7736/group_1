@@ -138,6 +138,12 @@ class Die:
         
         return perm_mult * ingame_mult
 
+    def apply_crit(self, dmg):
+        crit_rate = self.game.upgrades.get_crit_rate(self.type)
+        if random.random() < crit_rate:
+            return dmg * 2.0
+        return dmg
+
     def try_fire(self):
         # All dice except Iron: Priority attack frontmost enemy ("first" mode)
         best = None
