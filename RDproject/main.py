@@ -398,7 +398,7 @@ class Game:
         # One persistent upgrade button per dice (damage +10%)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
-            base_x, base_y = 480, 200
+            base_x, base_y = 600, 150
             btn_w, btn_h = 320, 60
             gap_y = 20
             cost = 50
