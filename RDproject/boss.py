@@ -148,7 +148,7 @@ class TrueBoss(Enemy):
     def _state_defense(self, dt, speed_mult, zone_mult):
         """DEFENSE: Move slowly, reduce damage taken."""
         super().update(dt, speed_mult * DEFENSE_MOVE_SPEED_MULT, zone_mult)
-        if self.state_timer <= 0 and self.hp / self.max_hp < DEFENSE_HP_THRESHOLD:
+        if self.state_timer <= 0:
             self._reset_all_timers()
             self.state = STATE_IDLE
 
@@ -188,9 +188,9 @@ class TrueBoss(Enemy):
         Determine which skill to use based on priority conditions.
         Returns the STATE constant of the chosen skill, or None.
         """
-        # 1. High Priority: Heal (if low HP)
+        # 1. High Priority: Heal (if low HP or taking moderate damage)
         # Note: HEAL_TRIGGER_THRESHOLD is 0.8 (80%) currently
-        if self.damage_taken_last_5s > 0.25 * self.max_hp or self.damage_taken_last_5s < 0.5 * self.max_hp:
+        if (self.hp < 0.5 * self.max_hp) or (self.damage_taken_last_5s > 0.25 * self.max_hp and self.damage_taken_last_5s < 0.5 * self.max_hp):
             return STATE_HEAL
 
         # 2. Random fallback between Defense and Attack
