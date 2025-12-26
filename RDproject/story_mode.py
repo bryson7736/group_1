@@ -38,20 +38,8 @@ class StoryProgress:
         self.current_stage: Optional[str] = None
         
     def is_stage_unlocked(self, stage_id: str, all_stages: List[StoryStage]) -> bool:
-        """Check if a stage is unlocked based on progression."""
-        # First stage is always unlocked
-        if stage_id == all_stages[0].stage_id:
-            return True
-        
-        # Find the index of this stage
-        for i, stage in enumerate(all_stages):
-            if stage.stage_id == stage_id:
-                # Stage is unlocked if previous stage is completed
-                if i > 0:
-                    prev_stage_id = all_stages[i - 1].stage_id
-                    return prev_stage_id in self.completed_stages
-                return True
-        return False
+        """Check if a stage is unlocked based on progression. (UNLOCKED FOR TESTING)"""
+        return True
     
     def complete_stage(self, stage_id: str):
         """Mark a stage as completed."""
