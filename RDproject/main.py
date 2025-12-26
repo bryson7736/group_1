@@ -144,6 +144,10 @@ class Game:
             self.toggle_trash
         )
 
+        # Lobby upgrades UI message (shown on upgrades screen)
+        self._upgrade_msg = ""
+        self._upgrade_msg_t = 0.0
+
         self._build_lobby()
 
     # --------------- Lobby ---------------
@@ -392,24 +396,23 @@ class Game:
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.back_to_lobby()
         self.upg_back.handle(event)
-        # simple buttons per type & stat
+        # One persistent upgrade button per dice (damage +10%)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
             base_x, base_y = 420, 200
             btn_w, btn_h = 220, 50
-            gap_x, gap_y = 30, 16
-            types = DIE_TYPES
-            labels = [("Damage +10%", "dmg"), ("Fire rate +8%", "fire"), ("Cost -10%", "cost")]
-            for row, t in enumerate(types):
-                for col, (lab, kind) in enumerate(labels):
-                    r = pygame.Rect(base_x + col * (btn_w + gap_x), base_y + row * (btn_h + gap_y), btn_w, btn_h)
-                    if r.collidepoint(mx, my):
-                        if kind == "dmg":
-                            self.upgrades.upgrade_damage(t)
-                        elif kind == "fire":
-                            self.upgrades.upgrade_fire(t)
-                        else:
-                            self.upgrades.upgrade_cost(t)
+            gap_y = 16
+            cost = 50
+            for row, t in enumerate(DIE_TYPES):
+                r = pygame.Rect(base_x, base_y + row * (btn_h + gap_y), btn_w, btn_h)
+                if r.collidepoint(mx, my):
+                    ok = self.upgrades.upgrade_class_damage(t, cost=cost)
+                    if ok:
+                        self._upgrade_msg = f"Upgraded {t.capitalize()} Damage!"
+                    else:
+                        self._upgrade_msg = "Not enough coins!"
+                    self._upgrade_msg_t = 1.6
+                    return
     
     def story_select_handle(self, event: pygame.event.Event) -> None:
         """Handle events during story stage selection screen."""
@@ -682,14 +685,9 @@ class Game:
         self.screen.blit(coins, (40, 120))
         base_x, base_y = 420, 200
         btn_w, btn_h = 220, 50
-        gap_x, gap_y = 30, 16
-        types = DIE_TYPES
-        # Show not enough coins message
-        not_enough_msg = ""
-        # Only trigger upgrade on mouse button down event
-        events = pygame.event.get(pygame.MOUSEBUTTONDOWN)
-        mx, my = pygame.mouse.get_pos()
-        for row, t in enumerate(types):
+        gap_y = 16
+        cost = 50
+        for row, t in enumerate(DIE_TYPES):
             name = self.font_big.render(t.capitalize(), True, WHITE)
             y_pos = base_y + row * (btn_h + gap_y)
             img = get_die_image(t)
@@ -701,24 +699,19 @@ class Game:
                 self.screen.blit(name, (base_x - 150, y_pos + (btn_h - name.get_height()) // 2))
             else:
                 self.screen.blit(name, (base_x - 150, y_pos + (btn_h - name.get_height()) // 2))
-            # Upgrade button for damage
-            r = pygame.Rect(base_x, base_y + row * (btn_h + gap_y), btn_w, btn_h)
-            btn_label = f"Damage +10% (50c)"
-            can_buy = self.upgrades.coins >= 50
+
+            r = pygame.Rect(base_x, y_pos, btn_w, btn_h)
+            btn_label = f"Damage +10% ({cost}c)"
+            can_buy = self.upgrades.coins >= cost
             color = (80, 200, 80) if can_buy else (100, 100, 100)
             pygame.draw.rect(self.screen, color, r, border_radius=8)
             pygame.draw.rect(self.screen, WHITE, r, width=2, border_radius=8)
             label = self.font.render(btn_label, True, WHITE)
             self.screen.blit(label, (r.centerx - label.get_width() // 2, r.centery - label.get_height() // 2))
-            # Handle click only on mouse down
-            for event in events:
-                if event.button == 1 and r.collidepoint(event.pos):
-                    if can_buy:
-                        self.upgrades.upgrade_class_damage(t)
-                    else:
-                        not_enough_msg = "Not enough coins!"
-        if not_enough_msg:
-            warn = self.font_big.render(not_enough_msg, True, (255, 80, 80))
+
+        if self._upgrade_msg and self._upgrade_msg_t > 0:
+            col = (255, 80, 80) if "Not enough" in self._upgrade_msg else (120, 255, 140)
+            warn = self.font_big.render(self._upgrade_msg, True, col)
             self.screen.blit(warn, (base_x, base_y - 60))
         self.upg_back.draw(self.screen)
 
@@ -1105,6 +1098,10 @@ class Game:
         """Main game loop."""
         while True:
             dt = self.clock.tick(FPS) / 1000.0
+
+            if self._upgrade_msg_t > 0.0:
+                self._upgrade_msg_t = max(0.0, self._upgrade_msg_t - dt)
+
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     # don't auto-quit on game over; here only explicit window close
