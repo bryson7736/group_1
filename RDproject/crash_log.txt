@@ -1,6 +1,6 @@
 CRASH REPORT
 ====================
-Error: No file 'assets/dice_iron.png' found in working directory 'C:\Users\洪崧祐\github_project\group_1'.
+Error: No file 'assets/dice_freeze.png' found in working directory 'C:\Users\洪崧祐\github_project\group_1'.
 
 Traceback:
 Traceback (most recent call last):
@@ -10,4 +10,4 @@ Traceback (most recent call last):
   File "c:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 121, in __init__
     img = pygame.image.load(img_path).convert_alpha()
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-FileNotFoundError: No file 'assets/dice_iron.png' found in working directory 'C:\Users\洪崧祐\github_project\group_1'.
+FileNotFoundError: No file 'assets/dice_freeze.png' found in working directory 'C:\Users\洪崧祐\github_project\group_1'.

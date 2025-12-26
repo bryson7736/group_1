@@ -23,8 +23,8 @@ def get_die_image(die_type):
     if die_type in _dice_images_cache:
         return _dice_images_cache[die_type]
     p = ASSET_FILES.get("dice", {}).get(die_type)
-    if p and os.path.exists(os.path.join("assets", p)):
-        img = pygame.image.load(os.path.join("assets", p)).convert_alpha()
+    if p and os.path.exists(os.path.join(ASSET_DIR, p)):
+        img = pygame.image.load(os.path.join(ASSET_DIR, p)).convert_alpha()
         _dice_images_cache[die_type] = img
         return img
     _dice_images_cache[die_type] = None
