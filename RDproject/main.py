@@ -841,14 +841,21 @@ class Game:
             # Draw button
             pygame.draw.rect(self.screen, btn_color, rect, border_radius=8)
             
-            # Draw Icon as semi-transparent background
-            img = get_die_image(die_type)
-            if img:
-                # Scale to fit most of the button
-                icon_s = int(btn_size * 0.7)
-                icon = pygame.transform.smoothscale(img, (icon_s, icon_s))
-                icon.set_alpha(100) # Semi-transparent
-                self.screen.blit(icon, (rect.centerx - icon_s // 2, rect.centery - icon_s // 2))
+            # Draw Upgrade Arrow (Generic Icon)
+            # Create a surface for the arrow to support transparency
+            arrow_surf = pygame.Surface((rect.w, rect.h), pygame.SRCALPHA)
+            arrow_color = (255, 255, 255, 100) # Semi-transparent white
+            
+            # Arrow Head
+            pygame.draw.polygon(arrow_surf, arrow_color, [
+                (rect.w//2, rect.h//2 - 12),
+                (rect.w//2 - 12, rect.h//2 + 4),
+                (rect.w//2 + 12, rect.h//2 + 4)
+            ])
+            # Arrow Stem
+            pygame.draw.rect(arrow_surf, arrow_color, (rect.w//2 - 5, rect.h//2 + 4, 10, 10))
+            
+            self.screen.blit(arrow_surf, rect.topleft)
 
             pygame.draw.rect(self.screen, border_color, rect, width=2, border_radius=8)
             
