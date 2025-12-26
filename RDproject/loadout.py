@@ -17,9 +17,32 @@ class Loadout:
                 self.selected.append(t)
 
     def draw_chip(self, surf, rect, t, font, active):
+        from dice import get_die_image
         color = DICE_COLORS.get(t, (150,150,150))
-        pygame.draw.rect(surf, color if active else DARK, rect, border_radius=12)
-        border = 4 if active else 2
-        pygame.draw.rect(surf, ACCENT, rect, width=border, border_radius=12)
-        s = font.render(t.capitalize(), True, WHITE)
-        surf.blit(s, (rect.centerx - s.get_width()//2, rect.centery - s.get_height()//2))
+        
+        # 1. Draw Stylized Square Icon on the left side of the rect
+        icon_size = rect.height
+        icon_rect = pygame.Rect(rect.x, rect.y, icon_size, icon_size)
+        
+        # Background
+        pygame.draw.rect(surf, color if active else (40, 40, 50), icon_rect, border_radius=10)
+        
+        # Glossy Highlight (Top half-ish)
+        highlight = pygame.Surface((icon_size, icon_size // 2), pygame.SRCALPHA)
+        highlight.fill((255, 255, 255, 30))
+        surf.blit(highlight, (icon_rect.x, icon_rect.y))
+        
+        # Border
+        border_col = WHITE if active else (100, 100, 110)
+        pygame.draw.rect(surf, border_col, icon_rect, width=3, border_radius=10)
+        
+        # Icon
+        img = get_die_image(t)
+        if img:
+            io = int(icon_size * 0.7)
+            isurf = pygame.transform.smoothscale(img, (io, io))
+            surf.blit(isurf, (icon_rect.centerx - io//2, icon_rect.centery - io//2))
+            
+        # 2. Draw Name Label to the right of the icon
+        name_txt = font.render(t.capitalize(), True, WHITE if active else (180, 180, 190))
+        surf.blit(name_txt, (icon_rect.right + 15, icon_rect.centery - name_txt.get_height() // 2))

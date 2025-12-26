@@ -84,8 +84,8 @@ class StoryManager:
         # Initialize Hell Chapter (Chapter 1)
         self._init_hell_chapter()
         
-        # Load saved progress
-        self.load_progress()
+        # Persistence disabled: progression resets on restart
+        # self.load_progress()
     
     def _init_hell_chapter(self):
         """Initialize Hell Chapter (1-1 to 1-5)."""
@@ -122,9 +122,10 @@ class StoryManager:
                 waves=5,
                 has_big_enemy=True,
                 path_points=[
-                    (1200, 80), (800, 80), (800, 500), (400, 500), (400, 300), (100, 300), (100, 650), (600, 650)
+                    (1290, 80), (800, 80), (800, 500), (400, 500), (400, 300), (50, 300), (50, 650), (640, 650), (640, 800)
                 ],
-                difficulty=1.8
+                difficulty=1.8,
+                path_color=(50, 200, 50) # GREEN
             ),
             StoryStage(
                 stage_id="1-4",
@@ -135,7 +136,8 @@ class StoryManager:
                 path_points=[
                     (1280, 400), (900, 400), (900, 200), (600, 200), (600, 600), (1280, 600)
                 ],
-                difficulty=2.0
+                difficulty=2.0,
+                path_color=(139, 69, 19) # BROWN
             ),
             StoryStage(
                 stage_id="1-5",
@@ -145,9 +147,10 @@ class StoryManager:
                 has_big_enemy=True,
                 has_true_boss=True,
                 path_points=[
-                    (1280, 400), (1000, 400), (1000, 100), (400, 100), (400, 600), (1280, 600)
+                    (1280, 430), (1030, 430), (1030, 110), (430, 110), (430, 630), (1280, 630)
                 ],
-                difficulty=2.5
+                difficulty=2.5,
+                path_color=(218, 179, 0) # GOLD (R218 G179 B0)
             ),
         ]
         
@@ -171,9 +174,10 @@ class StoryManager:
         return self.progress.is_stage_unlocked(stage_id, stages)
     
     def complete_stage(self, stage_id: str):
-        """Mark a stage as completed and save progress."""
+        """Mark a stage as completed (session-based)."""
         self.progress.complete_stage(stage_id)
-        self.save_progress()
+        # Persistence disabled
+        # self.save_progress()
     
     def save_progress(self):
         """Save progress to file."""

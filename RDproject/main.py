@@ -6,14 +6,14 @@ import math
 from typing import List, Tuple, Optional, Dict, Any
 
 from settings import *
-from ui import Button, draw_panel, Segmented
+from ui import Button, draw_panel, Segmented, draw_pips
 from grid import Grid
 from level_manager import LevelManager
 from loadout import Loadout
 from upgrades import UpgradeState
 from enemy import Enemy, BigEnemy
 from boss import TrueBoss, calculate_boss_hp, calculate_boss_speed
-from dice import DIE_TYPES, make_die
+from dice import DIE_TYPES, make_die, get_die_image
 from colors import WHITE, DARKER, GRAY, RED, DARK
 from story_mode import StoryManager
 from ingame_upgrades import InGameUpgrades
@@ -41,10 +41,10 @@ class Game:
         pygame.display.set_caption(TITLE)
         self.screen = pygame.display.set_mode((SCREEN_W, SCREEN_H), pygame.HWSURFACE | pygame.DOUBLEBUF)
         self.clock = pygame.time.Clock()
-        self.font = pygame.font.SysFont("arial", 22)
-        self.font_small = pygame.font.SysFont("arial", 16)
-        self.font_big = pygame.font.SysFont("arial", 28, bold=True)
-        self.font_huge = pygame.font.SysFont("arial", 48, bold=True)
+        self.font = pygame.font.SysFont(["segoe uiemoji", "segoe ui symbol", "arial"], 22)
+        self.font_small = pygame.font.SysFont(["segoe uiemoji", "segoe ui symbol", "arial"], 16)
+        self.font_big = pygame.font.SysFont(["segoe uiemoji", "segoe ui symbol", "arial"], 28, bold=True)
+        self.font_huge = pygame.font.SysFont(["segoe uiemoji", "segoe ui symbol", "arial"], 48, bold=True)
 
         self.state: str = STATE_LOBBY
         self.level_mgr = LevelManager()
@@ -78,6 +78,52 @@ class Game:
         self.speed_mult: float = GAME_SPEEDS[self.speed_index]
 
         self.trash_active: bool = False
+        
+        # Lobby background dice decoration
+        self.lobby_bg_dice = []
+        dice_pool = ASSET_FILES["dice"]
+        types = list(dice_pool.keys())
+        
+        # Try to place 24 icons with a minimum distance check to avoid clumping
+        max_attempts = 150
+        min_dist_sq = 200**2 # Larger distance between icons
+        
+        # Area to avoid (center buttons): Rect(center_x, start_y, btn_w, total_height)
+        # Roughly center of screen
+        avoid_rect = pygame.Rect(SCREEN_W//2 - 250, 150, 500, 500)
+        
+        for _ in range(24):
+            placed = False
+            for attempt in range(max_attempts):
+                x = random.randint(-40, SCREEN_W - 120)
+                y = random.randint(-40, SCREEN_H - 120)
+                
+                # Check collision with center avoidance zone
+                if avoid_rect.collidepoint(x + 50, y + 50):
+                    continue
+
+                # Check distance to existing icons
+                too_close = False
+                for _, (ex, ey) in self.lobby_bg_dice:
+                    dist_sq = (x - ex)**2 + (y - ey)**2
+                    if dist_sq < min_dist_sq:
+                        too_close = True
+                        break
+                
+                if not too_close:
+                    t = random.choice(types)
+                    img_path = f"assets/{dice_pool[t]}"
+                    img = pygame.image.load(img_path).convert_alpha()
+                    s = random.randint(70, 130)
+                    img = pygame.transform.smoothscale(img, (s, s))
+                    img.set_alpha(random.randint(40, 80))
+                    angle = random.randint(0, 360)
+                    img_rot = pygame.transform.rotate(img, angle)
+                    self.lobby_bg_dice.append((img_rot, (x, y)))
+                    placed = True
+                    break
+            if not placed:
+                continue
 
         self.speed_ctrl = Segmented(
             (SCREEN_W - 420, 24, 360, 40),
@@ -143,7 +189,7 @@ class Game:
         # Actually, let's put Help and Quit side-by-side below Upgrades
         
         # Re-calculating for side-by-side
-        row_y = y_offset + 2 * (btn_h + gap) + 20
+        row_y = y_offset + 2 * (btn_h + gap) - 10  # Reduced spacing to move up
         self.buttons.pop() # Remove Help from previous append
         self.buttons.append(
             Button((center_x, row_y, btn_w // 2 - 10, btn_h), "Help", self.font_big, self.goto_help)
@@ -193,7 +239,9 @@ class Game:
             self.story_max_waves = stage.waves
             # Use stage's path as the level path
             from level_manager import Level
-            self.level = Level(stage.name, stage.path_points, stage.difficulty, getattr(stage, 'path_color', (80, 85, 100)))
+            # Ensure path_color is used. Default to GRAY if missing.
+            p_color = getattr(stage, 'path_color', (80, 85, 100))
+            self.level = Level(stage.name, stage.path_points, stage.difficulty, p_color)
             
             # Must set state to STORY before reset_runtime so Grid knows to use dynamic layout
             self.state = STATE_STORY
@@ -211,6 +259,7 @@ class Game:
         self.bullets = []
         self.telegraphs = []
         self.money = START_MONEY
+        self.die_cost = DIE_COST  # Reset to base cost
         self.base_hp = BASE_HP
         self.wave = -1
         self.to_spawn = 0
@@ -327,7 +376,7 @@ class Game:
         # click on chips
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
-            bx, by, w, h, gap = 420, 200, 220, 60, 16
+            bx, by, w, h, gap = 520, 140, 240, 72, 12
             for i, t in enumerate(DIE_TYPES):
                 r = pygame.Rect(bx, by + i * (h + gap), w, h)
                 if r.collidepoint(mx, my):
@@ -366,7 +415,7 @@ class Game:
         # Click on stage buttons
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
-            btn_w, btn_h = 320, 70
+            btn_w, btn_h = 480, 80
             gap = 16
             start_x = (SCREEN_W - btn_w) // 2
             start_y = 180
@@ -593,6 +642,11 @@ class Game:
     def lobby_draw(self) -> None:
         """Draw the lobby screen."""
         self.screen.fill(DARK)
+        
+        # Deco Background Dice
+        for img, pos in self.lobby_bg_dice:
+            self.screen.blit(img, pos)
+
         # Title
         title = self.font_huge.render("RANDOM DICE DEFENSE", True, WHITE)
         self.screen.blit(title, (SCREEN_W // 2 - title.get_width() // 2, 100))
@@ -628,7 +682,16 @@ class Game:
         mx, my = pygame.mouse.get_pos()
         for row, t in enumerate(types):
             name = self.font_big.render(t.capitalize(), True, WHITE)
-            self.screen.blit(name, (base_x - 150, base_y + row * (btn_h + gap_y) + 8))
+            y_pos = base_y + row * (btn_h + gap_y)
+            img = get_die_image(t)
+            if img:
+                # Icon on the left of the name
+                icon_s = 40
+                icon = pygame.transform.smoothscale(img, (icon_s, icon_s))
+                self.screen.blit(icon, (base_x - 200, y_pos + (btn_h - icon_s) // 2))
+                self.screen.blit(name, (base_x - 150, y_pos + (btn_h - name.get_height()) // 2))
+            else:
+                self.screen.blit(name, (base_x - 150, y_pos + (btn_h - name.get_height()) // 2))
             # Upgrade button for damage
             r = pygame.Rect(base_x, base_y + row * (btn_h + gap_y), btn_w, btn_h)
             btn_label = f"Damage +10% (50c)"
@@ -756,12 +819,22 @@ class Game:
             
             # Draw button
             pygame.draw.rect(self.screen, btn_color, rect, border_radius=8)
+            
+            # Draw Icon as semi-transparent background
+            img = get_die_image(die_type)
+            if img:
+                # Scale to fit most of the button
+                icon_s = int(btn_size * 0.7)
+                icon = pygame.transform.smoothscale(img, (icon_s, icon_s))
+                icon.set_alpha(100) # Semi-transparent
+                self.screen.blit(icon, (rect.centerx - icon_s // 2, rect.centery - icon_s // 2))
+
             pygame.draw.rect(self.screen, border_color, rect, width=2, border_radius=8)
             
-            # Draw Text
-            # Level (Large, Center)
-            lvl_txt = self.font_big.render(f"Lv{current_level}", True, WHITE)
-            self.screen.blit(lvl_txt, (rect.centerx - lvl_txt.get_width()//2, rect.y + 5))
+            # Draw Pips/Dots instead of LvX text
+            # Add a small buffer for the pips area
+            pip_rect = rect.inflate(-10, -30)
+            draw_pips(self.screen, pip_rect, current_level, WHITE)
             
             # Cost (Small, Bottom)
             if current_level >= 5:
@@ -808,7 +881,7 @@ class Game:
         sub = self.font.render("Pick up to 5 dice types for this run.", True, WHITE)
         self.screen.blit(sub, (40, 120))
 
-        bx, by, w, h, gap = 420, 200, 220, 60, 16
+        bx, by, w, h, gap = 520, 140, 240, 72, 12
         types = DIE_TYPES
         dice_brief = {
             "single": "Single: High base damage, fast fire.",
@@ -825,8 +898,11 @@ class Game:
             self.loadout.draw_chip(self.screen, r, t, self.font_big, active)
             # Draw brief info to the right
             info_txt = dice_brief.get(t, "")
+            y_pos = by + i * (h + gap)
+            
             info_surf = self.font.render(info_txt, True, (220, 220, 220))
-            self.screen.blit(info_surf, (bx + w + 24, by + i * (h + gap) + h // 2 - info_surf.get_height() // 2))
+            # Align info text starting after the name box area
+            self.screen.blit(info_surf, (bx + w + 20, y_pos + (h - info_surf.get_height()) // 2))
         sel = ", ".join(self.loadout.selected) if self.loadout.selected else "(none)"
         info = self.font.render(f"Selected: {sel}", True, WHITE)
         # Move info to top right, above the chips
@@ -873,7 +949,7 @@ class Game:
         self.screen.blit(sub, (SCREEN_W // 2 - sub.get_width() // 2, 130))
         
         # Stage buttons
-        btn_w, btn_h = 320, 70
+        btn_w, btn_h = 480, 80
         gap = 16
         start_x = (SCREEN_W - btn_w) // 2
         start_y = 180
@@ -915,7 +991,7 @@ class Game:
         # Reuse play_draw but with story-specific UI elements
         self.screen.fill(DARK)
         if self.level:
-            pygame.draw.lines(self.screen, GRAY, False, self.level.path, 6)
+            pygame.draw.lines(self.screen, self.level.path_color, False, self.level.path, 6)
 
         self.grid.draw(self.screen)
         for e in self.enemies:

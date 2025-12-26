@@ -102,3 +102,32 @@ def draw_panel(surf, rect, title, title_font, body_fn=None):
         surf.blit(title_surf, (rect.x + 20, rect.y + 14))
     if body_fn:
         body_fn()
+def draw_pips(surf, rect, level, color=WHITE):
+    """Draw dots (pips) for levels 1-6, and a star for level 7."""
+    import pygame
+    if level >= 7:
+        # Star for level 7+
+        # Use a large font for the star
+        font_size = int(rect.height * 0.6)
+        try:
+            star_font = pygame.font.SysFont(["segoe uiemoji", "segoe ui symbol", "arial"], font_size, bold=True)
+        except:
+            star_font = pygame.font.SysFont("arial", font_size, bold=True)
+            
+        star = star_font.render("★", True, color)
+        surf.blit(star, (rect.centerx - star.get_width()//2, rect.centery - star.get_height()//2))
+        return
+
+    pip_radius = max(3, int(rect.width / 12))
+    gap = rect.width // 4
+    patterns = {
+        1: [(0, 0)],
+        2: [(-gap, -gap), (gap, gap)],
+        3: [(-gap, -gap), (0, 0), (gap, gap)],
+        4: [(-gap, -gap), (gap, -gap), (-gap, gap), (gap, gap)],
+        5: [(-gap, -gap), (gap, -gap), (0, 0), (-gap, gap), (gap, gap)],
+        6: [(-gap, -gap), (-gap, 0), (gap, 0), (-gap, gap), (0, gap), (gap, gap)],
+    }
+    
+    for dx, dy in patterns.get(level, []):
+        pygame.draw.circle(surf, color, (rect.centerx + dx, rect.centery + dy), pip_radius)
