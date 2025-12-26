@@ -51,16 +51,16 @@ INITIAL_SKILL_COOLDOWN = 2.0    # Initial cooldown at spawn
 SKILL_DURATION = {
     STATE_DEFENSE: 3.0,
     STATE_ATTACK: 1.0,  # Cast time
-    STATE_HEAL: 2.0,
+    STATE_HEAL: 3.0,
 }
 
 # Defense settings
 DEFENSE_DAMAGE_REDUCTION = 0.5  # 50% damage reduction
 DEFENSE_MOVE_SPEED_MULT = 0.5   # Move at 50% speed while defending
+DEFENSE_HP_THRESHOLD = 0.4      # Threshold for defense behavior logic
 
 # Heal settings
-HEAL_HP_PERCENT_PER_SEC = 0.05  # 5% max HP per second
-HEAL_TRIGGER_THRESHOLD = 0.8   # Heal when HP < 80%
+HEAL_HP_PERCENT_PER_SEC = 0.05  # 5% max HP per second  
 
 # Attack settings
 ATTACK_DESTROY_DICE_COUNT = 1  # Number of dice to destroy per attack
@@ -134,7 +134,7 @@ class TrueBoss(Enemy):
     def _state_defense(self, dt, speed_mult, zone_mult):
         """DEFENSE: Move slowly, reduce damage taken."""
         super().update(dt, speed_mult * DEFENSE_MOVE_SPEED_MULT, zone_mult)
-        if self.state_timer <= 0:
+        if self.state_timer <= 0 and self.hp / self.max_hp < DEFENSE_HP_THRESHOLD:
             self._reset_all_timers()
             self.state = STATE_IDLE
 
@@ -163,17 +163,28 @@ class TrueBoss(Enemy):
         if any(t > 0 for t in self.timers.values()):
             return
         
-        # Priority: Heal (if low HP) > Defense > Attack
-        if self.hp < self.max_hp * HEAL_TRIGGER_THRESHOLD:
-            self._enter_state(STATE_HEAL)
-            return
+        # Get prioritized state
+        next_state = self._get_skill_priority()
+        
+        if next_state:
+            self._enter_state(next_state)
 
-        # Random choice between Defense and Attack
-        import random
-        if random.random() < 0.5:
-            self._enter_state(STATE_DEFENSE)
+    def _get_skill_priority(self):
+        """
+        Determine which skill to use based on priority conditions.
+        Returns the STATE constant of the chosen skill, or None.
+        """
+        # 1. High Priority: Heal (if low HP)
+        # Note: HEAL_TRIGGER_THRESHOLD is 0.8 (80%) currently
+        if self.damage_taken_last_5s > 0.25 * self.max_hp or self.damage_taken_last_5s < 0.5 * self.max_hp:
+            return STATE_HEAL
+
+        # 2. Random fallback between Defense and Attack
+        # You can add more specific conditions here (e.g. if close to end, Attack more)
+        if self.damage_taken_last_5s > 0.5 * self.max_hp :
+            return STATE_DEFENSE
         else:
-            self._enter_state(STATE_ATTACK)
+            return STATE_ATTACK
 
     def _reset_all_timers(self):
         """Reset all skill timers to global cooldown (shared cooldown)."""
