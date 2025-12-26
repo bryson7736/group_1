@@ -58,9 +58,10 @@ class Die:
 
     def set_level(self, lv):
         self.level = max(1, min(MAX_DIE_LEVEL, lv))
-        self.base_fire_rate = max(8, BASE_FIRE_RATE - (self.level - 1) * FIRE_RATE_STEP)
-        # Convert frame-based rate to seconds for stable timing across FPS
-        self.base_period_sec = self.base_fire_rate / FPS
+        # New Proportional Logic: Period = Base / Level
+        # Base period from settings: 50/60 = 0.83s at level 1
+        base_period_at_lv1 = BASE_FIRE_RATE / FPS
+        self.base_period_sec = base_period_at_lv1 / self.level
         self.cool = 0.0
 
     def can_merge_with(self, other):
@@ -189,7 +190,10 @@ class SingleDice(Die):
         
         base_period = 0.45
         as_bonus = 0.10 + (self.level - 1) * 0.02
-        self.base_period_sec = base_period / (1.0 + as_bonus)
+        # New Logic: Period = 0.45 / level (with small bonus kept? or removed?)
+        # Simplest proportional logic:
+        self.base_period_sec = base_period / self.level
+        # Removing old bonus formula to keep it strictly proportional + upgrades
         self.base_fire_rate = self.base_period_sec * FPS  # For compatibility
 
     def set_level(self, lv):
@@ -197,8 +201,7 @@ class SingleDice(Die):
         # Recalculate stats
         self.base_dmg = 15 + (self.level - 1) * 3
         base_period = 0.45
-        as_bonus = 0.10 + (self.level - 1) * 0.02
-        self.base_period_sec = base_period / (1.0 + as_bonus)
+        self.base_period_sec = base_period / self.level
         self.base_fire_rate = self.base_period_sec * FPS
 
     def fire_at(self, target):
@@ -236,14 +239,15 @@ class WindDice(Die):
     def __init__(self, game, c, r, level=1):
         super().__init__(game, c, r, level)
         self.type = DIE_WIND
-        # Wind fires much faster
-        self.base_fire_rate = max(6, int(self.base_fire_rate * 0.4))
-        self.base_period_sec = self.base_fire_rate / FPS
+        # Wind fires much faster: 0.3s base at level 1
+        self.base_period_sec = 0.3 / self.level
+        self.base_fire_rate = self.base_period_sec * FPS
 
     def set_level(self, lv):
         super().set_level(lv)
-        self.base_fire_rate = max(4, int(self.base_fire_rate * 0.4))
-        self.base_period_sec = max(0.15, self.base_fire_rate / FPS)  # Cap at 0.15s min period
+        # Wind Logic: Base 0.3s / level
+        self.base_period_sec = 0.3 / self.level
+        self.base_fire_rate = self.base_period_sec * FPS
 
 
 class PoisonDice(Die):
@@ -274,13 +278,13 @@ class IronDice(Die):
         # Base: 100 Dmg, 1.5s AS (Buffed from 2.0s), Boss Dmg x2
         # Per Level: +10 Dmg
         self.base_dmg = 100 + (self.level - 1) * 10
-        self.base_period_sec = 1.5
+        self.base_period_sec = 1.5 / self.level
         self.base_fire_rate = self.base_period_sec * FPS
 
     def set_level(self, lv):
         super().set_level(lv)
         self.base_dmg = 100 + (self.level - 1) * 10
-        self.base_period_sec = 1.5
+        self.base_period_sec = 1.5 / self.level
         self.base_fire_rate = self.base_period_sec * FPS
 
     def try_fire(self):
@@ -330,8 +334,7 @@ class FireDice(Die):
         self.splash_dmg = 20 + (self.level - 1) * 3
         
         base_period = 0.8
-        period_reduction = (self.level - 1) * 0.01
-        self.base_period_sec = max(0.1, base_period - period_reduction)
+        self.base_period_sec = base_period / self.level
         self.base_fire_rate = self.base_period_sec * FPS
         self.splash_radius = 80  # Explosion radius
 
@@ -341,8 +344,7 @@ class FireDice(Die):
         self.splash_dmg = 20 + (self.level - 1) * 3
         
         base_period = 0.8
-        period_reduction = (self.level - 1) * 0.01
-        self.base_period_sec = max(0.1, base_period - period_reduction)
+        self.base_period_sec = base_period / self.level
         self.base_fire_rate = self.base_period_sec * FPS
 
     def fire_at(self, target):
