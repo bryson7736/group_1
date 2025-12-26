@@ -83,6 +83,7 @@ class Game:
 
         self.game_time: float = 0.0  # Total real-time seconds elapsed in game
         self.trash_active: bool = False
+        self._bg_surface: Optional[pygame.Surface] = None
         
         # Lobby background dice decoration
         self.lobby_bg_dice = []
@@ -166,7 +167,7 @@ class Game:
             self.buttons.append(
                 Button(
                     (center_x, start_y + i * (btn_h + gap), btn_w, btn_h),
-                    f"Practice: {lvl.name}",
+                    lvl.name,
                     self.font_big,
                     lambda i=i: self.start_level(i)
                 )
@@ -210,7 +211,23 @@ class Game:
         """Start a specific level."""
         self.level = self.level_mgr.get(idx)
         self.reset_runtime()
+        if self.level and self.level.bg_type == "space":
+            self._render_space_bg()
+        else:
+            self._bg_surface = None
         self.state = STATE_PLAY
+
+    def _render_space_bg(self) -> None:
+        """Load and scale the space background image with custom transparency for a desaturated look."""
+        try:
+            raw_bg = pygame.image.load(os.path.join(ASSETS_DIR, "bg_space.png")).convert()
+            scaled_bg = pygame.transform.smoothscale(raw_bg, (SCREEN_W, SCREEN_H))
+            # Set alpha to make it less saturated/intense against the DARK background
+            scaled_bg.set_alpha(160) # 255 is opaque, lower is more transparent
+            self._bg_surface = scaled_bg
+        except Exception as e:
+            print(f"Error loading space background: {e}")
+            self._bg_surface = None
 
     def goto_help(self) -> None:
         """Switch to help screen."""
@@ -250,7 +267,14 @@ class Game:
             from level_manager import Level
             # Ensure path_color is used. Default to GRAY if missing.
             p_color = getattr(stage, 'path_color', (80, 85, 100))
-            self.level = Level(stage.name, stage.path_points, stage.difficulty, p_color)
+            # Determine background type
+            bg_t = "space" if "Space" in stage.name else None
+            self.level = Level(stage.name, stage.path_points, stage.difficulty, p_color, bg_type=bg_t)
+            
+            if self.level.bg_type == "space":
+                self._render_space_bg()
+            else:
+                self._bg_surface = None
             
             # Must set state to STORY before reset_runtime so Grid knows to use dynamic layout
             self.state = STATE_STORY
@@ -798,7 +822,11 @@ class Game:
 
     def play_draw(self) -> None:
         """Draw the gameplay screen."""
-        self.screen.fill(DARK)
+        if self._bg_surface:
+            self.screen.blit(self._bg_surface, (0, 0))
+        else:
+            self.screen.fill(DARK)
+        
         if self.level:
             pygame.draw.lines(self.screen, self.level.path_color, False, self.level.path, 6)
 
