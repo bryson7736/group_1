@@ -1261,33 +1261,7 @@ class Game:
             return
         self.pause_menu.draw(self.screen)
 
-    def draw_wave_title(self) -> None:
-        """Draw the artistic WAVE X title at top center."""
-        # Calculate wave number (1-based for display)
-        current_wave = max(1, self.wave + 1)
-        text_str = f"WAVE {current_wave}"
-        
-        # Stylized font rendering
-        # Shadow
-        shadow = self.font_huge.render(text_str, True, (0, 0, 0))
-        # Main Text (Gold/Orange gradient simulated with color)
-        # Using a bright orange-gold
-        main_color = (255, 180, 0)
-        text = self.font_huge.render(text_str, True, main_color)
-        
-        # Position: Top Center
-        cx = SCREEN_W // 2
-        cy = 50
-        
-        # Draw shadow offset
-        self.screen.blit(shadow, (cx - shadow.get_width() // 2 + 3, cy - shadow.get_height() // 2 + 3))
-        # Draw text
-        self.screen.blit(text, (cx - text.get_width() // 2, cy - text.get_height() // 2))
-        
-        # Optional: Add a subtle glow or outline if possible, or just a decorative line
-        # Simple underline
-        lw = text.get_width() + 40
-        pygame.draw.rect(self.screen, main_color, (cx - lw//2, cy + 25, lw, 3), border_radius=2)
+
 
     def gameover_draw(self) -> None:
         """Draw the game over screen."""
