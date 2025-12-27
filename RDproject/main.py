@@ -990,7 +990,6 @@ class Game:
                 ("Time", time_str),
                 ("Money", f"${self.money}"),
                 ("Base HP", str(self.base_hp)),
-                ("Speed", f"{self.speed_mult}×"),
                 ("Coins", str(self.upgrades.coins)),
             ]
             for name, val in pairs:
