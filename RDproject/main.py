@@ -1331,52 +1331,7 @@ class Game:
         """Draw the pause popup window."""
         if not self.paused:
             return
-            
-        # Popup dimensions
-        w, h = 300, 280
-        x = (SCREEN_W - w) // 2
-        y = (SCREEN_H - h) // 2
-        rect = pygame.Rect(x, y, w, h)
-        
-        # Draw background
-        pygame.draw.rect(self.screen, (40, 40, 50), rect, border_radius=12)
-        pygame.draw.rect(self.screen, WHITE, rect, width=2, border_radius=12)
-        
-        # Title
-        title = self.font_big.render("Paused", True, WHITE)
-        self.screen.blit(title, (rect.centerx - title.get_width() // 2, rect.y + 30))
-        
-        # Buttons
-        btn_w, btn_h = 160, 40
-        gap = 15
-        start_y = rect.y + 80
-        
-        # Continue
-        r_cont = pygame.Rect(0, 0, btn_w, btn_h)
-        r_cont.centerx = rect.centerx
-        r_cont.y = start_y
-        pygame.draw.rect(self.screen, (100, 200, 100), r_cont, border_radius=8)
-        pygame.draw.rect(self.screen, WHITE, r_cont, width=2, border_radius=8)
-        t_cont = self.font.render("Continue", True, WHITE)
-        self.screen.blit(t_cont, (r_cont.centerx - t_cont.get_width()//2, r_cont.centery - t_cont.get_height()//2))
-        
-        # Restart
-        r_rest = pygame.Rect(0, 0, btn_w, btn_h)
-        r_rest.centerx = rect.centerx
-        r_rest.y = start_y + btn_h + gap
-        pygame.draw.rect(self.screen, (200, 150, 50), r_rest, border_radius=8)
-        pygame.draw.rect(self.screen, WHITE, r_rest, width=2, border_radius=8)
-        t_rest = self.font.render("Restart", True, WHITE)
-        self.screen.blit(t_rest, (r_rest.centerx - t_rest.get_width()//2, r_rest.centery - t_rest.get_height()//2))
-
-        # Quit
-        r_quit = pygame.Rect(0, 0, btn_w, btn_h)
-        r_quit.centerx = rect.centerx
-        r_quit.y = start_y + 2 * (btn_h + gap)
-        pygame.draw.rect(self.screen, (200, 80, 80), r_quit, border_radius=8)
-        pygame.draw.rect(self.screen, WHITE, r_quit, width=2, border_radius=8)
-        t_quit = self.font.render("Lobby", True, WHITE)
-        self.screen.blit(t_quit, (r_quit.centerx - t_quit.get_width()//2, r_quit.centery - t_quit.get_height()//2))
+        self.pause_menu.draw(self.screen)
 
     def draw_wave_title(self) -> None:
         """Draw the artistic WAVE X title at top center."""
