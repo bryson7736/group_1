@@ -246,6 +246,7 @@ class Game:
 
     def start_level(self, idx: int) -> None:
         """Start a specific level."""
+        self.current_level_idx = idx
         self.level = self.level_mgr.get(idx)
         self.reset_runtime()
         if self.level and self.level.bg_type == "space":
@@ -424,18 +425,42 @@ class Game:
         if self.paused:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mx, my = event.pos
-                # Check Continue button click
                 # Popup dimensions (same as draw)
-                w, h = 300, 200
+                w, h = 300, 280
                 x = (SCREEN_W - w) // 2
                 y = (SCREEN_H - h) // 2
                 rect = pygame.Rect(x, y, w, h)
                 
-                btn_rect = pygame.Rect(0, 0, 120, 40)
-                btn_rect.center = (rect.centerx, rect.bottom - 50)
+                # Button dimensions
+                bw, bh = 160, 40
+                cx = rect.centerx
                 
-                if btn_rect.collidepoint(mx, my):
+                # Continue
+                r_cont = pygame.Rect(0, 0, bw, bh)
+                r_cont.center = (cx, rect.top + 100)
+                
+                # Restart
+                r_rest = pygame.Rect(0, 0, bw, bh)
+                r_rest.center = (cx, rect.top + 155)
+                
+                # Quit
+                r_quit = pygame.Rect(0, 0, bw, bh)
+                r_quit.center = (cx, rect.top + 210)
+                
+                if r_cont.collidepoint(mx, my):
+                    self.sound_mgr.play("click")
                     self.toggle_pause()
+                elif r_rest.collidepoint(mx, my):
+                    self.sound_mgr.play("click")
+                    self.toggle_pause()
+                    if hasattr(self, 'current_level_idx'):
+                        self.start_level(self.current_level_idx)
+                    else:
+                        self.reset_runtime()
+                elif r_quit.collidepoint(mx, my):
+                    self.sound_mgr.play("click")
+                    self.toggle_pause()
+                    self.state = STATE_LOBBY
             return # Block other input when paused
 
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -637,18 +662,40 @@ class Game:
         if self.paused:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                 mx, my = event.pos
-                # Check Continue button click
                 # Popup dimensions (same as draw)
-                w, h = 300, 200
+                w, h = 300, 280
                 x = (SCREEN_W - w) // 2
                 y = (SCREEN_H - h) // 2
                 rect = pygame.Rect(x, y, w, h)
                 
-                btn_rect = pygame.Rect(0, 0, 120, 40)
-                btn_rect.center = (rect.centerx, rect.bottom - 50)
+                # Button dimensions
+                bw, bh = 160, 40
+                cx = rect.centerx
                 
-                if btn_rect.collidepoint(mx, my):
+                # Continue
+                r_cont = pygame.Rect(0, 0, bw, bh)
+                r_cont.center = (cx, rect.top + 100)
+                
+                # Restart
+                r_rest = pygame.Rect(0, 0, bw, bh)
+                r_rest.center = (cx, rect.top + 155)
+                
+                # Quit
+                r_quit = pygame.Rect(0, 0, bw, bh)
+                r_quit.center = (cx, rect.top + 210)
+                
+                if r_cont.collidepoint(mx, my):
+                    self.sound_mgr.play("click")
                     self.toggle_pause()
+                elif r_rest.collidepoint(mx, my):
+                    self.sound_mgr.play("click")
+                    self.toggle_pause()
+                    if self.current_story_stage:
+                        self.start_story_stage(self.current_story_stage.stage_id)
+                elif r_quit.collidepoint(mx, my):
+                    self.sound_mgr.play("click")
+                    self.toggle_pause()
+                    self.state = STATE_LOBBY
             return # Block other input when paused
 
         if event.type == pygame.MOUSEBUTTONDOWN:
