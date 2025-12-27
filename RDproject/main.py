@@ -411,9 +411,9 @@ class Game:
                     self.sound_mgr.play("error")
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             self.grid.selected = None
-        self.speed_ctrl.handle(event)
+            self.trash_active = False
             return
-        # self.speed_ctrl.handle(event)
+        self.speed_ctrl.handle(event)
         if self.btn_trash.handle(event):
             self.sound_mgr.play("click")
         if self.btn_help.handle(event):
