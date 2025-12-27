@@ -241,3 +241,57 @@ class HelpPopup:
         # Close instruction
         close_txt = self.font_small.render("Click Help again to close", True, (200, 200, 200))
         screen.blit(close_txt, (self.rect.centerx - close_txt.get_width() // 2, self.rect.bottom - 30))
+
+def draw_wave_title(screen, font_huge, wave):
+    """Draw the artistic WAVE X title at top center."""
+    # Calculate wave number (1-based for display)
+    current_wave = max(1, wave + 1)
+    text_str = f"WAVE {current_wave}"
+    
+    # Stylized font rendering
+    # Shadow
+    shadow = font_huge.render(text_str, True, (0, 0, 0))
+    # Main Text (Gold/Orange gradient simulated with color)
+    # Using a bright orange-gold
+    main_color = (255, 180, 0)
+    text = font_huge.render(text_str, True, main_color)
+    
+    # Position: Top Center
+    cx = SCREEN_W // 2
+    cy = 50
+    
+    # Draw shadow offset
+    screen.blit(shadow, (cx - shadow.get_width() // 2 + 3, cy - shadow.get_height() // 2 + 3))
+    # Draw text
+    screen.blit(text, (cx - text.get_width() // 2, cy - text.get_height() // 2))
+    
+    # Simple underline
+    lw = text.get_width() + 40
+    pygame.draw.rect(screen, main_color, (cx - lw//2, cy + 25, lw, 3), border_radius=2)
+
+def draw_boss_state(screen, font_huge, enemies):
+    """Draw the current state of the Boss if active."""
+    from boss import TrueBoss
+    boss = None
+    for e in enemies:
+        if isinstance(e, TrueBoss):
+            boss = e
+            break
+    
+    if boss:
+        state_text = f"BOSS: {boss.state.upper()}"
+        # Color coding based on state
+        color = WHITE
+        if boss.state == "defense":
+            color = (100, 100, 255) # Blueish
+        elif boss.state == "attack":
+            color = (255, 50, 50) # Red
+        elif boss.state == "heal":
+            color = (50, 255, 50) # Green
+        
+        txt = font_huge.render(state_text, True, color)
+        # Bottom Right
+        x = SCREEN_W - txt.get_width() - 30
+        y = SCREEN_H - txt.get_height() - 30
+        
+        screen.blit(txt, (x, y))
