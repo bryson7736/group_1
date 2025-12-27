@@ -1,16 +1,17 @@
 CRASH REPORT
 ====================
-Error: too many values to unpack (expected 2)
+Error: 'Game' object has no attribute 'hp_anim_timer'
 
 Traceback:
 Traceback (most recent call last):
-  File "c:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 1416, in <module>
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1557, in <module>
     Game().run()
-  File "c:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 1405, in run
-    self.update(dt)
-  File "c:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 817, in update
-    self.start_wave()
-  File "c:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 591, in start_wave
-    count, is_boss = self.level_mgr.wave_info(self.wave)
-    ^^^^^^^^^^^^^^
-ValueError: too many values to unpack (expected 2)
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1547, in run
+    self.draw()
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1504, in draw
+    self.story_draw()
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1443, in story_draw
+    self.draw_new_ui()
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1045, in draw_new_ui
+    if self.hp_anim_timer > 0:
+AttributeError: 'Game' object has no attribute 'hp_anim_timer'
