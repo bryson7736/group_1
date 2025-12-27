@@ -405,9 +405,12 @@ class Game:
             self.trash_active = False
             return
         # self.speed_ctrl.handle(event)
-        self.btn_trash.handle(event)
-        self.btn_help.handle(event)
-        self.btn_pause.handle(event)
+        if self.btn_trash.handle(event):
+            self.sound_mgr.play("click")
+        if self.btn_help.handle(event):
+            self.sound_mgr.play("click")
+        if self.btn_pause.handle(event):
+            self.sound_mgr.play("click")
         
         if self.paused:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -593,9 +596,12 @@ class Game:
             self.trash_active = False
             return
         # self.speed_ctrl.handle(event)
-        self.btn_trash.handle(event)
-        self.btn_help.handle(event)
-        self.btn_pause.handle(event)
+        if self.btn_trash.handle(event):
+            self.sound_mgr.play("click")
+        if self.btn_help.handle(event):
+            self.sound_mgr.play("click")
+        if self.btn_pause.handle(event):
+            self.sound_mgr.play("click")
         
         if self.paused:
             if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
