@@ -327,6 +327,8 @@ class Game:
         self.money = START_MONEY
         self.die_cost = DIE_COST  # Reset to base cost
         self.base_hp = BASE_HP
+        self.last_hp = BASE_HP
+        self.hp_anim_timer = 0.0
         self.wave = -1
         self.to_spawn = 0
         self.spawn_cd = 0.0
