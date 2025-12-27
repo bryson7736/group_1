@@ -269,15 +269,15 @@ class IronDice(Die):
         self.type = DIE_IRON
         
         # Stats:
-        # Base: 100 Dmg, 1.5s AS (Buffed from 2.0s), Boss Dmg x2
+        # Base: 150 Dmg, 1.5s AS (Buffed from 2.0s), Boss Dmg x2
         # Per Level: +10 Dmg
-        self.base_dmg = 100 + (self.level - 1) * 10
+        self.base_dmg = 150 + (self.level - 1) * 10
         self.base_period_sec = 1.5 / self.level
         self.base_fire_rate = self.base_period_sec * FPS
 
     def set_level(self, lv):
         super().set_level(lv)
-        self.base_dmg = 100 + (self.level - 1) * 10
+        self.base_dmg = 150 + (self.level - 1) * 10
         self.base_period_sec = 1.5 / self.level
         self.base_fire_rate = self.base_period_sec * FPS
 
