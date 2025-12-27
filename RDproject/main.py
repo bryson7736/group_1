@@ -1441,42 +1441,23 @@ class Game:
 
         # Draw New UI
         self.draw_new_ui()
-
-        panel_rect = pygame.Rect(20, 10, 370, 320)
-
-        def _body() -> None:
-            y = panel_rect.y + 60
+        
+        # Story Info (Stage & Wave Desc)
+        if self.current_story_stage:
+            # Draw below Coin display
+            sx = 20
+            sy = 70
+            stage_txt = self.font_big.render(f"Stage: {self.current_story_stage.stage_id}", True, (255, 150, 50))
+            self.screen.blit(stage_txt, (sx, sy))
             
-            # Story stage info
-            if self.current_story_stage:
-                stage_txt = self.font_big.render(f"Stage: {self.current_story_stage.stage_id}", True, (255, 150, 50))
-                self.screen.blit(stage_txt, (panel_rect.x + 20, y))
-                y += 32
-                
-                # Wave description
-                wave_desc = self.current_story_stage.get_wave_description(max(0, self.wave + 1))
-                desc_txt = self.font.render(wave_desc, True, WHITE)
-                self.screen.blit(desc_txt, (panel_rect.x + 20, y))
-                y += 28
+            wave_desc = self.current_story_stage.get_wave_description(max(0, self.wave + 1))
+            desc_txt = self.font.render(wave_desc, True, WHITE)
+            self.screen.blit(desc_txt, (sx, sy + 30))
             
-            pairs = [
-                ("Wave", f"{max(0, self.wave + 1)}/{self.story_max_waves}"),
-                ("Speed", f"{self.speed_mult}×"),
-            ]
-            for name, val in pairs:
-                txt = self.font.render(f"{name}: {val}", True, WHITE)
-                self.screen.blit(txt, (panel_rect.x + 20, y))
-                y += 24
-
-            y += 10
-            tips = [
-                "Story Mode: Complete all waves!",
-                "ESC to return to stage select",
-            ]
-            for s in tips:
-                t = self.font.render(s, True, WHITE)
-                self.screen.blit(t, (panel_rect.x + 20, y))
-                y += 20
+            # Wave progress
+            wave_prog = f"Wave: {max(0, self.wave + 1)}/{self.story_max_waves}"
+            prog_txt = self.font.render(wave_prog, True, WHITE)
+            self.screen.blit(prog_txt, (sx, sy + 60))
 
         draw_panel(self.screen, panel_rect, "Mission", self.font_big, _body)
 
