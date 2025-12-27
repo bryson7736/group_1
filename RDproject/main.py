@@ -1459,8 +1459,6 @@ class Game:
             prog_txt = self.font.render(wave_prog, True, WHITE)
             self.screen.blit(prog_txt, (sx, sy + 60))
 
-        draw_panel(self.screen, panel_rect, "Mission", self.font_big, _body)
-
         # self.speed_ctrl.draw(self.screen)
         self.draw_wave_title()
         self.btn_trash.draw(self.screen)
