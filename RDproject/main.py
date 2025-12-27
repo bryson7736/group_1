@@ -1100,7 +1100,6 @@ class Game:
 
             pairs = [
                 ("Time", time_str),
-                ("Coins", str(self.upgrades.coins)),
             ]
             for name, val in pairs:
                 txt = self.font.render(f"{name}: {val}", True, WHITE)
