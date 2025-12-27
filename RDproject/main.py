@@ -1022,7 +1022,7 @@ class Game:
 
             msg = f"Next wave in {int(time_left)}s"
             top = self.font_big.render(msg, True, WHITE)
-            self.screen.blit(top, (GRID_X, 42))
+            self.screen.blit(top, (SCREEN_W - top.get_width() - 20, 42))
         
         # Draw in-game upgrades
         self.draw_ingame_upgrades()
