@@ -1090,24 +1090,6 @@ class Game:
         # Draw New UI
         self.draw_new_ui()
 
-        panel_rect = pygame.Rect(20, 10, 370, 340)
-
-        def _body() -> None:
-            y = panel_rect.y + 60
-            mins = int(self.game_time) // 60
-            secs = int(self.game_time) % 60
-            time_str = f"{mins:02d}:{secs:02d}"
-
-            pairs = [
-                ("Time", time_str),
-            ]
-            for name, val in pairs:
-                txt = self.font.render(f"{name}: {val}", True, WHITE)
-                self.screen.blit(txt, (panel_rect.x + 20, y))
-                y += 26
-
-        draw_panel(self.screen, panel_rect, "Status", self.font_big, _body)
-
         # self.speed_ctrl.draw(self.screen)
         self.draw_wave_title()
         self.btn_trash.draw(self.screen)
