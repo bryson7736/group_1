@@ -47,3 +47,9 @@ class LeaderboardManager:
     def get_top_scores(self) -> List[Dict[str, Any]]:
         """Return the list of top scores."""
         return self.scores
+
+    def is_high_score(self, waves: int) -> bool:
+        """Check if the given wave count qualifies for the leaderboard."""
+        if len(self.scores) < 10:
+            return True
+        return waves > self.scores[-1]["waves"]

@@ -465,10 +465,20 @@ class Game:
         """Handle events during game over screen."""
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_r:
-                self.reset_runtime()
-                self.state = STATE_PLAY
+                # Check if score qualifies for leaderboard
+                if self.leaderboard_mgr.is_high_score(max(0, self.wave)):
+                    self.state = STATE_INPUT_NAME
+                    self.input_name_str = ""
+                else:
+                    self.reset_runtime()
+                    self.state = STATE_PLAY
             elif event.key == pygame.K_ESCAPE:
-                self.back_to_lobby()
+                # Check if score qualifies for leaderboard
+                if self.leaderboard_mgr.is_high_score(max(0, self.wave)):
+                    self.state = STATE_INPUT_NAME
+                    self.input_name_str = ""
+                else:
+                    self.back_to_lobby()
 
     def help_handle(self, event: pygame.event.Event) -> None:
         """Handle events during help screen."""
@@ -731,15 +741,20 @@ class Game:
             if event.key == pygame.K_RETURN:
                 if self.input_name_str.strip():
                     self.leaderboard_mgr.save_score(self.input_name_str.strip(), max(0, self.wave))
+                    self.sound_mgr.play("upgrade") # Success sound
                     self.goto_leaderboard()
+                else:
+                    self.sound_mgr.play("error")
             elif event.key == pygame.K_BACKSPACE:
                 self.input_name_str = self.input_name_str[:-1]
+                self.sound_mgr.play("click")
             elif event.key == pygame.K_ESCAPE:
                 # Giving up on saving score
                 self.back_to_lobby()
             else:
                 if len(self.input_name_str) < 12 and event.unicode.isprintable():
                     self.input_name_str += event.unicode
+                    self.sound_mgr.play("click")
 
     def leaderboard_handle(self, event: pygame.event.Event) -> None:
         """Handle leaderboard screen events."""
