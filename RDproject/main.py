@@ -18,6 +18,7 @@ from dice import DIE_TYPES, make_die, get_die_image
 from colors import WHITE, DARKER, GRAY, RED, DARK
 from story_mode import StoryManager
 from ingame_upgrades import InGameUpgrades
+from sound_manager import SoundManager
 from effects import TelegraphZone
 from colors import DICE_COLORS
 from leaderboard import LeaderboardManager
