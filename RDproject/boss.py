@@ -25,7 +25,7 @@ BOSS_MONEY_DROP = 200.0     # Money reward for killing boss
 BOSS_SPEED_MULT = 0.7       # Boss moves slower than normal enemies
 
 # Boss HP Formula Settings
-BOSS_BASE_HP = 1000.0      # Base HP for boss
+BOSS_BASE_HP = 2500.0      # Base HP for boss
 BOSS_HP_PER_WAVE = 500.0    # Additional HP per wave
 BOSS_HP_DIFFICULTY_SCALE = 3  # Difficulty scaling exponent
 
