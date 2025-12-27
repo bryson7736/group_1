@@ -1018,6 +1018,20 @@ class Game:
         label = self.font.render(text, True, WHITE)
         self.screen.blit(label, (rect.centerx - label.get_width() // 2, rect.centery - label.get_height() // 2))
 
+    def draw_new_ui(self) -> None:
+        """Draw the new UI elements (Money)."""
+        # Money Display (Bottom Center)
+        cx = SCREEN_W // 2
+        cy = SCREEN_H - 40
+        
+        # Money Icon
+        pygame.draw.circle(self.screen, (255, 255, 0), (cx - 80, cy), 20)
+        m_sym = self.font.render("$", True, (0,0,0))
+        self.screen.blit(m_sym, (cx - 80 - m_sym.get_width()//2, cy - m_sym.get_height()//2))
+        
+        money_val = self.font_big.render(str(self.money), True, WHITE)
+        self.screen.blit(money_val, (cx - 50, cy - money_val.get_height()//2))
+
     def play_draw(self) -> None:
         """Draw the gameplay screen."""
         if self._bg_surface:
@@ -1043,6 +1057,9 @@ class Game:
                 rx = int(z.x + (z.r - 10) * math.cos(ang))
                 ry = int(z.y + (z.r - 10) * math.sin(ang))
                 pygame.draw.circle(self.screen, color, (rx, ry), 6)
+
+        # Draw New UI
+        self.draw_new_ui()
 
         panel_rect = pygame.Rect(20, 10, 370, 340)
 
