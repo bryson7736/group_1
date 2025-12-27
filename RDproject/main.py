@@ -141,6 +141,14 @@ class Game:
             self.font_big,
             self.toggle_trash
         )
+        
+        self.btn_help = Button(
+            (SCREEN_W - 1250, 450, 120, 40),
+            "Help",
+            self.font_big,
+            self.toggle_help
+        )
+        self.show_help = False
 
         # Lobby upgrades UI message (shown on upgrades screen)
         self._upgrade_msg = ""
@@ -327,6 +335,10 @@ class Game:
     def toggle_trash(self) -> None:
         """Toggle trash mode for deleting dice."""
         self.trash_active = not self.trash_active
+
+    def toggle_help(self) -> None:
+        """Toggle help popup."""
+        self.show_help = not self.show_help
     
     def purchase_ingame_upgrade(self, upgrade_type: str) -> None:
         """Purchase an in-game upgrade with money."""
@@ -372,6 +384,7 @@ class Game:
             return
         # self.speed_ctrl.handle(event)
         self.btn_trash.handle(event)
+        self.btn_help.handle(event)
         if event.type == pygame.MOUSEBUTTONDOWN:
             # Check for upgrade button clicks
             if event.button == 1:  # Left click
@@ -997,22 +1010,13 @@ class Game:
                 self.screen.blit(txt, (panel_rect.x + 20, y))
                 y += 26
 
-            y += 10
-            tips = [
-                "Hotkeys: 1~5 speed, N next wave",
-                "Right click cancels / exits Trash",
-                "Press ESC for lobby",
-            ]
-            for s in tips:
-                t = self.font.render(s, True, WHITE)
-                self.screen.blit(t, (panel_rect.x + 20, y))
-                y += 22
-
         draw_panel(self.screen, panel_rect, "Status", self.font_big, _body)
 
         # self.speed_ctrl.draw(self.screen)
         self.draw_wave_title()
         self.btn_trash.draw(self.screen)
+        self.btn_help.draw(self.screen)
+        self.draw_help_popup()
 
         if self.to_spawn <= 0 and len(self.enemies) == 0:
             time_left = max(0.0, self.wave_delay - self.wave_timer)
@@ -1116,6 +1120,44 @@ class Game:
             y = SCREEN_H - txt.get_height() - 30
             
             self.screen.blit(txt, (x, y))
+
+    def draw_help_popup(self) -> None:
+        """Draw the help popup window."""
+        if not self.show_help:
+            return
+            
+        # Popup dimensions
+        w, h = 400, 300
+        x = (SCREEN_W - w) // 2
+        y = (SCREEN_H - h) // 2
+        rect = pygame.Rect(x, y, w, h)
+        
+        # Draw background
+        pygame.draw.rect(self.screen, (40, 40, 50), rect, border_radius=12)
+        pygame.draw.rect(self.screen, WHITE, rect, width=2, border_radius=12)
+        
+        # Title
+        title = self.font_big.render("How to Play", True, WHITE)
+        self.screen.blit(title, (rect.centerx - title.get_width() // 2, rect.y + 20))
+        
+        # Instructions
+        tips = [
+            "Hotkeys: 1~5 speed, N next wave",
+            "Right click cancels / exits Trash",
+            "Press ESC for lobby",
+            "Click empty slot to spawn die",
+            "Drag same dice to merge",
+        ]
+        
+        py = rect.y + 70
+        for tip in tips:
+            t = self.font.render(tip, True, WHITE)
+            self.screen.blit(t, (rect.x + 30, py))
+            py += 30
+            
+        # Close instruction
+        close_txt = self.font_small.render("Click Help again to close", True, (200, 200, 200))
+        self.screen.blit(close_txt, (rect.centerx - close_txt.get_width() // 2, rect.bottom - 30))
 
     def draw_wave_title(self) -> None:
         """Draw the artistic WAVE X title at top center."""
