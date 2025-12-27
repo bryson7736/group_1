@@ -473,13 +473,15 @@ class Game:
         """Handle events during help screen."""
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.back_to_lobby()
-        self.help_back.handle(event)
+        if self.help_back.handle(event):
+            self.sound_mgr.play("click")
 
     def loadout_handle(self, event: pygame.event.Event) -> None:
         """Handle events during loadout screen."""
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.back_to_lobby()
-        self.loadout_back.handle(event)
+        if self.loadout_back.handle(event):
+            self.sound_mgr.play("click")
         # click on chips
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
@@ -493,7 +495,8 @@ class Game:
         """Handle events during upgrades screen."""
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.back_to_lobby()
-        self.upg_back.handle(event)
+        if self.upg_back.handle(event):
+            self.sound_mgr.play("click")
         
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
@@ -541,7 +544,8 @@ class Game:
         """Handle events during story stage selection screen."""
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.back_to_lobby()
-        self.story_back.handle(event)
+        if self.story_back.handle(event):
+            self.sound_mgr.play("click")
         
         # Click on stage buttons
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
