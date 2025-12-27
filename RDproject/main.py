@@ -1171,6 +1171,34 @@ class Game:
         close_txt = self.font_small.render("Click Help again to close", True, (200, 200, 200))
         self.screen.blit(close_txt, (rect.centerx - close_txt.get_width() // 2, rect.bottom - 30))
 
+    def draw_pause_popup(self) -> None:
+        """Draw the pause popup window."""
+        if not self.paused:
+            return
+            
+        # Popup dimensions
+        w, h = 300, 200
+        x = (SCREEN_W - w) // 2
+        y = (SCREEN_H - h) // 2
+        rect = pygame.Rect(x, y, w, h)
+        
+        # Draw background
+        pygame.draw.rect(self.screen, (40, 40, 50), rect, border_radius=12)
+        pygame.draw.rect(self.screen, WHITE, rect, width=2, border_radius=12)
+        
+        # Title
+        title = self.font_big.render("Paused", True, WHITE)
+        self.screen.blit(title, (rect.centerx - title.get_width() // 2, rect.y + 40))
+        
+        # Continue Button (Visual only here, logic in handle_play)
+        btn_rect = pygame.Rect(0, 0, 120, 40)
+        btn_rect.center = (rect.centerx, rect.bottom - 50)
+        pygame.draw.rect(self.screen, (100, 200, 100), btn_rect, border_radius=8)
+        pygame.draw.rect(self.screen, WHITE, btn_rect, width=2, border_radius=8)
+        
+        btn_txt = self.font.render("Continue", True, WHITE)
+        self.screen.blit(btn_txt, (btn_rect.centerx - btn_txt.get_width() // 2, btn_rect.centery - btn_txt.get_height() // 2))
+
     def draw_wave_title(self) -> None:
         """Draw the artistic WAVE X title at top center."""
         # Calculate wave number (1-based for display)
