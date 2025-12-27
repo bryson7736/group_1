@@ -589,12 +589,19 @@ class Game:
         else:
             # Practice Mode: Use level manager's wave info
             count, is_boss, true_boss = self.level_mgr.wave_info(self.wave)
-            count = int(count * self.level.difficulty)
-            
+
+            # If it's a TrueBoss wave (every 10 waves), spawn only the TrueBoss (1 spawn).
+            # Otherwise compute normal count and scale by difficulty.
+            if true_boss:
+                count = 1
+            else:
+                count = int(count * self.level.difficulty)
+
             # Set flags for Practice Mode
-            self.is_big_enemy_wave = is_boss
-            self.is_true_boss_wave = true_boss # Enable True Boss in Practice mode
-        
+            # If true_boss is True, ensure big-enemy flag is off to avoid conflicts.
+            self.is_big_enemy_wave = False if true_boss else is_boss
+            self.is_true_boss_wave = true_boss
+                
         self.to_spawn = count
         self.spawn_cd = 0.0
 
