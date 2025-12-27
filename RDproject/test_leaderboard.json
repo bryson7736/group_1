@@ -1,0 +1,42 @@
+[
+    {
+        "name": "Bob",
+        "waves": 20
+    },
+    {
+        "name": "Player14",
+        "waves": 14
+    },
+    {
+        "name": "Player13",
+        "waves": 13
+    },
+    {
+        "name": "Player12",
+        "waves": 12
+    },
+    {
+        "name": "Player11",
+        "waves": 11
+    },
+    {
+        "name": "Alice",
+        "waves": 10
+    },
+    {
+        "name": "Player10",
+        "waves": 10
+    },
+    {
+        "name": "Player9",
+        "waves": 9
+    },
+    {
+        "name": "Player8",
+        "waves": 8
+    },
+    {
+        "name": "Player7",
+        "waves": 7
+    }
+]
