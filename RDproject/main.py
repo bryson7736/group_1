@@ -1023,7 +1023,19 @@ class Game:
         self.screen.blit(label, (rect.centerx - label.get_width() // 2, rect.centery - label.get_height() // 2))
 
     def draw_new_ui(self) -> None:
-        """Draw the new UI elements (Money, HP)."""
+        """Draw the new UI elements (Money, HP, Coins)."""
+        # 1. Coin Display (Top Left)
+        coin_x, coin_y = 20, 20
+        # Gold coin icon
+        pygame.draw.circle(self.screen, (255, 215, 0), (coin_x + 15, coin_y + 15), 15)
+        pygame.draw.circle(self.screen, (200, 170, 0), (coin_x + 15, coin_y + 15), 15, width=2)
+        # 'C' symbol
+        c_sym = self.font.render("C", True, (200, 170, 0))
+        self.screen.blit(c_sym, (coin_x + 15 - c_sym.get_width()//2, coin_y + 15 - c_sym.get_height()//2))
+        
+        coin_txt = self.font_big.render(str(self.upgrades.coins), True, WHITE)
+        self.screen.blit(coin_txt, (coin_x + 40, coin_y))
+
         # Money Display (Bottom Center)
         cx = SCREEN_W // 2
         cy = SCREEN_H - 40
