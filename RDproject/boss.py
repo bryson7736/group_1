@@ -247,5 +247,20 @@ class TrueBoss(Enemy):
         elif self.slow_timer > 0:
             pygame.draw.rect(surf, (100, 100, 255), r, width=2, border_radius=10)
 
+        # Health Bar
+        bar_w = self.size
+        bar_h = 8
+        bar_x = int(self.x - bar_w / 2)
+        bar_y = int(self.y - self.size / 2 - bar_h - 6)
+        
+        # Background (Red/Dark)
+        pygame.draw.rect(surf, (60, 0, 0), (bar_x, bar_y, bar_w, bar_h))
+        
+        # Foreground (Green)
+        if self.max_hp > 0:
+            pct = max(0.0, min(1.0, self.hp / self.max_hp))
+            fill_w = int(bar_w * pct)
+            pygame.draw.rect(surf, (0, 255, 0), (bar_x, bar_y, fill_w, bar_h))
+
         hp_txt = font.render(str(max(0, int(self.hp + 0.5))), True, WHITE)
         surf.blit(hp_txt, (r.centerx - hp_txt.get_width()//2, r.centery - hp_txt.get_height()//2))
