@@ -170,6 +170,9 @@ class Game:
             self.toggle_pause
         )
         self.paused = False
+        
+        self.pause_menu = PauseMenu(self.font_big, self.font)
+        self.help_popup = HelpPopup(self.font_big, self.font, self.font_small)
 
         # Lobby upgrades UI message (shown on upgrades screen)
         self._upgrade_msg = ""
@@ -1322,39 +1325,7 @@ class Game:
         """Draw the help popup window."""
         if not self.show_help:
             return
-            
-        # Popup dimensions
-        w, h = 400, 300
-        x = (SCREEN_W - w) // 2
-        y = (SCREEN_H - h) // 2
-        rect = pygame.Rect(x, y, w, h)
-        
-        # Draw background
-        pygame.draw.rect(self.screen, (40, 40, 50), rect, border_radius=12)
-        pygame.draw.rect(self.screen, WHITE, rect, width=2, border_radius=12)
-        
-        # Title
-        title = self.font_big.render("How to Play", True, WHITE)
-        self.screen.blit(title, (rect.centerx - title.get_width() // 2, rect.y + 20))
-        
-        # Instructions
-        tips = [
-            "Hotkeys: 1~5 speed, N next wave",
-            "Right click cancels / exits Trash",
-            "Press ESC for lobby",
-            "Click empty slot to spawn die",
-            "Drag same dice to merge",
-        ]
-        
-        py = rect.y + 70
-        for tip in tips:
-            t = self.font.render(tip, True, WHITE)
-            self.screen.blit(t, (rect.x + 30, py))
-            py += 30
-            
-        # Close instruction
-        close_txt = self.font_small.render("Click Help again to close", True, (200, 200, 200))
-        self.screen.blit(close_txt, (rect.centerx - close_txt.get_width() // 2, rect.bottom - 30))
+        self.help_popup.draw(self.screen)
 
     def draw_pause_popup(self) -> None:
         """Draw the pause popup window."""
