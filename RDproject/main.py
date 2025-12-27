@@ -989,7 +989,6 @@ class Game:
             pairs = [
                 ("Time", time_str),
                 ("Money", f"${self.money}"),
-                ("Wave", str(max(0, self.wave))),
                 ("Base HP", str(self.base_hp)),
                 ("Speed", f"{self.speed_mult}×"),
                 ("Coins", str(self.upgrades.coins)),
