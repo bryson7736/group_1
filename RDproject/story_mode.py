@@ -132,7 +132,7 @@ class StoryManager:
                 stage_id="1-5",
                 name="Hell Lord's Throne",
                 description="Face the Hell Lord himself! Prepare for the ultimate test!",
-                waves=5,
+                waves=10,
                 has_big_enemy=True,
                 has_true_boss=True,
                 path_points=[

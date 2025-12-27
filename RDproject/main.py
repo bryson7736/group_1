@@ -588,7 +588,7 @@ class Game:
         # Story Mode: Use story-specific wave configuration
         if self.state == STATE_STORY and self.current_story_stage:
             # Simple scaling for story mode: base count + wave number
-            count = 10 + self.wave * 3  # Increased difficulty
+            count = 25 + self.wave * 3  # Increased difficulty
             # Flags are already set by update() logic
         else:
             # Practice Mode: Use level manager's wave info
