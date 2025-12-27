@@ -1180,7 +1180,7 @@ class Game:
         # Draw in-game upgrades
         self.draw_ingame_upgrades()
         # Draw Boss State
-        self.draw_boss_state()
+        draw_boss_state(self.screen, self.font_huge, self.enemies)
     
     def draw_ingame_upgrades(self) -> None:
         """Draw the in-game upgrade panel (2x3 grid)."""
@@ -1247,31 +1247,7 @@ class Game:
                 cost_txt = self.font_small.render(f"${cost}", True, cost_color)
             self.screen.blit(cost_txt, (rect.centerx - cost_txt.get_width()//2, rect.bottom - 18))
 
-    def draw_boss_state(self) -> None:
-        """Draw the current state of the Boss if active."""
-        boss = None
-        for e in self.enemies:
-            if isinstance(e, TrueBoss):
-                boss = e
-                break
-        
-        if boss:
-            state_text = f"BOSS: {boss.state.upper()}"
-            # Color coding based on state
-            color = WHITE
-            if boss.state == "defense":
-                color = (100, 100, 255) # Blueish
-            elif boss.state == "attack":
-                color = (255, 50, 50) # Red
-            elif boss.state == "heal":
-                color = (50, 255, 50) # Green
-            
-            txt = self.font_huge.render(state_text, True, color)
-            # Bottom Right
-            x = SCREEN_W - txt.get_width() - 30
-            y = SCREEN_H - txt.get_height() - 30
-            
-            self.screen.blit(txt, (x, y))
+
 
     def draw_help_popup(self) -> None:
         """Draw the help popup window."""
@@ -1497,7 +1473,7 @@ class Game:
         # Draw in-game upgrades
         self.draw_ingame_upgrades()
         # Draw Boss State
-        self.draw_boss_state()
+        draw_boss_state(self.screen, self.font_huge, self.enemies)
 
     # --------------- Frame ---------------
     def draw(self) -> None:
