@@ -588,7 +588,7 @@ class Game:
             # Flags are already set by update() logic
         else:
             # Practice Mode: Use level manager's wave info
-            count, is_boss, true_boss = self.level_mgr.wave_info(self.wave)
+            count, is_boss, true_boss = self.level_mgr.wave_info(self.wave + 1)
 
             # If it's a TrueBoss wave (every 10 waves), spawn only the TrueBoss (1 spawn).
             # Otherwise compute normal count and scale by difficulty.
