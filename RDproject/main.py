@@ -571,6 +571,9 @@ class Game:
                     # Check if unlocked
                     if self.story_mgr.is_stage_unlocked(stage.stage_id):
                         self.start_story_stage(stage.stage_id)
+                        self.sound_mgr.play("click")
+                    else:
+                        self.sound_mgr.play("error")
                     break
     
     def story_handle(self, event: pygame.event.Event) -> None:
