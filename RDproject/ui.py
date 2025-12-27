@@ -22,6 +22,8 @@ class Button:
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(event.pos):
                 self.on_click()
+                return True
+        return False
 
     def draw(self, surf):
         color = self.hover if self._hovering else self.bg

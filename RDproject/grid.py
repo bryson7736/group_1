@@ -204,6 +204,7 @@ class Grid:
                         self.set(c, r, make_die(self.game, c, r, ttype, new_lv))
                         self.set(sc, sr, None)
                         self.game.money += MERGE_REFUND
+                        self.game.sound_mgr.play("merge")
                         self.selected = None
                     else:
                         self.selected = None
