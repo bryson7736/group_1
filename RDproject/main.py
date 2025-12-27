@@ -767,6 +767,8 @@ class Game:
     # --------------- Update ---------------
     def update(self, dt: float) -> None:
         """Update game logic."""
+        if self.paused:
+            return
         if self.state not in (STATE_PLAY, STATE_STORY):
             return
 
