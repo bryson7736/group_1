@@ -170,6 +170,7 @@ class Die:
         base = 2 ** (self.level - 1)
         dmg = self.apply_crit(base * self.damage_multiplier())
         self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
+        self.game.sound_mgr.play("shoot")
 
 
 class SingleDice(Die):
