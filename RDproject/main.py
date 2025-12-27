@@ -1430,6 +1430,9 @@ class Game:
                 ry = int(z.y + (z.r - 10) * math.sin(ang))
                 pygame.draw.circle(self.screen, color, (rx, ry), 6)
 
+        # Draw New UI
+        self.draw_new_ui()
+
         panel_rect = pygame.Rect(20, 10, 370, 320)
 
         def _body() -> None:
