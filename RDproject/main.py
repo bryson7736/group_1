@@ -396,6 +396,9 @@ class Game:
                         self.grid.set(c, r, die)
                         self.money -= self.die_cost
                         self.die_cost += 10  # Increase cost by 10
+                        self.sound_mgr.play("spawn")
+                else:
+                    self.sound_mgr.play("error")
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             self.grid.selected = None
             self.trash_active = False
@@ -581,6 +584,9 @@ class Game:
                         self.grid.set(c, r, die)
                         self.money -= self.die_cost
                         self.die_cost += 10  # Increase cost by 10
+                        self.sound_mgr.play("spawn")
+                else:
+                    self.sound_mgr.play("error")
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             self.grid.selected = None
             self.trash_active = False
