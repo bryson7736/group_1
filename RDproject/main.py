@@ -53,6 +53,8 @@ class Game:
         self.font_small = pygame.font.SysFont(["segoe uiemoji", "segoe ui symbol", "arial"], 16)
         self.font_big = pygame.font.SysFont(["segoe uiemoji", "segoe ui symbol", "arial"], 28, bold=True)
         self.font_huge = pygame.font.SysFont(["segoe uiemoji", "segoe ui symbol", "arial"], 48, bold=True)
+        
+        self.sound_mgr = SoundManager()
 
         self.state: str = STATE_LOBBY
         self.level_mgr = LevelManager()
