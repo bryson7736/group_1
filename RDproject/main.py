@@ -492,6 +492,7 @@ class Game:
                 r = pygame.Rect(bx, by + i * (h + gap), w, h)
                 if r.collidepoint(mx, my):
                     self.loadout.toggle(t)
+                    self.sound_mgr.play("click")
 
     def upgrades_handle(self, event: pygame.event.Event) -> None:
         """Handle events during upgrades screen."""
