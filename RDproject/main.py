@@ -1071,7 +1071,6 @@ class Game:
 
             pairs = [
                 ("Time", time_str),
-                ("Base HP", str(self.base_hp)),
                 ("Coins", str(self.upgrades.coins)),
             ]
             for name, val in pairs:
