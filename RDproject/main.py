@@ -149,6 +149,14 @@ class Game:
             self.toggle_help
         )
         self.show_help = False
+        
+        self.btn_pause = Button(
+            (SCREEN_W - 1250, 500, 120, 40),
+            "Pause",
+            self.font_big,
+            self.toggle_pause
+        )
+        self.paused = False
 
         # Lobby upgrades UI message (shown on upgrades screen)
         self._upgrade_msg = ""
@@ -339,6 +347,10 @@ class Game:
     def toggle_help(self) -> None:
         """Toggle help popup."""
         self.show_help = not self.show_help
+
+    def toggle_pause(self) -> None:
+        """Toggle pause state."""
+        self.paused = not self.paused
     
     def purchase_ingame_upgrade(self, upgrade_type: str) -> None:
         """Purchase an in-game upgrade with money."""
