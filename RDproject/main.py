@@ -134,15 +134,9 @@ class Game:
             if not placed:
                 continue
 
-        self.speed_ctrl = Segmented(
-            (SCREEN_W - 420, 24, 360, 40),
-            ["0.5×", "1×", "2×", "4×", "8×"],
-            self.font_big,
-            self.speed_index,
-            self.on_speed_change
-        )
+        # self.speed_ctrl removed
         self.btn_trash = Button(
-            (SCREEN_W - 820, 24, 120, 40),
+            (SCREEN_W - 1250, 400, 120, 40),
             "Trash",
             self.font_big,
             self.toggle_trash
@@ -374,8 +368,9 @@ class Game:
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             self.grid.selected = None
             self.trash_active = False
+            self.trash_active = False
             return
-        self.speed_ctrl.handle(event)
+        # self.speed_ctrl.handle(event)
         self.btn_trash.handle(event)
         if event.type == pygame.MOUSEBUTTONDOWN:
             # Check for upgrade button clicks
@@ -538,8 +533,9 @@ class Game:
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             self.grid.selected = None
             self.trash_active = False
+            self.trash_active = False
             return
-        self.speed_ctrl.handle(event)
+        # self.speed_ctrl.handle(event)
         self.btn_trash.handle(event)
         if event.type == pygame.MOUSEBUTTONDOWN:
             # Check for upgrade button clicks
@@ -1010,7 +1006,8 @@ class Game:
 
         draw_panel(self.screen, panel_rect, "Status", self.font_big, _body)
 
-        self.speed_ctrl.draw(self.screen)
+        # self.speed_ctrl.draw(self.screen)
+        self.draw_wave_title()
         self.btn_trash.draw(self.screen)
 
         if self.to_spawn <= 0 and len(self.enemies) == 0:
@@ -1114,6 +1111,34 @@ class Game:
             y = SCREEN_H - txt.get_height() - 30
             
             self.screen.blit(txt, (x, y))
+
+    def draw_wave_title(self) -> None:
+        """Draw the artistic WAVE X title at top center."""
+        # Calculate wave number (1-based for display)
+        current_wave = max(1, self.wave + 1)
+        text_str = f"WAVE {current_wave}"
+        
+        # Stylized font rendering
+        # Shadow
+        shadow = self.font_huge.render(text_str, True, (0, 0, 0))
+        # Main Text (Gold/Orange gradient simulated with color)
+        # Using a bright orange-gold
+        main_color = (255, 180, 0)
+        text = self.font_huge.render(text_str, True, main_color)
+        
+        # Position: Top Center
+        cx = SCREEN_W // 2
+        cy = 50
+        
+        # Draw shadow offset
+        self.screen.blit(shadow, (cx - shadow.get_width() // 2 + 3, cy - shadow.get_height() // 2 + 3))
+        # Draw text
+        self.screen.blit(text, (cx - text.get_width() // 2, cy - text.get_height() // 2))
+        
+        # Optional: Add a subtle glow or outline if possible, or just a decorative line
+        # Simple underline
+        lw = text.get_width() + 40
+        pygame.draw.rect(self.screen, main_color, (cx - lw//2, cy + 25, lw, 3), border_radius=2)
 
     def gameover_draw(self) -> None:
         """Draw the game over screen."""
@@ -1297,7 +1322,8 @@ class Game:
 
         draw_panel(self.screen, panel_rect, "Mission", self.font_big, _body)
 
-        self.speed_ctrl.draw(self.screen)
+        # self.speed_ctrl.draw(self.screen)
+        self.draw_wave_title()
         self.btn_trash.draw(self.screen)
 
         if self.to_spawn <= 0 and len(self.enemies) == 0:
