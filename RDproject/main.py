@@ -139,7 +139,15 @@ class Game:
             if not placed:
                 continue
 
-        # self.speed_ctrl removed
+        # Speed Control (Top Right)
+        self.speed_ctrl = Segmented(
+            (SCREEN_W - 220, 80, 200, 40),
+            ["0.5x", "1x", "2x", "4x", "8x"],
+            self.font_small,
+            self.speed_index,
+            self.on_speed_change
+        )
+
         self.btn_trash = Button(
             (SCREEN_W - 1250, 400, 120, 40),
             "Trash",
@@ -403,7 +411,7 @@ class Game:
                     self.sound_mgr.play("error")
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             self.grid.selected = None
-            self.trash_active = False
+        self.speed_ctrl.handle(event)
             return
         # self.speed_ctrl.handle(event)
         if self.btn_trash.handle(event):
@@ -620,7 +628,7 @@ class Game:
             self.trash_active = False
             return
         # self.speed_ctrl.handle(event)
-        if self.btn_trash.handle(event):
+        self.speed_ctrl.handle(event)
             self.sound_mgr.play("click")
         if self.btn_help.handle(event):
             self.sound_mgr.play("click")
@@ -1151,7 +1159,7 @@ class Game:
         # Draw New UI
         self.draw_new_ui()
 
-        # self.speed_ctrl.draw(self.screen)
+        self.speed_ctrl.draw(self.screen)
         self.draw_wave_title()
         self.btn_trash.draw(self.screen)
         self.btn_help.draw(self.screen)
