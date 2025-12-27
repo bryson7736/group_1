@@ -1019,7 +1019,7 @@ class Game:
         self.screen.blit(label, (rect.centerx - label.get_width() // 2, rect.centery - label.get_height() // 2))
 
     def draw_new_ui(self) -> None:
-        """Draw the new UI elements (Money)."""
+        """Draw the new UI elements (Money, HP)."""
         # Money Display (Bottom Center)
         cx = SCREEN_W // 2
         cy = SCREEN_H - 40
@@ -1031,6 +1031,35 @@ class Game:
         
         money_val = self.font_big.render(str(self.money), True, WHITE)
         self.screen.blit(money_val, (cx - 50, cy - money_val.get_height()//2))
+        
+        # HP Display (Right of Money)
+        hp_x = cx + 60
+        
+        for i in range(3):
+            hx = hp_x + i * 40
+            hy = cy
+            
+            if i < self.base_hp:
+                # Draw Heart
+                scale_x = 1.0
+                if self.hp_anim_timer > 0:
+                    # Flip 3 times in 1 second
+                    scale_x = abs(math.cos(self.hp_anim_timer * 3 * math.pi * 2))
+                
+                # Draw heart (simplified as red circle for now, or polygon)
+                w = int(30 * scale_x)
+                if w > 0:
+                    heart_surf = pygame.Surface((30, 30), pygame.SRCALPHA)
+                    # Draw heart shape on surface
+                    pygame.draw.circle(heart_surf, (255, 50, 50), (9, 9), 9)
+                    pygame.draw.circle(heart_surf, (255, 50, 50), (21, 9), 9)
+                    pygame.draw.polygon(heart_surf, (255, 50, 50), [(0, 12), (15, 30), (30, 12)])
+                    
+                    scaled_heart = pygame.transform.scale(heart_surf, (w, 30))
+                    self.screen.blit(scaled_heart, (hx - w//2, hy - 15))
+            else:
+                # Empty slot
+                pygame.draw.circle(self.screen, (50, 50, 50), (hx, hy), 5)
 
     def play_draw(self) -> None:
         """Draw the gameplay screen."""
