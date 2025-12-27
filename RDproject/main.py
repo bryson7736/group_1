@@ -1015,7 +1015,7 @@ class Game:
 
         if self.to_spawn <= 0 and len(self.enemies) == 0:
             time_left = max(0.0, self.wave_delay - self.wave_timer)
-            msg = f"Next wave in {time_left:.1f}s (Press N to skip)"
+            msg = f"Next wave in {time_left:.1f}s"
             top = self.font_big.render(msg, True, WHITE)
             self.screen.blit(top, (GRID_X, 42))
         
