@@ -1451,7 +1451,6 @@ class Game:
             
             pairs = [
                 ("Wave", f"{max(0, self.wave + 1)}/{self.story_max_waves}"),
-                ("Base HP", str(self.base_hp)),
                 ("Speed", f"{self.speed_mult}×"),
             ]
             for name, val in pairs:
