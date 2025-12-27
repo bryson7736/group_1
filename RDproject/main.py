@@ -1049,6 +1049,10 @@ class Game:
         self.draw_wave_title()
         self.btn_trash.draw(self.screen)
         self.btn_help.draw(self.screen)
+        self.btn_pause.draw(self.screen)
+        self.draw_help_popup()
+        self.draw_pause_popup()
+        self.btn_help.draw(self.screen)
         self.draw_help_popup()
 
         if self.to_spawn <= 0 and len(self.enemies) == 0:
