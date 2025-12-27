@@ -518,8 +518,10 @@ class Game:
                 if r_dmg.collidepoint(mx, my):
                     if self.upgrades.upgrade_class_damage(t, cost=cost):
                         self._upgrade_msg = f"Upgraded {t.capitalize()} Damage!"
+                        self.sound_mgr.play("upgrade")
                     else:
                         self._upgrade_msg = "Not enough coins!"
+                        self.sound_mgr.play("error")
                     self._upgrade_msg_t = 1.6
                     return
 
@@ -528,8 +530,10 @@ class Game:
                 if r_spd.collidepoint(mx, my):
                     if self.upgrades.upgrade_class_fire_rate(t, cost=cost):
                         self._upgrade_msg = f"Upgraded {t.capitalize()} Speed!"
+                        self.sound_mgr.play("upgrade")
                     else:
                         self._upgrade_msg = "Not enough coins!"
+                        self.sound_mgr.play("error")
                     self._upgrade_msg_t = 1.6
                     return
 
