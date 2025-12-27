@@ -31,4 +31,5 @@ class LevelManager:
     def wave_info(self, wave_idx):
         base = WAVE_BASE_COUNT + wave_idx * WAVE_GROWTH
         is_boss = (wave_idx > 0 and wave_idx % 5 == 0)
-        return base, is_boss
+        true_boss = (wave_idx > 0 and wave_idx % 10 == 0)
+        return base, is_boss, true_boss
