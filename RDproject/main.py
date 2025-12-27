@@ -1315,7 +1315,7 @@ class Game:
             return
             
         # Popup dimensions
-        w, h = 300, 200
+        w, h = 300, 280
         x = (SCREEN_W - w) // 2
         y = (SCREEN_H - h) // 2
         rect = pygame.Rect(x, y, w, h)
@@ -1326,16 +1326,39 @@ class Game:
         
         # Title
         title = self.font_big.render("Paused", True, WHITE)
-        self.screen.blit(title, (rect.centerx - title.get_width() // 2, rect.y + 40))
+        self.screen.blit(title, (rect.centerx - title.get_width() // 2, rect.y + 30))
         
-        # Continue Button (Visual only here, logic in handle_play)
-        btn_rect = pygame.Rect(0, 0, 120, 40)
-        btn_rect.center = (rect.centerx, rect.bottom - 50)
-        pygame.draw.rect(self.screen, (100, 200, 100), btn_rect, border_radius=8)
-        pygame.draw.rect(self.screen, WHITE, btn_rect, width=2, border_radius=8)
+        # Buttons
+        btn_w, btn_h = 160, 40
+        gap = 15
+        start_y = rect.y + 80
         
-        btn_txt = self.font.render("Continue", True, WHITE)
-        self.screen.blit(btn_txt, (btn_rect.centerx - btn_txt.get_width() // 2, btn_rect.centery - btn_txt.get_height() // 2))
+        # Continue
+        r_cont = pygame.Rect(0, 0, btn_w, btn_h)
+        r_cont.centerx = rect.centerx
+        r_cont.y = start_y
+        pygame.draw.rect(self.screen, (100, 200, 100), r_cont, border_radius=8)
+        pygame.draw.rect(self.screen, WHITE, r_cont, width=2, border_radius=8)
+        t_cont = self.font.render("Continue", True, WHITE)
+        self.screen.blit(t_cont, (r_cont.centerx - t_cont.get_width()//2, r_cont.centery - t_cont.get_height()//2))
+        
+        # Restart
+        r_rest = pygame.Rect(0, 0, btn_w, btn_h)
+        r_rest.centerx = rect.centerx
+        r_rest.y = start_y + btn_h + gap
+        pygame.draw.rect(self.screen, (200, 150, 50), r_rest, border_radius=8)
+        pygame.draw.rect(self.screen, WHITE, r_rest, width=2, border_radius=8)
+        t_rest = self.font.render("Restart", True, WHITE)
+        self.screen.blit(t_rest, (r_rest.centerx - t_rest.get_width()//2, r_rest.centery - t_rest.get_height()//2))
+
+        # Quit
+        r_quit = pygame.Rect(0, 0, btn_w, btn_h)
+        r_quit.centerx = rect.centerx
+        r_quit.y = start_y + 2 * (btn_h + gap)
+        pygame.draw.rect(self.screen, (200, 80, 80), r_quit, border_radius=8)
+        pygame.draw.rect(self.screen, WHITE, r_quit, width=2, border_radius=8)
+        t_quit = self.font.render("Lobby", True, WHITE)
+        self.screen.blit(t_quit, (r_quit.centerx - t_quit.get_width()//2, r_quit.centery - t_quit.get_height()//2))
 
     def draw_wave_title(self) -> None:
         """Draw the artistic WAVE X title at top center."""
