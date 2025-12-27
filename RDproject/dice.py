@@ -229,6 +229,7 @@ class FreezeDice(Die):
         dmg = self.apply_crit(base * self.damage_multiplier())
         self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
         target.apply_slow(FREEZE_SLOW_RATIO, FREEZE_DURATION + 0.2 * (self.level - 1))
+        self.game.sound_mgr.play("shoot")
 
 
 class WindDice(Die):
@@ -263,6 +264,7 @@ class PoisonDice(Die):
         
         poison_dps = dmg * dot_ratio
         target.apply_poison(poison_dps, 3.0)
+        self.game.sound_mgr.play("shoot")
 
 
 class IronDice(Die):
@@ -317,6 +319,7 @@ class IronDice(Die):
         
         dmg = self.apply_crit(dmg)
         self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
+        self.game.sound_mgr.play("shoot")
 
 
 class FireDice(Die):
@@ -354,6 +357,7 @@ class FireDice(Die):
             dmg, splash, self.splash_radius, 
             speed_mult_provider=lambda: self.game.speed_mult
         ))
+        self.game.sound_mgr.play("shoot")
 
 
 def make_die(game, c, r, die_type, level=1):

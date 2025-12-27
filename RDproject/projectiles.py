@@ -25,6 +25,7 @@ class Bullet:
         dist = math.hypot(dx, dy)
         if dist <= 0.0001:
             self.target.hit(self.dmg)
+            self.game.sound_mgr.play("hit")
             return True
 
         # step reach/overrun check to avoid afterimage at high speed
@@ -32,6 +33,7 @@ class Bullet:
         if step >= dist:
             self.x, self.y = tx, ty
             self.target.hit(self.dmg)
+            self.game.sound_mgr.play("hit")
             return True
 
         nx, ny = dx / dist, dy / dist
@@ -109,6 +111,7 @@ class ExplosiveBullet(Bullet):
         if hit:
             # Main target hit
             self.target.hit(self.dmg)
+            self.game.sound_mgr.play("hit")
             # Splash damage
             for e in self.game.enemies:
                 if e is not self.target and not e.dead:
