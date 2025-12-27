@@ -7,7 +7,7 @@ import math
 from typing import List, Tuple, Optional, Dict, Any
 
 from settings import *
-from ui import Button, draw_panel, Segmented, draw_pips
+from ui import Button, draw_panel, Segmented, draw_pips, PauseMenu, HelpPopup
 from grid import Grid
 from level_manager import LevelManager
 from loadout import Loadout
