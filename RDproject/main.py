@@ -1326,15 +1326,16 @@ class Game:
         # self.speed_ctrl.draw(self.screen)
         self.draw_wave_title()
         self.btn_trash.draw(self.screen)
-
         if self.to_spawn <= 0 and len(self.enemies) == 0:
+            # 邏輯說明：當所有敵人生成完畢且場面上已無敵人時，計算並顯示下一波倒數或勝利訊息。
+            # 變更邏輯：將 blit 的 Y 座標從 42 增加到 80，使文字在畫面上向下移動，避免遮擋。
             time_left = max(0.0, self.wave_delay - self.wave_timer)
             if self.wave < self.story_max_waves - 1:
                 msg = f"Next wave in {time_left:.1f}s"
             else:
                 msg = "Victory! Returning to stage select..."
             top = self.font_big.render(msg, True, (255, 200, 100))
-            self.screen.blit(top, (GRID_X, 42))
+            self.screen.blit(top, (GRID_X, 80))
         
         # Draw in-game upgrades
         self.draw_ingame_upgrades()
