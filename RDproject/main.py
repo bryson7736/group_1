@@ -1437,6 +1437,11 @@ class Game:
         # self.speed_ctrl.draw(self.screen)
         self.draw_wave_title()
         self.btn_trash.draw(self.screen)
+        self.btn_help.draw(self.screen)
+        self.btn_pause.draw(self.screen)
+        self.draw_help_popup()
+        self.draw_pause_popup()
+
         if self.to_spawn <= 0 and len(self.enemies) == 0:
             # 邏輯說明：當所有敵人生成完畢且場面上已無敵人時，計算並顯示下一波倒數或勝利訊息。
             # 變更邏輯：將 blit 的 Y 座標從 42 增加到 80，使文字在畫面上向下移動，避免遮擋。
