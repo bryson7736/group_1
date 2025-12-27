@@ -581,6 +581,26 @@ class Game:
             return
         # self.speed_ctrl.handle(event)
         self.btn_trash.handle(event)
+        self.btn_help.handle(event)
+        self.btn_pause.handle(event)
+        
+        if self.paused:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                mx, my = event.pos
+                # Check Continue button click
+                # Popup dimensions (same as draw)
+                w, h = 300, 200
+                x = (SCREEN_W - w) // 2
+                y = (SCREEN_H - h) // 2
+                rect = pygame.Rect(x, y, w, h)
+                
+                btn_rect = pygame.Rect(0, 0, 120, 40)
+                btn_rect.center = (rect.centerx, rect.bottom - 50)
+                
+                if btn_rect.collidepoint(mx, my):
+                    self.toggle_pause()
+            return # Block other input when paused
+
         if event.type == pygame.MOUSEBUTTONDOWN:
             # Check for upgrade button clicks
             if event.button == 1:  # Left click
