@@ -70,6 +70,8 @@ class Game:
         self.money: int = START_MONEY
         self.die_cost: int = DIE_COST  # Dynamic cost, increases by 10 each summon
         self.base_hp: int = BASE_HP
+        self.last_hp: int = BASE_HP
+        self.hp_anim_timer: float = 0.0
         self.wave: int = -1
         self.to_spawn: int = 0
         self.spawn_cd: float = 0.0
