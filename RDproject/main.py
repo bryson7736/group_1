@@ -365,8 +365,10 @@ class Game:
         if success:
             self.money = new_money
             print(f"[OK] {message}")
+            self.sound_mgr.play("upgrade")
         else:
             print(f"[FAIL] {message}")
+            self.sound_mgr.play("error")
 
     def handle_play(self, event: pygame.event.Event) -> None:
         """Handle events during gameplay."""
@@ -735,7 +737,8 @@ class Game:
         """Handle leaderboard screen events."""
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.back_to_lobby()
-        self.leaderboard_back.handle(event)
+        if self.leaderboard_back.handle(event):
+            self.sound_mgr.play("click")
 
     def input_name_draw(self) -> None:
         """Draw input name screen."""
