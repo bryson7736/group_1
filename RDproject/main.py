@@ -1547,8 +1547,10 @@ class Game:
                     self.quit()
                 if self.state == STATE_LOBBY:
                     for b in self.buttons:
-                        b.handle(event)
-                    self.quit_btn.handle(event)
+                        if b.handle(event):
+                            self.sound_mgr.play("click")
+                    if self.quit_btn.handle(event):
+                        self.sound_mgr.play("click")
                 elif self.state == STATE_PLAY:
                     self.handle_play(event)
                 elif self.state == STATE_GAMEOVER:
