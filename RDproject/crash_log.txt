@@ -8,9 +8,9 @@ Traceback (most recent call last):
     Game().run()
   File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1547, in run
     self.draw()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1504, in draw
-    self.story_draw()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1443, in story_draw
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1492, in draw
+    self.play_draw()
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1091, in play_draw
     self.draw_new_ui()
   File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1045, in draw_new_ui
     if self.hp_anim_timer > 0:
