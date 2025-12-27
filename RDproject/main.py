@@ -426,42 +426,18 @@ class Game:
             self.sound_mgr.play("click")
         
         if self.paused:
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                mx, my = event.pos
-                # Popup dimensions (same as draw)
-                w, h = 300, 280
-                x = (SCREEN_W - w) // 2
-                y = (SCREEN_H - h) // 2
-                rect = pygame.Rect(x, y, w, h)
-                
-                # Button dimensions
-                bw, bh = 160, 40
-                cx = rect.centerx
-                
-                # Continue
-                r_cont = pygame.Rect(0, 0, bw, bh)
-                r_cont.center = (cx, rect.top + 100)
-                
-                # Restart
-                r_rest = pygame.Rect(0, 0, bw, bh)
-                r_rest.center = (cx, rect.top + 155)
-                
-                # Quit
-                r_quit = pygame.Rect(0, 0, bw, bh)
-                r_quit.center = (cx, rect.top + 210)
-                
-                if r_cont.collidepoint(mx, my):
-                    self.sound_mgr.play("click")
+            action = self.pause_menu.handle_input(event)
+            if action:
+                self.sound_mgr.play("click")
+                if action == "continue":
                     self.toggle_pause()
-                elif r_rest.collidepoint(mx, my):
-                    self.sound_mgr.play("click")
+                elif action == "restart":
                     self.toggle_pause()
                     if hasattr(self, 'current_level_idx'):
                         self.start_level(self.current_level_idx)
                     else:
                         self.reset_runtime()
-                elif r_quit.collidepoint(mx, my):
-                    self.sound_mgr.play("click")
+                elif action == "quit":
                     self.toggle_pause()
                     self.state = STATE_LOBBY
             return # Block other input when paused
@@ -663,40 +639,16 @@ class Game:
             self.sound_mgr.play("click")
         
         if self.paused:
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                mx, my = event.pos
-                # Popup dimensions (same as draw)
-                w, h = 300, 280
-                x = (SCREEN_W - w) // 2
-                y = (SCREEN_H - h) // 2
-                rect = pygame.Rect(x, y, w, h)
-                
-                # Button dimensions
-                bw, bh = 160, 40
-                cx = rect.centerx
-                
-                # Continue
-                r_cont = pygame.Rect(0, 0, bw, bh)
-                r_cont.center = (cx, rect.top + 100)
-                
-                # Restart
-                r_rest = pygame.Rect(0, 0, bw, bh)
-                r_rest.center = (cx, rect.top + 155)
-                
-                # Quit
-                r_quit = pygame.Rect(0, 0, bw, bh)
-                r_quit.center = (cx, rect.top + 210)
-                
-                if r_cont.collidepoint(mx, my):
-                    self.sound_mgr.play("click")
+            action = self.pause_menu.handle_input(event)
+            if action:
+                self.sound_mgr.play("click")
+                if action == "continue":
                     self.toggle_pause()
-                elif r_rest.collidepoint(mx, my):
-                    self.sound_mgr.play("click")
+                elif action == "restart":
                     self.toggle_pause()
                     if self.current_story_stage:
                         self.start_story_stage(self.current_story_stage.stage_id)
-                elif r_quit.collidepoint(mx, my):
-                    self.sound_mgr.play("click")
+                elif action == "quit":
                     self.toggle_pause()
                     self.state = STATE_LOBBY
             return # Block other input when paused
