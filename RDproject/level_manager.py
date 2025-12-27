@@ -29,6 +29,6 @@ class LevelManager:
         return self.levels[idx]
 
     def wave_info(self, wave_idx):
-        base = WAVE_BASE_COUNT + wave_idx * (WAVE_GROWTH // 2)  # clarified precedence
+        base = WAVE_BASE_COUNT + wave_idx * WAVE_GROWTH
         is_boss = (wave_idx > 0 and wave_idx % 5 == 0)
         return base, is_boss

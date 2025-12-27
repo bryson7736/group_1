@@ -20,6 +20,7 @@ from story_mode import StoryManager
 from ingame_upgrades import InGameUpgrades
 from effects import TelegraphZone
 from colors import DICE_COLORS
+from leaderboard import LeaderboardManager
 
 
 ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
@@ -33,6 +34,8 @@ STATE_LOADOUT = "loadout"
 STATE_UPGRADES = "upgrades"
 STATE_STORY_SELECT = "story_select"
 STATE_STORY = "story"
+STATE_INPUT_NAME = "input_name"
+STATE_LEADERBOARD = "leaderboard"
 
 
 class Game:
@@ -149,6 +152,9 @@ class Game:
         self._upgrade_msg = ""
         self._upgrade_msg_t = 0.0
 
+        self.leaderboard_mgr = LeaderboardManager()
+        self.input_name_str = ""
+
         self._build_lobby()
 
     # --------------- Lobby ---------------
@@ -201,6 +207,14 @@ class Game:
         # Re-calculating for side-by-side
         row_y = y_offset + 2 * (btn_h + gap) - 10  # Reduced spacing to move up
         self.buttons.pop() # Remove Help from previous append
+        
+        # Leaderboard button (New)
+        self.buttons.append(
+            Button((center_x, row_y, btn_w, btn_h), "Leaderboard", self.font_big, self.goto_leaderboard)
+        )
+        
+        row_y += (btn_h + gap)
+
         self.buttons.append(
             Button((center_x, row_y, btn_w // 2 - 10, btn_h), "Help", self.font_big, self.goto_help)
         )
@@ -250,6 +264,13 @@ class Game:
             (24, SCREEN_H - 94, 260, 64), "Back", self.font_big, self.back_to_lobby
         )
     
+    def goto_leaderboard(self) -> None:
+        """Switch to leaderboard screen."""
+        self.state = STATE_LEADERBOARD
+        self.leaderboard_back = Button(
+            (24, SCREEN_H - 94, 260, 64), "Back", self.font_big, self.back_to_lobby
+        )
+
     def goto_story_select(self) -> None:
         """Switch to story stage selection screen."""
         self.state = STATE_STORY_SELECT
@@ -586,7 +607,7 @@ class Game:
         # Polynomial HP scaling: Base * (Wave^1.3) * Difficulty
         # Using Base=30 as recommended for balanced difficulty
         wave_num = max(1, self.wave + 1)
-        hp = 30 * (wave_num ** 1.3) * self.level.difficulty
+        hp = 30 * (wave_num ** 1.1) * self.level.difficulty
         speed = (36 + min(140, self.wave * 6)) * (0.9 + 0.2 * random.random())
         path = list(self.level.path)
         if self.is_true_boss_wave and self.to_spawn == 0:
@@ -603,6 +624,108 @@ class Game:
         if len(path) == 2:
             e.y += random.randint(-60, 60)
         self.enemies.append(e)
+
+    def input_name_handle(self, event: pygame.event.Event) -> None:
+        """Handle name input."""
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_RETURN:
+                if self.input_name_str.strip():
+                    self.leaderboard_mgr.save_score(self.input_name_str.strip(), max(0, self.wave))
+                    self.goto_leaderboard()
+            elif event.key == pygame.K_BACKSPACE:
+                self.input_name_str = self.input_name_str[:-1]
+            elif event.key == pygame.K_ESCAPE:
+                # Giving up on saving score
+                self.back_to_lobby()
+            else:
+                if len(self.input_name_str) < 12 and event.unicode.isprintable():
+                    self.input_name_str += event.unicode
+
+    def leaderboard_handle(self, event: pygame.event.Event) -> None:
+        """Handle leaderboard screen events."""
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            self.back_to_lobby()
+        self.leaderboard_back.handle(event)
+
+    def input_name_draw(self) -> None:
+        """Draw input name screen."""
+        self.screen.fill(DARK)
+        
+        # Game Over Text
+        t = self.font_huge.render("GAME OVER", True, RED)
+        self.screen.blit(t, (SCREEN_W // 2 - t.get_width() // 2, SCREEN_H // 2 - 120))
+        
+        # Waves survived
+        msg = self.font_big.render(f"You survived {max(0, self.wave)} waves!", True, WHITE)
+        self.screen.blit(msg, (SCREEN_W // 2 - msg.get_width() // 2, SCREEN_H // 2 - 60))
+
+        # Instructions
+        prompt = self.font_big.render("Enter your name:", True, (200, 200, 200))
+        self.screen.blit(prompt, (SCREEN_W // 2 - prompt.get_width() // 2, SCREEN_H // 2 + 20))
+        
+        # Input Box
+        box_w, box_h = 300, 50
+        box_rect = pygame.Rect((SCREEN_W - box_w) // 2, SCREEN_H // 2 + 70, box_w, box_h)
+        pygame.draw.rect(self.screen, DARKER, box_rect, border_radius=8)
+        pygame.draw.rect(self.screen, (100, 100, 255), box_rect, width=2, border_radius=8)
+        
+        txt = self.font_big.render(self.input_name_str, True, WHITE)
+        self.screen.blit(txt, (box_rect.x + 10, box_rect.y + (box_h - txt.get_height()) // 2))
+        
+        # Hint
+        hint = self.font.render("Press ENTER to submit, ESC to skip", True, GRAY)
+        self.screen.blit(hint, (SCREEN_W // 2 - hint.get_width() // 2, SCREEN_H // 2 + 140))
+
+    def leaderboard_draw(self) -> None:
+        """Draw leaderboard screen."""
+        self.screen.fill(DARK)
+        
+        title = self.font_huge.render("GROUD 1 LEADERBOARD", True, (255, 215, 0)) # Gold
+        self.screen.blit(title, (SCREEN_W // 2 - title.get_width() // 2, 60))
+        
+        scores = self.leaderboard_mgr.get_top_scores()
+        
+        start_y = 160
+        gap = 40
+        
+        # Header
+        pygame.draw.rect(self.screen, (40, 40, 60), (SCREEN_W//2 - 250, start_y - 10, 500, 500), border_radius=15)
+        
+        # Columns
+        head_rank = self.font_big.render("#", True, (200, 200, 200))
+        head_name = self.font_big.render("Name", True, (200, 200, 200))
+        head_wave = self.font_big.render("Waves", True, (200, 200, 200))
+        
+        col_x = [SCREEN_W//2 - 200, SCREEN_W//2 - 80, SCREEN_W//2 + 120]
+        
+        self.screen.blit(head_rank, (col_x[0], start_y))
+        self.screen.blit(head_name, (col_x[1], start_y))
+        self.screen.blit(head_wave, (col_x[2], start_y))
+        
+        pygame.draw.line(self.screen, GRAY, (col_x[0]-20, start_y + 35), (col_x[2]+100, start_y + 35), 2)
+        
+        y = start_y + 50
+        for i, entry in enumerate(scores):
+            rank = str(i + 1)
+            name = entry.get("name", "Unknown")
+            wave = str(entry.get("waves", 0))
+            
+            color = WHITE
+            if i == 0: color = (255, 215, 0) # Gold
+            elif i == 1: color = (192, 192, 192) # Silver
+            elif i == 2: color = (205, 127, 50) # Bronze
+            
+            r_txt = self.font.render(rank, True, color)
+            n_txt = self.font.render(name, True, color)
+            w_txt = self.font.render(wave, True, color)
+            
+            self.screen.blit(r_txt, (col_x[0], y))
+            self.screen.blit(n_txt, (col_x[1], y))
+            self.screen.blit(w_txt, (col_x[2], y))
+            
+            y += gap
+            
+        self.leaderboard_back.draw(self.screen)
 
     def spawn_telegraph(self, px: float, py: float) -> None:
         """Spawn a telegraph zone for big enemy attacks."""
@@ -707,7 +830,13 @@ class Game:
 
         # end
         if self.base_hp <= 0:
-            self.state = STATE_GAMEOVER
+            if self.state == STATE_PLAY:
+                # Practice mode -> Input Name
+                self.state = STATE_INPUT_NAME
+                self.input_name_str = ""
+            else:
+                # Story mode -> Standard Game Over
+                self.state = STATE_GAMEOVER
             self.check_game_over_coins()
 
     # --------------- Draw ---------------
@@ -1204,6 +1333,10 @@ class Game:
             self.story_select_draw()
         elif self.state == STATE_STORY:
             self.story_draw()
+        elif self.state == STATE_INPUT_NAME:
+            self.input_name_draw()
+        elif self.state == STATE_LEADERBOARD:
+            self.leaderboard_draw()
         pygame.display.flip()
 
     def run(self) -> None:
@@ -1236,6 +1369,10 @@ class Game:
                     self.story_select_handle(event)
                 elif self.state == STATE_STORY:
                     self.story_handle(event)
+                elif self.state == STATE_INPUT_NAME:
+                    self.input_name_handle(event)
+                elif self.state == STATE_LEADERBOARD:
+                    self.leaderboard_handle(event)
 
             self.update(dt)
             self.draw()
