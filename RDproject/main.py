@@ -1161,7 +1161,7 @@ class Game:
         self.draw_new_ui()
 
         self.speed_ctrl.draw(self.screen)
-        self.draw_wave_title()
+        draw_wave_title(self.screen, self.font_huge, self.wave)
         self.btn_trash.draw(self.screen)
         self.btn_help.draw(self.screen)
         self.btn_pause.draw(self.screen)
@@ -1476,7 +1476,7 @@ class Game:
             self.screen.blit(prog_txt, (sx, sy + 60))
 
         self.speed_ctrl.draw(self.screen)
-        self.draw_wave_title()
+        draw_wave_title(self.screen, self.font_huge, self.wave)
         self.btn_trash.draw(self.screen)
         self.btn_help.draw(self.screen)
         self.btn_pause.draw(self.screen)
