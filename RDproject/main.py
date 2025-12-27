@@ -588,12 +588,12 @@ class Game:
             # Flags are already set by update() logic
         else:
             # Practice Mode: Use level manager's wave info
-            count, is_boss = self.level_mgr.wave_info(self.wave)
+            count, is_boss, true_boss = self.level_mgr.wave_info(self.wave)
             count = int(count * self.level.difficulty)
             
             # Set flags for Practice Mode
             self.is_big_enemy_wave = is_boss
-            self.is_true_boss_wave = False # No True Boss in Practice for now
+            self.is_true_boss_wave = true_boss # Enable True Boss in Practice mode
         
         self.to_spawn = count
         self.spawn_cd = 0.0
