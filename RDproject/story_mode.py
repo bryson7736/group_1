@@ -95,7 +95,7 @@ class StoryManager:
             },
             {
                 "name": "Burning Path",
-                "path": [(350, 100), (650, 100), (650, 400), (450, 400), (450, 650), (1280, 650)],
+                "path": [(0, 100), (650, 100), (650, 400), (450, 400), (450, 650), (1280, 650)],
                 "color": (255, 0, 0), "bg": "burning_path", "desc": "Cross the lava rivers."
             },
             {
