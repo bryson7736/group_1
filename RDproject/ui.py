@@ -469,16 +469,24 @@ class RemoveAdsPopup:
         self.font_small = font_small
         
         # Popup dimensions
-        self.w, self.h = 400, 350
+        self.w, self.h = 400, 450 # Increased height for more fields
         self.x = (SCREEN_W - self.w) // 2
         self.y = (SCREEN_H - self.h) // 2
         self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
         
-        # Input Field
+        # Input Fields
         self.card_number = ""
+        self.cvv = ""
+        self.expiry = ""
+        
+        # Rects
         self.input_rect = pygame.Rect(0, 0, 300, 40)
-        self.input_rect.center = (self.rect.centerx, self.rect.centery + 20)
-        self.active = True  # Auto-focus
+        self.input_rect.center = (self.rect.centerx, self.rect.y + 130)
+        
+        self.cvv_rect = pygame.Rect(self.rect.x + 50, self.rect.y + 220, 100, 40)
+        self.expiry_rect = pygame.Rect(self.rect.x + 200, self.rect.y + 220, 150, 40)
+        
+        self.active_field = "card" # card, cvv, expiry
         
         # Pay Button
         self.btn_w, self.btn_h = 160, 50
@@ -501,35 +509,61 @@ class RemoveAdsPopup:
         title = self.font_big.render("Remove Ads", True, WHITE)
         screen.blit(title, (self.rect.centerx - title.get_width() // 2, self.rect.y + 30))
         
-        # Message
-        msg1 = self.font_small.render("Enter 16-digit Credit Card Number:", True, WHITE)
-        screen.blit(msg1, (self.rect.centerx - msg1.get_width() // 2, self.rect.y + 100))
+        # --- Card Number ---
+        msg1 = self.font_small.render("Card Number:", True, WHITE)
+        screen.blit(msg1, (self.input_rect.x, self.input_rect.y - 25))
 
-        # Input Box
-        box_color = WHITE if self.active else (200, 200, 200)
+        box_color = WHITE if self.active_field == "card" else (200, 200, 200)
         pygame.draw.rect(screen, box_color, self.input_rect, border_radius=5)
         
-        # Render text with formatting (groups of 4)
         display_text = " ".join([self.card_number[i:i+4] for i in range(0, len(self.card_number), 4)])
-        
-        if not self.card_number and not self.active:
+        if not self.card_number and self.active_field != "card":
             txt_surf = self.font_big.render("0000 0000 0000 0000", True, (180, 180, 180))
         else:
             txt_surf = self.font_big.render(display_text, True, DARK)
-            
         screen.blit(txt_surf, (self.input_rect.x + 10, self.input_rect.y + (self.input_rect.height - txt_surf.get_height()) // 2))
         
-        # Cursor
-        if self.active and (pygame.time.get_ticks() // 500) % 2 == 0:
+        # Cursor for Card
+        if self.active_field == "card" and (pygame.time.get_ticks() // 500) % 2 == 0:
             cursor_x = self.input_rect.x + 10 + txt_surf.get_width()
-            # Adjust cursor if text is empty
-            if not self.card_number:
-                cursor_x = self.input_rect.x + 10
-            cursor_y = self.input_rect.y + 10
-            pygame.draw.line(screen, DARK, (cursor_x, cursor_y), (cursor_x, cursor_y + 20), 2)
+            if not self.card_number: cursor_x = self.input_rect.x + 10
+            pygame.draw.line(screen, DARK, (cursor_x, self.input_rect.y + 10), (cursor_x, self.input_rect.y + 30), 2)
+
+        # --- CVV ---
+        msg2 = self.font_small.render("CVV (3 digits):", True, WHITE)
+        screen.blit(msg2, (self.cvv_rect.x, self.cvv_rect.y - 25))
         
+        box_color = WHITE if self.active_field == "cvv" else (200, 200, 200)
+        pygame.draw.rect(screen, box_color, self.cvv_rect, border_radius=5)
+        
+        txt_surf = self.font_big.render(self.cvv, True, DARK)
+        screen.blit(txt_surf, (self.cvv_rect.x + 10, self.cvv_rect.y + (self.cvv_rect.height - txt_surf.get_height()) // 2))
+        
+        if self.active_field == "cvv" and (pygame.time.get_ticks() // 500) % 2 == 0:
+            cursor_x = self.cvv_rect.x + 10 + txt_surf.get_width()
+            pygame.draw.line(screen, DARK, (cursor_x, self.cvv_rect.y + 10), (cursor_x, self.cvv_rect.y + 30), 2)
+
+        # --- Expiry ---
+        msg3 = self.font_small.render("Expiry (MM/YY):", True, WHITE)
+        screen.blit(msg3, (self.expiry_rect.x, self.expiry_rect.y - 25))
+        
+        box_color = WHITE if self.active_field == "expiry" else (200, 200, 200)
+        pygame.draw.rect(screen, box_color, self.expiry_rect, border_radius=5)
+        
+        # Format MM/YY
+        exp_disp = self.expiry
+        if len(self.expiry) > 2:
+            exp_disp = self.expiry[:2] + "/" + self.expiry[2:]
+            
+        txt_surf = self.font_big.render(exp_disp, True, DARK)
+        screen.blit(txt_surf, (self.expiry_rect.x + 10, self.expiry_rect.y + (self.expiry_rect.height - txt_surf.get_height()) // 2))
+        
+        if self.active_field == "expiry" and (pygame.time.get_ticks() // 500) % 2 == 0:
+            cursor_x = self.expiry_rect.x + 10 + txt_surf.get_width()
+            pygame.draw.line(screen, DARK, (cursor_x, self.expiry_rect.y + 10), (cursor_x, self.expiry_rect.y + 30), 2)
+
         # Pay Button
-        can_pay = len(self.card_number) == 16
+        can_pay = (len(self.card_number) == 16) and (len(self.cvv) == 3) and (len(self.expiry) == 4)
         btn_color = (100, 200, 100) if can_pay else (100, 100, 100)
         
         pygame.draw.rect(screen, btn_color, self.pay_rect, border_radius=8)
@@ -550,24 +584,46 @@ class RemoveAdsPopup:
     def handle_input(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.input_rect.collidepoint(event.pos):
-                self.active = True
+                self.active_field = "card"
+            elif self.cvv_rect.collidepoint(event.pos):
+                self.active_field = "cvv"
+            elif self.expiry_rect.collidepoint(event.pos):
+                self.active_field = "expiry"
             else:
-                self.active = False
+                self.active_field = None
 
             if self.close_rect.collidepoint(event.pos):
                 return "close"
             if self.pay_rect.collidepoint(event.pos):
-                if len(self.card_number) == 16:
+                if (len(self.card_number) == 16) and (len(self.cvv) == 3) and (len(self.expiry) == 4):
                     return "pay"
 
-        if event.type == pygame.KEYDOWN and self.active:
+        if event.type == pygame.KEYDOWN and self.active_field:
             if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
-                if len(self.card_number) == 16:
-                    return "pay"
+                # Tab to next field or submit
+                if self.active_field == "card": self.active_field = "cvv"
+                elif self.active_field == "cvv": self.active_field = "expiry"
+                elif self.active_field == "expiry":
+                    if (len(self.card_number) == 16) and (len(self.cvv) == 3) and (len(self.expiry) == 4):
+                        return "pay"
+            elif event.key == pygame.K_TAB:
+                 if self.active_field == "card": self.active_field = "cvv"
+                 elif self.active_field == "cvv": self.active_field = "expiry"
+                 elif self.active_field == "expiry": self.active_field = "card"
             elif event.key == pygame.K_BACKSPACE:
-                self.card_number = self.card_number[:-1]
-            elif event.unicode.isdigit() and len(self.card_number) < 16:
-                self.card_number += event.unicode
+                if self.active_field == "card":
+                    self.card_number = self.card_number[:-1]
+                elif self.active_field == "cvv":
+                    self.cvv = self.cvv[:-1]
+                elif self.active_field == "expiry":
+                    self.expiry = self.expiry[:-1]
+            elif event.unicode.isdigit():
+                if self.active_field == "card" and len(self.card_number) < 16:
+                    self.card_number += event.unicode
+                elif self.active_field == "cvv" and len(self.cvv) < 3:
+                    self.cvv += event.unicode
+                elif self.active_field == "expiry" and len(self.expiry) < 4:
+                    self.expiry += event.unicode
         return None
 
 class CoinPurchasePopup:
