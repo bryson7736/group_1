@@ -95,6 +95,8 @@ class TrueBoss(Enemy):
             STATE_ATTACK: INITIAL_SKILL_COOLDOWN,
             STATE_HEAL: INITIAL_SKILL_COOLDOWN,
         }
+        
+        self.attack_targets = [] # List of (c, r) tuples for targeted dice
 
     def hit(self, dmg):
         """Override hit to apply defense damage reduction and track damage."""
@@ -196,23 +198,34 @@ class TrueBoss(Enemy):
         """Transition to a new state."""
         self.state = new_state
         self.state_timer = self.durations[new_state]
+        
+        # Clear previous targets
+        self.attack_targets = []
+        
+        if new_state == STATE_ATTACK:
+            # Pre-select targets
+            if self.game and self.game.grid:
+                filled = []
+                for c in range(self.game.grid.cols):
+                    for r in range(self.game.grid.rows):
+                        if self.game.grid.get(c, r):
+                            filled.append((c, r))
+                
+                if filled:
+                    count = min(ATTACK_DESTROY_DICE_COUNT, len(filled))
+                    self.attack_targets = random.sample(filled, count)
 
     def _cast_attack(self):
-        """Destroy random dice on the player's grid."""
+        """Destroy targeted dice on the player's grid."""
         if not self.game or not self.game.grid:
             return
             
-        filled = []
-        for c in range(self.game.grid.cols):
-            for r in range(self.game.grid.rows):
-                if self.game.grid.get(c, r):
-                    filled.append((c, r))
-        
-        if filled:
-            for _ in range(min(ATTACK_DESTROY_DICE_COUNT, len(filled))):
-                c, r = random.choice(filled)
+        for c, r in self.attack_targets:
+            # Verify die still exists there (it might have been merged/trashed)
+            if self.game.grid.get(c, r):
                 self.game.grid.remove(c, r)
-                filled.remove((c, r))
+        
+        self.attack_targets = []
 
     # -------------------------------------------------------------------------
     # Drawing
