@@ -786,7 +786,7 @@ class Game:
         # Click on stage buttons
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
-            btn_w, btn_h = 480, 80
+            btn_w, btn_h = 600, 80
             gap = 16
             start_x = (SCREEN_W - btn_w) // 2
             start_y = 180
@@ -1720,7 +1720,7 @@ class Game:
         self.screen.blit(sub, (SCREEN_W // 2 - sub.get_width() // 2, 130))
         
         # Stage buttons
-        btn_w, btn_h = 480, 80
+        btn_w, btn_h = 600, 80
         gap = 16
         start_x = (SCREEN_W - btn_w) // 2
         start_y = 180
