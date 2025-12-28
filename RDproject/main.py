@@ -1106,6 +1106,10 @@ class Game:
                     # Boss reached the end - instant defeat
                     self.base_hp = 0
                     self.enemies.remove(e)
+                elif isinstance(e, BigEnemy):
+                    # Big Enemy reached the end - instant defeat
+                    self.base_hp = 0
+                    self.enemies.remove(e)
                 else:
                     self.base_hp -= 1
                     self.enemies.remove(e)
