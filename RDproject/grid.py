@@ -405,7 +405,7 @@ class Grid:
         drawn_pairs = set()
         import math
         ticks = pygame.time.get_ticks()
-        pulse = (math.sin(ticks * 0.005) + 1) * 0.5 # 0 to 1
+        pulse = (math.sin(ticks * 0.008) + 1) * 0.5 # 0 to 1
         
         for c in range(self.cols):
             for r in range(self.rows):
@@ -418,7 +418,6 @@ class Grid:
                     drawn_pairs.add(pair_id)
                     
                     color = (255, 255, 255)
-                    width = 8 # Thicker line
                     if d.synergy_buffs.get("inferno"): color = (255, 69, 0) 
                     elif d.synergy_buffs.get("toxic_spikes"): color = (138, 43, 226) 
                     elif d.synergy_buffs.get("frost_volley"): color = (0, 255, 255) 
@@ -429,15 +428,37 @@ class Grid:
                     start = self.center_of(d.c, d.r)
                     end = self.center_of(p.c, p.r)
                     
-                    # Draw glow (pulsing)
-                    glow_width = width + 6 + int(pulse * 6)
-                    glow_color = (color[0]//2, color[1]//2, color[2]//2)
-                    pygame.draw.line(surf, glow_color, start, end, glow_width)
-                    pygame.draw.line(surf, color, start, end, width)
+                    # Draw a thick "bridge" connector
+                    # Calculate vector
+                    dx, dy = end[0] - start[0], end[1] - start[1]
+                    dist = math.hypot(dx, dy)
+                    angle = math.atan2(dy, dx)
                     
-                    # Draw connection circle at center
+                    # Draw a rect rotated to connect them
+                    # We can just draw a thick line with rounded caps
+                    
+                    # Outer Glow
+                    glow_width = 16 + int(pulse * 8)
+                    glow_color = (color[0]//3, color[1]//3, color[2]//3)
+                    pygame.draw.line(surf, glow_color, start, end, glow_width)
+                    
+                    # Inner Core
+                    core_width = 8
+                    pygame.draw.line(surf, color, start, end, core_width)
+                    
+                    # Draw "Knots" at the ends (under the dice, but visible if dice are transparent/small)
+                    # Actually, let's draw a symbol in the middle
                     mid_x = (start[0] + end[0]) // 2
                     mid_y = (start[1] + end[1]) // 2
-                    pygame.draw.circle(surf, color, (mid_x, mid_y), 6 + int(pulse * 3))
-                    pygame.draw.circle(surf, (255, 255, 255), (mid_x, mid_y), 3)
+                    
+                    # Draw a diamond shape at the center
+                    diamond_size = 10 + int(pulse * 4)
+                    points = [
+                        (mid_x, mid_y - diamond_size),
+                        (mid_x + diamond_size, mid_y),
+                        (mid_x, mid_y + diamond_size),
+                        (mid_x - diamond_size, mid_y)
+                    ]
+                    pygame.draw.polygon(surf, color, points)
+                    pygame.draw.polygon(surf, (255, 255, 255), points, 2)
 
