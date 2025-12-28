@@ -221,7 +221,7 @@ class HelpPopup:
         
         self.tips = [
             "- Drag dice from Loadout to Grid.",
-            "- 3 same color dice adjacent = Merge (Level Up).",
+            "- 3 same color dice adjacent = Chain (+20% Speed).",
             "- Dice attack automatically.",
             "- Enemies move from top to bottom.",
             "- Don't let enemies reach the bottom!",
