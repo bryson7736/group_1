@@ -518,7 +518,7 @@ class Game:
         if self.show_ads:
             action = self.ads_popup.handle_input(event)
             if action == "close":
-                self.sound_mgr.play("click")
+                self.sound_mgr.play("bark")
                 self.show_ads = False
                 self.toggle_pause()
             return
@@ -526,7 +526,11 @@ class Game:
         if self.paused:
             action = self.pause_menu.handle_input(event)
             if action:
-                self.sound_mgr.play("click")
+                if action == "quit":
+                    self.sound_mgr.play("bark")
+                else:
+                    self.sound_mgr.play("click")
+                    
                 if action == "continue":
                     self.toggle_pause()
                 elif action == "restart":
@@ -713,7 +717,7 @@ class Game:
         if self.show_ads:
             action = self.ads_popup.handle_input(event)
             if action == "close":
-                self.sound_mgr.play("click")
+                self.sound_mgr.play("bark")
                 self.show_ads = False
                 self.toggle_pause()
             return
@@ -747,7 +751,11 @@ class Game:
         if self.paused:
             action = self.pause_menu.handle_input(event)
             if action:
-                self.sound_mgr.play("click")
+                if action == "quit":
+                    self.sound_mgr.play("bark")
+                else:
+                    self.sound_mgr.play("click")
+                    
                 if action == "continue":
                     self.toggle_pause()
                 elif action == "restart":
