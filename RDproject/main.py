@@ -627,6 +627,14 @@ class Game:
     
     def story_handle(self, event: pygame.event.Event) -> None:
         """Handle events during story mode gameplay."""
+        if self.show_ads:
+            action = self.ads_popup.handle_input(event)
+            if action == "close":
+                self.sound_mgr.play("click")
+                self.show_ads = False
+                self.toggle_pause()
+            return
+
         # Similar to play mode but with story-specific logic
         if event.type == pygame.KEYDOWN:
             if event.unicode in ('1', '2', '3', '4', '5'):
@@ -1201,18 +1209,17 @@ class Game:
         # Draw New UI
         self.draw_new_ui()
         
-        if self.show_ads:
-            self.ads_popup.draw(self.screen)
-
         self.speed_ctrl.draw(self.screen)
         draw_wave_title(self.screen, self.font_huge, self.wave)
         self.btn_trash.draw(self.screen)
         self.btn_help.draw(self.screen)
         self.btn_pause.draw(self.screen)
         self.draw_help_popup()
-        self.draw_pause_popup()
-        self.btn_help.draw(self.screen)
-        self.draw_help_popup()
+        
+        if self.show_ads:
+            self.ads_popup.draw(self.screen)
+        else:
+            self.draw_pause_popup()
 
         if self.to_spawn <= 0 and len(self.enemies) == 0:
             time_left = max(0.0, self.wave_delay - self.wave_timer)
@@ -1475,7 +1482,11 @@ class Game:
         self.btn_help.draw(self.screen)
         self.btn_pause.draw(self.screen)
         self.draw_help_popup()
-        self.draw_pause_popup()
+        
+        if self.show_ads:
+            self.ads_popup.draw(self.screen)
+        else:
+            self.draw_pause_popup()
 
         if self.to_spawn <= 0 and len(self.enemies) == 0:
             # 邏輯說明：當所有敵人生成完畢且場面上已無敵人時，計算並顯示下一波倒數或勝利訊息。
