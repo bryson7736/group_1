@@ -3,19 +3,22 @@ import os
 import struct
 import random
 import math
+from settings import ASSETS_DIR
 
 class SoundManager:
     def __init__(self):
         # Ensure mixer is initialized with specific settings for our generated sounds
         if not pygame.mixer.get_init():
-            pygame.mixer.init(frequency=44100, size=-16, channels=1)
+            # Try stereo in case m4a/mp3 is stereo
+            pygame.mixer.init(frequency=44100, size=-16, channels=2)
         
         self.sounds = {}
         self.enabled = True
         
         # Ensure assets directory exists
-        if not os.path.exists(os.path.join("assets", "sounds")):
-            os.makedirs(os.path.join("assets", "sounds"), exist_ok=True)
+        self.sound_dir = os.path.join(ASSETS_DIR, "sounds")
+        if not os.path.exists(self.sound_dir):
+            os.makedirs(self.sound_dir, exist_ok=True)
 
         # Load or generate sounds
         self._load_or_generate("shoot", "shoot.wav", self._gen_shoot)
@@ -27,7 +30,7 @@ class SoundManager:
         self._load_or_generate("upgrade", "upgrade.wav", self._gen_upgrade)
 
     def _load_or_generate(self, name, filename, gen_func):
-        path = os.path.join("assets", "sounds", filename)
+        path = os.path.join(self.sound_dir, filename)
         if os.path.exists(path):
             try:
                 self.sounds[name] = pygame.mixer.Sound(path)
@@ -108,17 +111,26 @@ class SoundManager:
         if not self.enabled:
             return
             
-        path = os.path.join("assets", "sounds", filename)
+        path = os.path.join(self.sound_dir, filename)
         if not os.path.exists(path):
-            print(f"BGM file not found: {path}")
-            return
+            print(f"BGM file NOT FOUND at: {os.path.abspath(path)}")
+            # Fallback check one level up
+            alt_path = os.path.join(os.path.dirname(os.path.dirname(self.sound_dir)), "assets", "sounds", filename)
+            if os.path.exists(alt_path):
+                 print(f"BGM found at fallback path: {alt_path}")
+                 path = alt_path
+            else:
+                return
             
         try:
+            print(f"Loading BGM: {path} (Size: {os.path.getsize(path)} bytes)")
             pygame.mixer.music.load(path)
             pygame.mixer.music.set_volume(volume)
             pygame.mixer.music.play(loops)
+            print("BGM Started Successfully")
         except Exception as e:
-            print(f"Failed to play BGM {path}: {e}")
+            print(f"CRITICAL: Failed to play BGM {path}: {e}")
+            print("Possible cause: m4a/mp3 codec missing or file corrupted.")
 
     def stop_bgm(self):
         """Stop background music."""
