@@ -295,3 +295,49 @@ def draw_boss_state(screen, font_huge, enemies):
         y = SCREEN_H - txt.get_height() - 30
         
         screen.blit(txt, (x, y))
+
+class AdsPopup:
+    def __init__(self, font_big, font_small):
+        self.font_big = font_big
+        self.font_small = font_small
+        
+        # Popup dimensions
+        self.w, self.h = 500, 400
+        self.x = (SCREEN_W - self.w) // 2
+        self.y = (SCREEN_H - self.h) // 2
+        self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
+        
+        # Close button (top right)
+        self.close_btn_size = 30
+        self.close_rect = pygame.Rect(self.rect.right - self.close_btn_size - 10, 
+                                      self.rect.top + 10, 
+                                      self.close_btn_size, 
+                                      self.close_btn_size)
+
+    def draw(self, screen):
+        # Draw background (White interface as requested)
+        pygame.draw.rect(screen, WHITE, self.rect, border_radius=12)
+        pygame.draw.rect(screen, (200, 200, 200), self.rect, width=2, border_radius=12)
+        
+        # Placeholder text
+        title = self.font_big.render("Advertisement", True, DARK)
+        screen.blit(title, (self.rect.centerx - title.get_width() // 2, self.rect.y + 50))
+        
+        msg = self.font_small.render("(Future Ads Content)", True, GRAY)
+        screen.blit(msg, (self.rect.centerx - msg.get_width() // 2, self.rect.centery))
+
+        # Close button (X)
+        pygame.draw.rect(screen, (200, 50, 50), self.close_rect, border_radius=4)
+        # Draw X
+        start_pos = (self.close_rect.left + 8, self.close_rect.top + 8)
+        end_pos = (self.close_rect.right - 8, self.close_rect.bottom - 8)
+        pygame.draw.line(screen, WHITE, start_pos, end_pos, 3)
+        start_pos2 = (self.close_rect.right - 8, self.close_rect.top + 8)
+        end_pos2 = (self.close_rect.left + 8, self.close_rect.bottom - 8)
+        pygame.draw.line(screen, WHITE, start_pos2, end_pos2, 3)
+
+    def handle_input(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.close_rect.collidepoint(event.pos):
+                return "close"
+        return None
