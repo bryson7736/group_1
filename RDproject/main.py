@@ -1355,6 +1355,9 @@ class Game:
         
         if self.show_coin_purchase:
             self.coin_purchase_popup.draw(self.screen)
+            
+        if self.show_remove_ads:
+            self.remove_ads_popup.draw(self.screen)
 
     def _draw_upgrade_btn(self, rect, text, cost):
         can_buy = self.upgrades.coins >= cost
