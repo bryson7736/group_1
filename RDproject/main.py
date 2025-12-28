@@ -149,6 +149,11 @@ class Game:
             if not placed:
                 continue
 
+        self.remove_ads_popup = RemoveAdsPopup(self.font_big, self.font_small)
+        self.show_remove_ads = False
+        self.ads_removed = False
+        self.ad_timer = 0.0
+
         # Speed Control (Top Right)
         # 16x speed (index 5) is locked for non-pro users
         locked_indices = []

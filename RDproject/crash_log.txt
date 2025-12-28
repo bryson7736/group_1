@@ -1,19 +1,11 @@
 CRASH REPORT
 ====================
-Error: 'HelpPopup' object has no attribute 'tips'
+Error: 'Game' object has no attribute 'ads_removed'
 
 Traceback:
 Traceback (most recent call last):
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1868, in <module>
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1910, in <module>
     Game().run()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1858, in run
-    self.draw()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1782, in draw
-    self.play_draw()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1406, in play_draw
-    self.draw_help_popup()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1496, in draw_help_popup
-    self.help_popup.draw(self.screen)
-  File "/home/sutender/rdproject/group_1/RDproject/ui.py", line 244, in draw
-    for tip in self.tips:
-AttributeError: 'HelpPopup' object has no attribute 'tips'
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 155, in __init__
+    if not self.ads_removed:
+AttributeError: 'Game' object has no attribute 'ads_removed'
