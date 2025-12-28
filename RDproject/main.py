@@ -412,7 +412,7 @@ class Game:
         self.wave_timer = 0.0
         
         # Notify
-        self.stage_complete_msg = f"{stage.stage_id} {stage.name} START!"
+        self.stage_complete_msg = f"{stage.stage_id} {stage.name} "
         self.stage_complete_timer = 3.0
         
         # Ensure grid layout is updated for the new stage path
