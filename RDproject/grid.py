@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pygame, random
 from colors import GRAY, ACCENT, BLUE
-from settings import GRID_COLS, GRID_ROWS, CELL_SIZE, GRID_X, GRID_Y, DIE_COST, MERGE_REFUND, MAX_DIE_LEVEL
+from settings import GRID_COLS, GRID_ROWS, CELL_SIZE, GRID_X, GRID_Y, DIE_COST, MERGE_REFUND, MAX_DIE_LEVEL, SCREEN_W, SCREEN_H
 from dice import DIE_TYPES, make_die
 
 class Grid:
@@ -67,9 +67,11 @@ class Grid:
         min_dist = CELL_SIZE * 0.45   # Closer to path (< half cell)
         max_dist = CELL_SIZE * 2.2    # Tighter spread
         
-        # Mission Panel Rect (approximate based on main.py)
-        # Avoid placement in top-left UI area + margin
+        # UI Exclusion Rects
+        # Mission Panel (top-left)
         ui_rect = pygame.Rect(20, 10, 370, 280)
+        # Wave Title & Countdown (top-center)
+        title_rect = pygame.Rect(SCREEN_W // 2 - 250, 0, 500, 150)
 
         for c in range(self.cols):
             for r in range(self.rows):
@@ -79,7 +81,7 @@ class Grid:
                 
                 # Check collision with UI
                 cell_rect = self.rect_at(c, r)
-                if cell_rect.colliderect(ui_rect):
+                if cell_rect.colliderect(ui_rect) or cell_rect.colliderect(title_rect):
                     continue
                 
                 # Check distance to path segments
