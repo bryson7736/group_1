@@ -100,8 +100,7 @@ class StoryManager:
                 waves=5,
                 has_big_enemy=True,
                 path_points=[
-                    # Shifted Right (+250)
-                    (350, 100), (650, 100), (650, 400), (450, 400), (450, 650), (1280, 650)
+                    (0, 100), (650, 100), (650, 400), (450, 400), (450, 650), (1280, 650)
                 ],
                 difficulty=1.5,
                 path_color=(255, 0, 0), # RED
