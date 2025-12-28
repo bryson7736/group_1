@@ -298,6 +298,8 @@ class Game:
                 filename = "bg_burning_path.png"
             elif bg_type == "torture_chamber":
                 filename = "bg_torture_chamber.png"
+            elif bg_type == "demon_fortress":
+                filename = "bg_demon_fortress.png"
             else:
                 filename = "bg_space.png" # default
 
@@ -311,6 +313,10 @@ class Game:
                 scaled_bg.set_alpha(180)
             elif bg_type == "torture_chamber":
                 scaled_bg.set_alpha(190)
+            elif bg_type == "demon_fortress":
+                scaled_bg.set_alpha(180)
+            elif bg_type == "demon_fortress":
+                scaled_bg.set_alpha(180)
             
             self._bg_surface = scaled_bg
         except Exception as e:

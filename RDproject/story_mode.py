@@ -101,7 +101,7 @@ class StoryManager:
             {
                 "name": "Demon Fortress",
                 "path": [(1290, 80), (800, 80), (800, 500), (400, 500), (400, 300), (50, 300), (50, 650), (640, 650), (640, 800)],
-                "color": (50, 200, 50), "bg": None, "desc": "Built by the damned."
+                "color": (255, 128, 0), "bg": "demon_fortress", "desc": "Built by the damned."
             },
             {
                 "name": "Chamber of Torment",
