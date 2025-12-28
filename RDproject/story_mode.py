@@ -111,7 +111,7 @@ class StoryManager:
             {
                 "name": "Hell Lord's Throne",
                 "path": [(1280, 430), (1030, 430), (1030, 110), (430, 110), (430, 630), (1280, 630)],
-                "color": (218, 179, 0), "bg": None, "desc": "Face the ultimate test!"
+                "color": (218, 179, 0), "bg": "hell_lord", "desc": "Face the ultimate test!"
             }
         ]
 

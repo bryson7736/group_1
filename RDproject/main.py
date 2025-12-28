@@ -300,6 +300,8 @@ class Game:
                 filename = "bg_torture_chamber.png"
             elif bg_type == "demon_fortress":
                 filename = "bg_demon_fortress.png"
+            elif bg_type == "hell_lord":
+                filename = "bg_hell_lord.png"
             else:
                 filename = "bg_space.png" # default
 
