@@ -113,15 +113,24 @@ class SoundManager:
             
         path = os.path.join(self.sound_dir, filename)
         if not os.path.exists(path):
-            print(f"BGM file not found: {path}")
-            return
+            print(f"BGM file NOT FOUND at: {os.path.abspath(path)}")
+            # Fallback check one level up
+            alt_path = os.path.join(os.path.dirname(os.path.dirname(self.sound_dir)), "assets", "sounds", filename)
+            if os.path.exists(alt_path):
+                 print(f"BGM found at fallback path: {alt_path}")
+                 path = alt_path
+            else:
+                return
             
         try:
+            print(f"Loading BGM: {path} (Size: {os.path.getsize(path)} bytes)")
             pygame.mixer.music.load(path)
             pygame.mixer.music.set_volume(volume)
             pygame.mixer.music.play(loops)
+            print("BGM Started Successfully")
         except Exception as e:
-            print(f"Failed to play BGM {path}: {e}")
+            print(f"CRITICAL: Failed to play BGM {path}: {e}")
+            print("Possible cause: m4a/mp3 codec missing or file corrupted.")
 
     def stop_bgm(self):
         """Stop background music."""
