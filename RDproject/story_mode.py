@@ -6,7 +6,7 @@ Manages story stages, progression, and save/load functionality.
 import json
 import os
 from typing import List, Optional, Dict, Any
-from settings import BASE_DIR
+from settings import BASE_DIR, SCREEN_W, SCREEN_H
 
 class StoryStage:
     """Represents a single story stage in a chapter."""
@@ -63,99 +63,108 @@ class StoryProgress:
         return progress
 
 
+class StoryChapter:
+    """Represents a chapter containing multiple stages to be played continuously."""
+    
+    def __init__(self, chapter_id: str, name: str, stages: List[StoryStage], icon: Optional[str] = None):
+        self.chapter_id = chapter_id
+        self.name = name
+        self.stages = stages
+        self.icon = icon
+
 class StoryManager:
     """Manages story mode chapters and stages."""
     
     def __init__(self, save_path: Optional[str] = None):
         self.save_path = save_path or os.path.join(BASE_DIR, "story_progress.json")
         self.progress = StoryProgress()
-        self.chapters: Dict[str, List[StoryStage]] = {}
+        self.chapters: Dict[str, StoryChapter] = {}
         
-        # Initialize Hell Chapter (Chapter 1)
-        self._init_hell_chapter()
+        # Initialize Chapters 1-5
+        self._init_chapters()
         
-        # Persistence disabled: progression resets on restart
-        # self.load_progress()
-    
-    def _init_hell_chapter(self):
-        """Initialize Hell Chapter (1-1 to 1-5)."""
-        hell_stages = [
-            StoryStage(
-                stage_id="1-1",
-                name="Hell Gate",
-                description="The entrance to the infernal realm. Demons pour forth!",
-                waves=5,
-                has_big_enemy=True,
-                path_points=[
-                    (1280, 100), (900, 100), (900, 300), (600, 300), (600, 600), (1280, 600)
-                ],
-                difficulty=1.0,
-                path_color=(0, 0, 0), # BLACK
-                bg_type="hell"
-            ),
-            StoryStage(
-                stage_id="1-2",
-                name="Burning Path",
-                description="Walk the scorched path through rivers of lava.",
-                waves=5,
-                has_big_enemy=True,
-                path_points=[
-                    # Shifted Right (+250)
-                    (350, 100), (650, 100), (650, 400), (450, 400), (450, 650), (1280, 650)
-                ],
-                difficulty=1.5,
-                path_color=(255, 0, 0), # RED
-                bg_type="burning_path"
-            ),
-            StoryStage(
-                stage_id="1-3",
-                name="Demon Fortress",
-                description="A fortress built by the damned. Steel yourself!",
-                waves=5,
-                has_big_enemy=True,
-                path_points=[
-                    (1290, 80), (800, 80), (800, 500), (400, 500), (400, 300), (50, 300), (50, 650), (640, 650), (640, 800)
-                ],
-                difficulty=1.8,
-                path_color=(50, 200, 50) # GREEN
-            ),
-            StoryStage(
-                stage_id="1-4",
-                name="Chamber of Torment",
-                description="The air itself burns. The boss chamber awaits...",
-                waves=5,
-                has_big_enemy=True,
-                path_points=[
-                    (1280, 400), (900, 400), (900, 200), (600, 200), (600, 600), (1280, 600)
-                ],
-                difficulty=2.0,
-                path_color=(139, 69, 19) # BROWN
-            ),
-            StoryStage(
-                stage_id="1-5",
-                name="Hell Lord's Throne",
-                description="Face the Hell Lord himself! Prepare for the ultimate test!",
-                waves=10,
-                has_big_enemy=True,
-                has_true_boss=True,
-                path_points=[
-                    (1280, 430), (1030, 430), (1030, 110), (430, 110), (430, 630), (1280, 630)
-                ],
-                difficulty=2.5,
-                path_color=(218, 179, 0) # GOLD (R218 G179 B0)
-            ),
+    def _init_chapters(self):
+        """Initialize all 5 chapters based on original maps 1-1 to 1-5."""
+        
+        # Original map data
+        original_maps = [
+            {
+                "name": "Hell Gate",
+                "path": [(1280, 100), (900, 100), (900, 300), (600, 300), (600, 600), (1280, 600)],
+                "color": (0, 0, 0), "bg": "hell", "desc": "The entrance to the infernal realm."
+            },
+            {
+                "name": "Burning Path",
+                "path": [(350, 100), (650, 100), (650, 400), (450, 400), (450, 650), (1280, 650)],
+                "color": (255, 0, 0), "bg": "burning_path", "desc": "Cross the lava rivers."
+            },
+            {
+                "name": "Demon Fortress",
+                "path": [(1290, 80), (800, 80), (800, 500), (400, 500), (400, 300), (50, 300), (50, 650), (640, 650), (640, 800)],
+                "color": (50, 200, 50), "bg": None, "desc": "Built by the damned."
+            },
+            {
+                "name": "Chamber of Torment",
+                "path": [(1280, 400), (900, 400), (900, 200), (600, 200), (600, 600), (1280, 600)],
+                "color": (139, 69, 19), "bg": None, "desc": "The air itself burns."
+            },
+            {
+                "name": "Hell Lord's Throne",
+                "path": [(1280, 430), (1030, 430), (1030, 110), (430, 110), (430, 630), (1280, 630)],
+                "color": (218, 179, 0), "bg": None, "desc": "Face the ultimate test!"
+            }
         ]
-        
-        self.chapters["hell"] = hell_stages
+
+        # Chapter Names (optional display names)
+        chapter_names = ["Hell Gate", "Burning Path", "Demon Fortress", "Chamber of Torment", "Hell Lord"]
+
+        for i in range(5):
+            ch_num = i + 1
+            map_data = original_maps[i]
+            stages = []
+            
+            # Create 5 sub-stages for each chapter, all using the same map
+            for s_num in range(1, 6):
+                stage_id = f"{ch_num}-{s_num}"
+                is_last = (s_num == 5)
+                # Final sub-stage of Chapter 5 has True Boss
+                true_boss = (ch_num == 5 and is_last)
+                
+                stages.append(StoryStage(
+                    stage_id=stage_id,
+                    name=map_data["name"],
+                    description=map_data["desc"],
+                    waves=10 if is_last else 5,
+                    has_big_enemy=True,
+                    path_points=map_data["path"],
+                    has_true_boss=true_boss,
+                    difficulty=1.0 + i * 0.5 + s_num * 0.1,
+                    path_color=map_data["color"],
+                    bg_type=map_data["bg"]
+                ))
+            
+            self.chapters[f"chapter{ch_num}"] = StoryChapter(
+                f"chapter{ch_num}", 
+                f"Chapter {ch_num}: {chapter_names[i]}", 
+                stages
+            )
+
+    def get_chapters(self) -> List[StoryChapter]:
+        """Get all available chapters."""
+        return [self.chapters[f"chapter{i}"] for i in range(1, 6)]
     
-    def get_chapter_stages(self, chapter_name: str) -> List[StoryStage]:
+    def get_chapter(self, chapter_id: str) -> Optional[StoryChapter]:
+        return self.chapters.get(chapter_id)
+
+    def get_chapter_stages(self, chapter_id: str) -> List[StoryStage]:
         """Get all stages for a chapter."""
-        return self.chapters.get(chapter_name, [])
+        ch = self.chapters.get(chapter_id)
+        return ch.stages if ch else []
     
     def get_stage(self, stage_id: str) -> Optional[StoryStage]:
         """Get a specific stage by ID."""
-        for chapter_stages in self.chapters.values():
-            for stage in chapter_stages:
+        for chapter in self.chapters.values():
+            for stage in chapter.stages:
                 if stage.stage_id == stage_id:
                     return stage
         return None
