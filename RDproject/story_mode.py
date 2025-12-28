@@ -14,7 +14,7 @@ class StoryStage:
     def __init__(self, stage_id: str, name: str, description: str, 
                  waves: int, has_big_enemy: bool, path_points: List[tuple], 
                  has_true_boss: bool = False, difficulty: float = 1.0,
-                 path_color: tuple = (80, 85, 100)): # Default GRAY
+                 path_color: tuple = (80, 85, 100), bg_type: Optional[str] = None): # Default GRAY
         self.stage_id = stage_id  # e.g., "1-1", "1-2"
         self.name = name
         self.description = description
@@ -24,6 +24,7 @@ class StoryStage:
         self.path_points = path_points
         self.difficulty = difficulty
         self.path_color = path_color
+        self.bg_type = bg_type
         
     def get_wave_description(self, wave_num: int) -> str:
         """Get description text for a specific wave."""
@@ -89,7 +90,8 @@ class StoryManager:
                     (1280, 100), (900, 100), (900, 300), (600, 300), (600, 600), (1280, 600)
                 ],
                 difficulty=1.0,
-                path_color=(60, 160, 255) # BLUE
+                path_color=(0, 0, 0), # BLACK
+                bg_type="hell"
             ),
             StoryStage(
                 stage_id="1-2",

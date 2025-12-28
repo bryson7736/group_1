@@ -267,22 +267,26 @@ class Game:
         self.current_level_idx = idx
         self.level = self.level_mgr.get(idx)
         self.reset_runtime()
-        if self.level and self.level.bg_type == "space":
-            self._render_space_bg()
+        if self.level and self.level.bg_type:
+            self._render_bg(self.level.bg_type)
         else:
             self._bg_surface = None
         self.state = STATE_PLAY
 
-    def _render_space_bg(self) -> None:
-        """Load and scale the space background image with custom transparency for a desaturated look."""
+    def _render_bg(self, bg_type: str) -> None:
+        """Load and scale a background image based on type."""
         try:
-            raw_bg = pygame.image.load(os.path.join(ASSETS_DIR, "bg_space.png")).convert()
+            filename = "bg_space.png" if bg_type == "space" else "bg_hell.png"
+            raw_bg = pygame.image.load(os.path.join(ASSETS_DIR, filename)).convert()
             scaled_bg = pygame.transform.smoothscale(raw_bg, (SCREEN_W, SCREEN_H))
-            # Set alpha to make it less saturated/intense against the DARK background
-            scaled_bg.set_alpha(160) # 255 is opaque, lower is more transparent
+            
+            # Special treatment for space background (lower alpha)
+            if bg_type == "space":
+                scaled_bg.set_alpha(160)
+            
             self._bg_surface = scaled_bg
         except Exception as e:
-            print(f"Error loading space background: {e}")
+            print(f"Error loading background ({bg_type}): {e}")
             self._bg_surface = None
 
     def goto_help(self) -> None:
@@ -331,11 +335,14 @@ class Game:
             # Ensure path_color is used. Default to GRAY if missing.
             p_color = getattr(stage, 'path_color', (80, 85, 100))
             # Determine background type
-            bg_t = "space" if "Space" in stage.name else None
+            bg_t = getattr(stage, 'bg_type', None)
+            if not bg_t and "Space" in stage.name:
+                bg_t = "space"
+            
             self.level = Level(stage.name, stage.path_points, stage.difficulty, p_color, bg_type=bg_t)
             
-            if self.level.bg_type == "space":
-                self._render_space_bg()
+            if self.level.bg_type:
+                self._render_bg(self.level.bg_type)
             else:
                 self._bg_surface = None
             
@@ -1260,7 +1267,7 @@ class Game:
 
             msg = f"Next wave in {int(time_left)}s"
             top = self.font_big.render(msg, True, WHITE)
-            self.screen.blit(top, (SCREEN_W - top.get_width() - 20, 42))
+            self.screen.blit(top, ((SCREEN_W - top.get_width()) // 2, 85))
         
         # Draw in-game upgrades
         self.draw_ingame_upgrades()
@@ -1469,8 +1476,10 @@ class Game:
     
     def story_draw(self) -> None:
         """Draw the story mode gameplay screen."""
-        # Reuse play_draw but with story-specific UI elements
-        self.screen.fill(DARK)
+        if self._bg_surface:
+            self.screen.blit(self._bg_surface, (0, 0))
+        else:
+            self.screen.fill(DARK)
         if self.level:
             pygame.draw.lines(self.screen, self.level.path_color, False, self.level.path, 6)
 
@@ -1531,7 +1540,7 @@ class Game:
             else:
                 msg = "Victory! Returning to stage select..."
             top = self.font_big.render(msg, True, (255, 200, 100))
-            self.screen.blit(top, (GRID_X, 80))
+            self.screen.blit(top, ((SCREEN_W - top.get_width()) // 2, 85))
         
         # Draw in-game upgrades
         self.draw_ingame_upgrades()
