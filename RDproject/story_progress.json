@@ -1,9 +1,7 @@
 {
-  "completed_stages": [
-    "1",
-    "2",
-    "3",
-    "4"
+  "completed_stages": [],
+  "completed_chapters": [
+    "chapter5"
   ],
   "current_stage": null
 }

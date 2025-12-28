@@ -106,11 +106,26 @@ def draw_panel(surf, rect, title, title_font, body_fn=None):
     if body_fn:
         body_fn()
 def draw_pips(surf, rect, level, color=WHITE):
-    """Draw dots (pips) for levels 1-6, and a star for level 7."""
+    """Draw dots (pips) for levels 1-7."""
     import pygame
-    if level >= 7:
-        # Star for level 7+
-        # Use a large font for the star
+    
+    pip_radius = max(3, int(rect.width / 12))
+    gap = rect.width // 4
+    
+    patterns = {
+        1: [(0, 0)],
+        2: [(-gap, -gap), (gap, gap)],
+        3: [(-gap, -gap), (0, 0), (gap, gap)],
+        4: [(-gap, -gap), (gap, -gap), (-gap, gap), (gap, gap)],
+        5: [(-gap, -gap), (gap, -gap), (0, 0), (-gap, gap), (gap, gap)],
+        # Level 6: Two columns of 3 pips each (3x2 grid)
+        6: [(-gap, -gap), (-gap, 0), (-gap, gap), (gap, -gap), (gap, 0), (gap, gap)],
+        # Level 7: 1-3-3 pyramid pattern (top center, middle row 3, bottom row 3)
+        7: [(0, -gap), (-gap, 0), (0, 0), (gap, 0), (-gap, gap), (0, gap), (gap, gap)],
+    }
+    
+    # For level 7+, use star
+    if level > 7:
         font_size = int(rect.height * 0.6)
         try:
             star_font = pygame.font.SysFont(["segoe uiemoji", "segoe ui symbol", "arial"], font_size, bold=True)
@@ -120,17 +135,6 @@ def draw_pips(surf, rect, level, color=WHITE):
         star = star_font.render("★", True, color)
         surf.blit(star, (rect.centerx - star.get_width()//2, rect.centery - star.get_height()//2))
         return
-
-    pip_radius = max(3, int(rect.width / 12))
-    gap = rect.width // 4
-    patterns = {
-        1: [(0, 0)],
-        2: [(-gap, -gap), (gap, gap)],
-        3: [(-gap, -gap), (0, 0), (gap, gap)],
-        4: [(-gap, -gap), (gap, -gap), (-gap, gap), (gap, gap)],
-        5: [(-gap, -gap), (gap, -gap), (0, 0), (-gap, gap), (gap, gap)],
-        6: [(-gap, -gap), (-gap, 0), (gap, 0), (-gap, gap), (0, gap), (gap, gap)],
-    }
     
     for dx, dy in patterns.get(level, []):
         pygame.draw.circle(surf, color, (rect.centerx + dx, rect.centery + dy), pip_radius)
@@ -210,18 +214,32 @@ class HelpPopup:
         self.font_small = font_small
         
         # Popup dimensions
-        self.w, self.h = 600, 500
+        self.w, self.h = 700, 650
         self.x = (SCREEN_W - self.w) // 2
         self.y = (SCREEN_H - self.h) // 2
         self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
         
         self.tips = [
-            "Hotkeys: 1~5 speed, N next wave",
-            "Right click cancels / exits Trash",
-            "Press ESC for lobby",
-            "Click empty slot to spawn die",
-            "Drag same dice to merge",
+            "- Drag dice from Loadout to Grid.",
+            "- 3 same color dice adjacent = Merge (Level Up).",
+            "- Dice attack automatically.",
+            "- Enemies move from top to bottom.",
+            "- Don't let enemies reach the bottom!",
+            "- Click 'Roll' to get new dice.",
+            "- Use 'Trash' to remove unwanted dice."
         ]
+
+        # Close Button
+        self.close_btn = Button(
+            rect=(self.rect.centerx - 60, self.rect.bottom - 50, 120, 40),
+            text="Close",
+            font=self.font,
+            on_click=lambda: None, # Handled externally or we can return a signal
+            bg=(200, 50, 50),
+            fg=WHITE,
+            hover=(220, 70, 70),
+            radius=8
+        )
 
     def draw(self, screen):
         # Draw background
@@ -232,14 +250,14 @@ class HelpPopup:
         title = self.font_big.render("How to Play", True, WHITE)
         screen.blit(title, (self.rect.centerx - title.get_width() // 2, self.rect.y + 20))
         
-        py = self.rect.y + 70
+        py = self.rect.y + 60
         for tip in self.tips:
-            t = self.font.render(tip, True, WHITE)
+            t = self.font_small.render(tip, True, WHITE)
             screen.blit(t, (self.rect.x + 30, py))
-            py += 30
+            py += 25
             
         # Synergies Section
-        py += 20
+        py += 10
         syn_title = self.font_big.render("Synergies (Place Adjacent)", True, (255, 215, 0))
         screen.blit(syn_title, (self.rect.centerx - syn_title.get_width() // 2, py))
         py += 40
@@ -254,42 +272,44 @@ class HelpPopup:
             screen.blit(l, (r.centerx - l.get_width()//2, r.centery - l.get_height()//2))
             return r.right
             
-        # 1. Fire + Wind
-        start_x = self.rect.x + 50
-        lx = start_x
-        lx = draw_icon(lx, py, DICE_COLORS.get("fire", (200, 50, 50)), "Fire") + 10
-        plus = self.font.render("+", True, WHITE)
-        screen.blit(plus, (lx, py))
-        lx += 20
-        lx = draw_icon(lx, py, DICE_COLORS.get("wind", (50, 200, 50)), "Wind") + 20
+        synergies = [
+            ("fire", "wind", "Inferno: Fire +Splash, Wind +Speed", (255, 69, 0)),
+            ("iron", "poison", "Toxic Spikes: Iron poisons, Poison +Dmg", (138, 43, 226)),
+            ("freeze", "multi", "Frost Volley: Multi slows, Freeze +Range", (0, 255, 255)),
+            ("single", "wind", "Sniper Nest: Single +Range/Dmg, Wind +Speed", (50, 205, 50)),
+            ("fire", "iron", "Magma: Fire +Dmg, Iron Explodes", (220, 20, 60)),
+            ("poison", "multi", "Plague: Poison AOE, Multi poisons", (0, 128, 0))
+        ]
         
-        desc = self.font.render("= Fire gets +50% Splash Radius", True, (255, 200, 200))
-        screen.blit(desc, (lx, py + 2))
+        start_x = self.rect.x + 40
         
-        # 2. Iron + Ice
-        py += 50
-        lx = start_x
-        lx = draw_icon(lx, py, DICE_COLORS.get("iron", (100, 100, 100)), "Iron") + 10
-        screen.blit(plus, (lx, py))
-        lx += 20
-        lx = draw_icon(lx, py, DICE_COLORS.get("freeze", (100, 100, 255)), "Ice") + 20
-        
-        desc = self.font.render("= Iron deals +20% Damage", True, (200, 200, 255))
-        screen.blit(desc, (lx, py + 2))
-        
-        # 3. Chain
-        py += 50
-        lx = start_x
-        lx = draw_icon(lx, py, (150, 150, 150), "?") + 5
-        lx = draw_icon(lx, py, (150, 150, 150), "?") + 5
-        lx = draw_icon(lx, py, (150, 150, 150), "?") + 20
-        
-        desc = self.font.render("= Chain 3+ Same Dice: +20% Speed", True, (255, 255, 150))
-        screen.blit(desc, (lx, py + 2))
+        for t1, t2, desc_text, color in synergies:
+            lx = start_x
+            lx = draw_icon(lx, py, DICE_COLORS.get(t1, (100,100,100)), t1) + 5
+            plus = self.font_small.render("+", True, WHITE)
+            screen.blit(plus, (lx, py+5))
+            lx += 15
+            lx = draw_icon(lx, py, DICE_COLORS.get(t2, (100,100,100)), t2) + 15
+            
+            # Draw link line
+            pygame.draw.line(screen, color, (start_x + 15, py+35), (start_x + 15 + 30 + 15, py+35), 3)
+            
+            # Draw Dot Indicator explanation
+            dot_x = lx + 15
+            pygame.draw.circle(screen, color, (dot_x, py + 15), 6)
+            pygame.draw.circle(screen, WHITE, (dot_x, py + 15), 7, width=1)
+            
+            desc = self.font_small.render(desc_text, True, color)
+            screen.blit(desc, (dot_x + 15, py + 5))
+            py += 45
 
-        # Close instruction
-        close_txt = self.font_small.render("Click Help again to close", True, (200, 200, 200))
-        screen.blit(close_txt, (self.rect.centerx - close_txt.get_width() // 2, self.rect.bottom - 30))
+        # Close Button
+        self.close_btn.draw(screen)
+
+    def handle_input(self, event):
+        if self.close_btn.handle(event):
+            return "close"
+        return None
 
 def draw_wave_title(screen, font_huge, wave):
     """Draw the artistic WAVE X title at top center."""

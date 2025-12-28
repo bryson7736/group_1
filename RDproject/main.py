@@ -37,6 +37,7 @@ STATE_STORY_SELECT = "story_select"
 STATE_STORY = "story"
 STATE_INPUT_NAME = "input_name"
 STATE_LEADERBOARD = "leaderboard"
+STATE_CHAPTER_VICTORY = "chapter_victory"
 
 
 class Game:
@@ -95,6 +96,12 @@ class Game:
         self.game_time: float = 0.0  # Total real-time seconds elapsed in game
         self.trash_active: bool = False
         self._bg_surface: Optional[pygame.Surface] = None
+        
+        # Chapter statistics tracking
+        self.chapter_start_time: float = 0.0
+        self.chapter_start_coins: int = 0
+        self.chapter_coins_earned: int = 0
+        self.chapter_time_spent: float = 0.0
         
         # Lobby background dice decoration
         self.lobby_bg_dice = []
@@ -296,6 +303,12 @@ class Game:
                 filename = "bg_hell.png"
             elif bg_type == "burning_path":
                 filename = "bg_burning_path.png"
+            elif bg_type == "torture_chamber":
+                filename = "bg_torture_chamber.png"
+            elif bg_type == "demon_fortress":
+                filename = "bg_demon_fortress.png"
+            elif bg_type == "hell_lord":
+                filename = "bg_hell_lord.png"
             else:
                 filename = "bg_space.png" # default
 
@@ -307,6 +320,12 @@ class Game:
                 scaled_bg.set_alpha(160)
             elif bg_type == "burning_path":
                 scaled_bg.set_alpha(180)
+            elif bg_type == "torture_chamber":
+                scaled_bg.set_alpha(190)
+            elif bg_type == "demon_fortress":
+                scaled_bg.set_alpha(180)
+            elif bg_type == "hell_lord":
+                scaled_bg.set_alpha(170)
             
             self._bg_surface = scaled_bg
         except Exception as e:
@@ -382,6 +401,10 @@ class Game:
             self.current_stage_index = 0
             self.state = STATE_STORY
             self.reset_runtime()
+            # Record chapter start statistics
+            import time
+            self.chapter_start_time = time.time()
+            self.chapter_start_coins = self.money
             self._load_current_story_stage()
 
     def _load_current_story_stage(self) -> None:
@@ -510,11 +533,21 @@ class Game:
         self.speed_ctrl.handle(event)
         if self.btn_trash.handle(event):
             self.sound_mgr.play("click")
+            return
         if self.btn_help.handle(event):
             self.sound_mgr.play("click")
+            return
         if self.btn_pause.handle(event):
             self.sound_mgr.play("click")
+            return
         
+        if self.show_help:
+            action = self.help_popup.handle_input(event)
+            if action == "close":
+                self.sound_mgr.play("click")
+                self.show_help = False
+            return
+
         if self.show_ads:
             action = self.ads_popup.handle_input(event)
             if action == "close":
@@ -1056,8 +1089,14 @@ class Game:
                     self.upgrades.add_coin(1)
                 self.enemies.remove(e)
             elif e.reached:
-                self.base_hp -= 1
-                self.enemies.remove(e)
+                # Special handling for boss enemies
+                if isinstance(e, TrueBoss):
+                    # Boss reached the end - instant defeat
+                    self.base_hp = 0
+                    self.enemies.remove(e)
+                else:
+                    self.base_hp -= 1
+                    self.enemies.remove(e)
 
         # Auto-wave logic
         if self.to_spawn <= 0 and len(self.enemies) == 0:
@@ -1073,9 +1112,18 @@ class Game:
                             self._load_current_story_stage()
                             return # Skip regular wave start for this frame
                         else:
-                            # Chapter complete!
-                            self.story_mgr.complete_stage(self.current_story_stage.stage_id)
-                            self.goto_story_select()
+                        # Chapter complete! Calculate statistics and show victory screen
+                            import time
+                            self.chapter_time_spent = time.time() - self.chapter_start_time
+                            self.chapter_coins_earned = self.money - self.chapter_start_coins
+                            
+                            # Mark chapter as completed
+                            if self.current_story_chapter:
+                                self.story_mgr.complete_chapter(self.current_story_chapter.chapter_id)
+                                self.story_mgr.save_progress()
+                            
+                            # Transition to victory screen
+                            self.state = STATE_CHAPTER_VICTORY
                             return
                     else:
                         # Fallback for single stage mode
@@ -1524,6 +1572,74 @@ class Game:
 
         self.loadout_back.draw(self.screen)
 
+    def chapter_victory_handle(self, event: pygame.event.Event) -> None:
+        """Handle events during chapter victory screen."""
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            # Check if continue button clicked (will add button below)
+            btn_w, btn_h = 300, 60
+            btn_x = (SCREEN_W - btn_w) // 2
+            btn_y = SCREEN_H - 150
+            btn_rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
+            if btn_rect.collidepoint(event.pos):
+                self.goto_story_select()
+
+    def chapter_victory_draw(self) -> None:
+        """Draw the chapter victory screen with statistics."""
+        # Dark overlay background
+        self.screen.fill((15, 10, 25))
+        
+        # Victory title
+        title = self.font_huge.render("🎉 CHAPTER COMPLETE! 🎉", True, (255, 215, 0))
+        self.screen.blit(title, (SCREEN_W // 2 - title.get_width() // 2, 100))
+        
+        # Chapter name
+        if self.current_story_chapter:
+            chapter_name = self.font_big.render(self.current_story_chapter.name, True, (255, 180, 100))
+            self.screen.blit(chapter_name, (SCREEN_W // 2 - chapter_name.get_width() // 2, 180))
+        
+        # Statistics panel
+        panel_w, panel_h = 500, 300
+        panel_x = (SCREEN_W - panel_w) // 2
+        panel_y = 250
+        
+        # Panel background
+        panel_surf = pygame.Surface((panel_w, panel_h), pygame.SRCALPHA)
+        panel_surf.fill((30, 25, 40, 220))
+        pygame.draw.rect(panel_surf, (255, 180, 0), (0, 0, panel_w, panel_h), 3, border_radius=10)
+        self.screen.blit(panel_surf, (panel_x, panel_y))
+        
+        # Statistics text
+        stats_y = panel_y + 40
+        
+        # Coins earned
+        coins_text = f"💰 Coins Earned: {self.chapter_coins_earned}"
+        coins_surf = self.font_big.render(coins_text, True, (255, 215, 0))
+        self.screen.blit(coins_surf, (SCREEN_W // 2 - coins_surf.get_width() // 2, stats_y))
+        
+        # Time spent
+        minutes = int(self.chapter_time_spent // 60)
+        seconds = int(self.chapter_time_spent % 60)
+        time_text = f"⏱️ Time: {minutes:02d}:{seconds:02d}"
+        time_surf = self.font_big.render(time_text, True, (150, 200, 255))
+        self.screen.blit(time_surf, (SCREEN_W // 2 - time_surf.get_width() // 2, stats_y + 80))
+        
+        # Continue button
+        btn_w, btn_h = 300, 60
+        btn_x = (SCREEN_W - btn_w) // 2
+        btn_y = SCREEN_H - 150
+        
+        mouse_pos = pygame.mouse.get_pos()
+        btn_rect = pygame.Rect(btn_x, btn_y, btn_w, btn_h)
+        is_hover = btn_rect.collidepoint(mouse_pos)
+        
+        btn_color = (80, 180, 80) if is_hover else (60, 140, 60)
+        pygame.draw.rect(self.screen, btn_color, btn_rect, border_radius=10)
+        pygame.draw.rect(self.screen, (100, 255, 100), btn_rect, 3, border_radius=10)
+        
+        btn_text = self.font_big.render("Continue", True, WHITE)
+        self.screen.blit(btn_text, (btn_x + (btn_w - btn_text.get_width()) // 2, 
+                                     btn_y + (btn_h - btn_text.get_height()) // 2))
+
     
     def story_select_draw(self) -> None:
         """Draw the story stage selection screen."""
@@ -1560,6 +1676,20 @@ class Game:
             
             txt = self.font_big.render(chapter.name, True, text_color)
             self.screen.blit(txt, (r.centerx - txt.get_width() // 2, r.centery - txt.get_height() // 2))
+            
+            # Draw checkmark if chapter is completed
+            if self.story_mgr.is_chapter_completed(chapter.chapter_id):
+                # Green circle background
+                check_size = 40
+                check_x = r.right - check_size - 10
+                check_y = r.top + 10
+                pygame.draw.circle(self.screen, (50, 200, 80), (check_x + check_size // 2, check_y + check_size // 2), check_size // 2)
+                pygame.draw.circle(self.screen, (100, 255, 120), (check_x + check_size // 2, check_y + check_size // 2), check_size // 2, 2)
+                
+                # White checkmark symbol
+                check_text = self.font_big.render("✓", True, WHITE)
+                self.screen.blit(check_text, (check_x + (check_size - check_text.get_width()) // 2, 
+                                               check_y + (check_size - check_text.get_height()) // 2))
         
         self.story_back.draw(self.screen)
     
@@ -1669,6 +1799,8 @@ class Game:
             self.input_name_draw()
         elif self.state == STATE_LEADERBOARD:
             self.leaderboard_draw()
+        elif self.state == STATE_CHAPTER_VICTORY:
+            self.chapter_victory_draw()
         pygame.display.flip()
 
     def run(self) -> None:
@@ -1722,6 +1854,8 @@ class Game:
                     self.input_name_handle(event)
                 elif self.state == STATE_LEADERBOARD:
                     self.leaderboard_handle(event)
+                elif self.state == STATE_CHAPTER_VICTORY:
+                    self.chapter_victory_handle(event)
 
             self.update(dt)
             self.draw()

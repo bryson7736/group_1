@@ -47,8 +47,13 @@ class Die:
     @property
     def range(self):
         """Effective range."""
-        # Base range is constant for now, or could be upgraded
-        return self.base_range
+        r = self.base_range
+        # Synergies
+        if self.synergy_buffs.get("sniper_nest") and self.type == DIE_SINGLE:
+            r *= 1.5
+        if self.synergy_buffs.get("frost_volley") and self.type == DIE_FREEZE:
+            r *= 1.3
+        return r
 
     @property
     def x(self):
@@ -105,15 +110,44 @@ class Die:
         else:
             pygame.draw.rect(surf, (255,255,255), rect, width=2, border_radius=14)
         
-        # Synergy Indicators
-        if self.synergy_buffs.get("fire_wind"):
-            # Red/Green ring for Fire+Wind
-            pygame.draw.circle(surf, (255, 100, 0), rect.topleft, 8)
-            pygame.draw.circle(surf, (100, 255, 100), rect.topleft, 5)
-        if self.synergy_buffs.get("iron_ice"):
-            # Blue/Gray ring for Iron+Ice
-            pygame.draw.circle(surf, (100, 100, 255), rect.topright, 8)
-            pygame.draw.circle(surf, (200, 200, 200), rect.topright, 5)
+        # Synergy Dot Indicators
+        synergy_colors = {
+            "inferno": (255, 69, 0),      # Orange Red
+            "toxic_spikes": (138, 43, 226), # Blue Violet
+            "frost_volley": (0, 255, 255),  # Cyan
+            "sniper_nest": (50, 205, 50),   # Lime Green
+            "magma": (220, 20, 60),         # Crimson
+            "plague": (0, 128, 0)           # Green
+        }
+        
+        active_colors = []
+        for syn, color in synergy_colors.items():
+            if self.synergy_buffs.get(syn):
+                active_colors.append(color)
+                
+        if active_colors:
+            # Draw dots in top right area, moving inwards ("middler")
+            # Start position: shifted in from the corner
+            start_x = rect.right - 25
+            start_y = rect.top + 25
+            spacing = 18
+            
+            for i, color in enumerate(active_colors):
+                # Arrange horizontally to the left
+                dot_pos = (start_x - (i * spacing), start_y)
+                pygame.draw.circle(surf, color, dot_pos, 7)
+                pygame.draw.circle(surf, WHITE, dot_pos, 8, width=2) # White outline for visibility
+        
+        
+        # Synergy Indicators - Removed for cleaner visual
+        # if self.synergy_buffs.get("fire_wind"):
+        #     # Red/Green ring for Fire+Wind
+        #     pygame.draw.circle(surf, (255, 100, 0), rect.topleft, 8)
+        #     pygame.draw.circle(surf, (100, 255, 100), rect.topleft, 5)
+        # if self.synergy_buffs.get("iron_ice"):
+        #     # Blue/Gray ring for Iron+Ice
+        #     pygame.draw.circle(surf, (100, 100, 255), rect.topright, 8)
+        #     pygame.draw.circle(surf, (200, 200, 200), rect.topright, 5)
 
         glow = rect.copy()
         glow.h = int(rect.h * 0.35)
@@ -144,6 +178,12 @@ class Die:
         # Synergy: Chain (3+ same dice) -> +20% Speed
         if self.synergy_buffs.get("chain"):
             ingame_mult += 0.20
+            
+        # New Synergies
+        if self.synergy_buffs.get("inferno") and self.type == DIE_WIND:
+            ingame_mult += 0.30
+        if self.synergy_buffs.get("sniper_nest") and self.type == DIE_WIND:
+            ingame_mult += 0.30
         
         return perm_mult / ingame_mult
 
@@ -220,6 +260,8 @@ class SingleDice(Die):
 
     def fire_at(self, target):
         dmg = self.apply_crit(self.base_dmg * self.damage_multiplier())
+        if self.synergy_buffs.get("sniper_nest"):
+            dmg *= 1.5
         self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
 
 
@@ -234,7 +276,16 @@ class MultiDice(Die):
         # Buff: Base damage starts at 3 instead of 1
         base = 3 * (2 ** (self.level - 1))
         dmg = self.apply_crit(base * self.damage_multiplier())
-        self.game.bullets.append(ChainBolt(self.game, self.x, self.y, target, dmg, jumps, self.game.enemies, speed_mult_provider=lambda: self.game.speed_mult))
+        
+        slow = None
+        if self.synergy_buffs.get("frost_volley"):
+            slow = (FREEZE_SLOW_RATIO, FREEZE_DURATION)
+            
+        poison = None
+        if self.synergy_buffs.get("plague"):
+            poison = (dmg * 0.5, 3.0)
+
+        self.game.bullets.append(ChainBolt(self.game, self.x, self.y, target, dmg, jumps, self.game.enemies, speed_mult_provider=lambda: self.game.speed_mult, poison=poison, slow=slow))
         self.game.sound_mgr.play("shoot")
 
 
@@ -274,15 +325,29 @@ class PoisonDice(Die):
     def fire_at(self, target):
         base = 2 ** (self.level - 1)
         dmg = self.apply_crit(base * self.damage_multiplier())
-        # Initial hit
-        self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
-        # Apply poison: dmg per sec for 3s (Buffed to 0.6x)
+        
+        if self.synergy_buffs.get("toxic_spikes"):
+            dmg *= 1.5
+            
         # In-game upgrade: +10% dot ratio per level
         ingame_level = self.game.ingame_upgrades.get_level(self.type)
         dot_ratio = 0.6 + (ingame_level - 1) * 0.1
-        
         poison_dps = dmg * dot_ratio
-        target.apply_poison(poison_dps, 3.0)
+        
+        if self.synergy_buffs.get("plague"):
+             # AOE Poison
+             self.game.bullets.append(ExplosiveBullet(
+                self.game, self.x, self.y, target, 
+                dmg, dmg, 60, 
+                speed_mult_provider=lambda: self.game.speed_mult,
+                poison=(poison_dps, 3.0)
+            ))
+        else:
+            # Initial hit
+            self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
+            # Apply poison manually for non-AOE to keep original behavior logic structure (or just use Bullet poison)
+            target.apply_poison(poison_dps, 3.0)
+            
         self.game.sound_mgr.play("shoot")
 
 
@@ -341,7 +406,21 @@ class IronDice(Die):
             dmg *= boss_mult
         
         dmg = self.apply_crit(dmg)
-        self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
+        
+        poison = None
+        if self.synergy_buffs.get("toxic_spikes"):
+            poison = (dmg * 0.2, 3.0)
+            
+        if self.synergy_buffs.get("magma"):
+            self.game.bullets.append(ExplosiveBullet(
+                self.game, self.x, self.y, target, 
+                dmg, dmg * 0.5, 40, 
+                speed_mult_provider=lambda: self.game.speed_mult,
+                poison=poison
+            ))
+        else:
+            self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult, poison=poison))
+            
         self.game.sound_mgr.play("shoot")
 
 
@@ -372,12 +451,16 @@ class FireDice(Die):
 
     def fire_at(self, target):
         dmg = self.apply_crit(self.base_dmg * self.damage_multiplier())
+        
+        if self.synergy_buffs.get("magma"):
+            dmg *= 1.5
+            
         # Splash damage is 75% of main damage (Nerfed from 100%)
         splash = self.splash_dmg * self.damage_multiplier() * 0.75
         
         # Synergy: Fire + Wind -> +50% Splash Radius
         radius = self.splash_radius
-        if self.synergy_buffs.get("fire_wind"):
+        if self.synergy_buffs.get("fire_wind") or self.synergy_buffs.get("inferno"):
             radius *= 1.5
         
         self.game.bullets.append(ExplosiveBullet(

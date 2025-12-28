@@ -147,6 +147,21 @@ class Grid:
                 for c in [6, 7, 8]:
                     self.valid_cells.add((c, 3))
 
+        # Manual overrides for Chapter 5 "Hell Lord's Throne" (all stages)
+        if hasattr(self.game, 'current_story_stage') and self.game.current_story_stage:
+            if self.game.current_story_stage.stage_id.startswith("5-"):
+                # Remove bottom-left slots that are blocked by upgrade UI
+                self.valid_cells.discard((1, 4))
+                self.valid_cells.discard((1, 5))
+                self.valid_cells.discard((2, 4))
+                self.valid_cells.discard((2, 5))
+                
+                # Add relocated slots higher up (as indicated by user's drawing)
+                self.valid_cells.add((1, 1))
+                self.valid_cells.add((1, 2))
+                self.valid_cells.add((2, 1))
+                self.valid_cells.add((2, 2))
+
     def _point_segment_msg_dist(self, px, py, p1, p2):
         """Distance from point (px, py) to segment p1-p2."""
         x1, y1 = p1
@@ -217,43 +232,52 @@ class Grid:
         self.update_synergies()
 
     def update_synergies(self):
-        # Reset all buffs
+        # Clear all synergies first
         for c in range(self.cols):
             for r in range(self.rows):
                 d = self.cells[c][r]
                 if d:
                     d.synergy_buffs = {}
+                    d.synergy_partner = None
 
-        # 1. Adjacency Checks
-        for c in range(self.cols):
-            for r in range(self.rows):
-                d = self.cells[c][r]
-                if not d:
-                    continue
-                
-                neighbors = []
-                for dc, dr in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
-                    nc, nr = c + dc, r + dr
-                    if self.in_bounds(nc, nr):
-                        n = self.cells[nc][nr]
-                        if n:
-                            neighbors.append(n)
-                
-                # Fire + Wind
-                if d.type == "fire":
-                    for n in neighbors:
-                        if n.type == "wind":
-                            d.synergy_buffs["fire_wind"] = True
-                            break
-                
-                # Iron + Ice (Freeze)
-                if d.type == "iron":
-                    for n in neighbors:
-                        if n.type == "freeze":
-                            d.synergy_buffs["iron_ice"] = True
-                            break
+        # Priority List of Synergies
+        synergies = [
+            ("inferno", "fire", "wind"),
+            ("toxic_spikes", "iron", "poison"),
+            ("frost_volley", "freeze", "multi"),
+            ("sniper_nest", "single", "wind"),
+            ("magma", "fire", "iron"),
+            ("plague", "poison", "multi")
+        ]
+        
+        processed = set() 
+        
+        # 1. Check Pair Synergies
+        for syn_name, type1, type2 in synergies:
+            for c in range(self.cols):
+                for r in range(self.rows):
+                    d1 = self.cells[c][r]
+                    if not d1 or d1 in processed:
+                        continue
+                    
+                    target_type = None
+                    if d1.type == type1:
+                        target_type = type2
+                    elif d1.type == type2:
+                        target_type = type1
+                    
+                    if target_type:
+                        neighbor = self._find_neighbor(c, r, target_type, processed)
+                        if neighbor:
+                            d1.synergy_buffs[syn_name] = True
+                            neighbor.synergy_buffs[syn_name] = True
+                            d1.synergy_partner = neighbor
+                            neighbor.synergy_partner = d1
+                            processed.add(d1)
+                            processed.add(neighbor)
 
         # 2. Chain Check (Connected Components of same type >= 3)
+        # Only check dice not already in a special synergy
         visited = set()
         for c in range(self.cols):
             for r in range(self.rows):
@@ -261,7 +285,7 @@ class Grid:
                     continue
                 
                 d = self.cells[c][r]
-                if not d:
+                if not d or d in processed:
                     continue
                 
                 # BFS to find component
@@ -279,7 +303,7 @@ class Grid:
                         nc, nr = curr_c + dc, curr_r + dr
                         if self.in_bounds(nc, nr) and (nc, nr) not in visited:
                             neighbor = self.cells[nc][nr]
-                            if neighbor and neighbor.type == d.type:
+                            if neighbor and neighbor.type == d.type and neighbor not in processed:
                                 visited.add((nc, nr))
                                 queue.append((nc, nr))
                 
@@ -299,6 +323,9 @@ class Grid:
                 rect = self.rect_at(c, r)
                 if rect.collidepoint(mx, my):
                     hover_cell = (c, r)
+
+        # Draw synergy links first (under dice)
+        self.draw_synergy_links(screen)
 
         for c in range(self.cols):
             for r in range(self.rows):
@@ -363,3 +390,75 @@ class Grid:
                         self.selected = None
                     else:
                         self.selected = None
+
+    def _find_neighbor(self, c, r, target_type, processed):
+        offsets = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        for dc, dr in offsets:
+            nc, nr = c + dc, r + dr
+            if 0 <= nc < self.cols and 0 <= nr < self.rows:
+                n = self.cells[nc][nr]
+                if n and n.type == target_type and n not in processed:
+                    return n
+        return None
+
+    def draw_synergy_links(self, surf):
+        drawn_pairs = set()
+        import math
+        ticks = pygame.time.get_ticks()
+        pulse = (math.sin(ticks * 0.008) + 1) * 0.5 # 0 to 1
+        
+        for c in range(self.cols):
+            for r in range(self.rows):
+                d = self.cells[c][r]
+                if d and hasattr(d, 'synergy_partner') and d.synergy_partner:
+                    p = d.synergy_partner
+                    pair_id = tuple(sorted((id(d), id(p))))
+                    if pair_id in drawn_pairs:
+                        continue
+                    drawn_pairs.add(pair_id)
+                    
+                    color = (255, 255, 255)
+                    if d.synergy_buffs.get("inferno"): color = (255, 69, 0) 
+                    elif d.synergy_buffs.get("toxic_spikes"): color = (138, 43, 226) 
+                    elif d.synergy_buffs.get("frost_volley"): color = (0, 255, 255) 
+                    elif d.synergy_buffs.get("sniper_nest"): color = (50, 205, 50) 
+                    elif d.synergy_buffs.get("magma"): color = (220, 20, 60) 
+                    elif d.synergy_buffs.get("plague"): color = (0, 128, 0) 
+                    
+                    start = self.center_of(d.c, d.r)
+                    end = self.center_of(p.c, p.r)
+                    
+                    # Draw a thick "bridge" connector
+                    # Calculate vector
+                    dx, dy = end[0] - start[0], end[1] - start[1]
+                    dist = math.hypot(dx, dy)
+                    angle = math.atan2(dy, dx)
+                    
+                    # Draw a rect rotated to connect them
+                    # We can just draw a thick line with rounded caps
+                    
+                    # Outer Glow
+                    glow_width = 16 + int(pulse * 8)
+                    glow_color = (color[0]//3, color[1]//3, color[2]//3)
+                    pygame.draw.line(surf, glow_color, start, end, glow_width)
+                    
+                    # Inner Core
+                    core_width = 8
+                    pygame.draw.line(surf, color, start, end, core_width)
+                    
+                    # Draw "Knots" at the ends (under the dice, but visible if dice are transparent/small)
+                    # Actually, let's draw a symbol in the middle
+                    mid_x = (start[0] + end[0]) // 2
+                    mid_y = (start[1] + end[1]) // 2
+                    
+                    # Draw a diamond shape at the center
+                    diamond_size = 10 + int(pulse * 4)
+                    points = [
+                        (mid_x, mid_y - diamond_size),
+                        (mid_x + diamond_size, mid_y),
+                        (mid_x, mid_y + diamond_size),
+                        (mid_x - diamond_size, mid_y)
+                    ]
+                    pygame.draw.polygon(surf, color, points)
+                    pygame.draw.polygon(surf, (255, 255, 255), points, 2)
+

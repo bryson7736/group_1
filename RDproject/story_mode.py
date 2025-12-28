@@ -36,6 +36,7 @@ class StoryProgress:
     
     def __init__(self):
         self.completed_stages: List[str] = []
+        self.completed_chapters: List[str] = []
         self.current_stage: Optional[str] = None
         
     def is_stage_unlocked(self, stage_id: str, all_stages: List[StoryStage]) -> bool:
@@ -47,10 +48,20 @@ class StoryProgress:
         if stage_id not in self.completed_stages:
             self.completed_stages.append(stage_id)
     
+    def complete_chapter(self, chapter_id: str):
+        """Mark a chapter as completed."""
+        if chapter_id not in self.completed_chapters:
+            self.completed_chapters.append(chapter_id)
+    
+    def is_chapter_completed(self, chapter_id: str) -> bool:
+        """Check if a chapter is completed."""
+        return chapter_id in self.completed_chapters
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for saving."""
         return {
             'completed_stages': self.completed_stages,
+            'completed_chapters': self.completed_chapters,
             'current_stage': self.current_stage
         }
     
@@ -59,6 +70,7 @@ class StoryProgress:
         """Load from dictionary."""
         progress = StoryProgress()
         progress.completed_stages = data.get('completed_stages', [])
+        progress.completed_chapters = data.get('completed_chapters', [])
         progress.current_stage = data.get('current_stage', None)
         return progress
 
@@ -101,17 +113,17 @@ class StoryManager:
             {
                 "name": "Demon Fortress",
                 "path": [(1290, 80), (800, 80), (800, 500), (400, 500), (400, 300), (50, 300), (50, 650), (640, 650), (640, 800)],
-                "color": (50, 200, 50), "bg": None, "desc": "Built by the damned."
+                "color": (255, 128, 0), "bg": "demon_fortress", "desc": "Built by the damned."
             },
             {
                 "name": "Chamber of Torment",
                 "path": [(1280, 400), (900, 400), (900, 200), (600, 200), (600, 600), (1280, 600)],
-                "color": (139, 69, 19), "bg": None, "desc": "The air itself burns."
+                "color": (139, 69, 19), "bg": "torture_chamber", "desc": "The air itself burns."
             },
             {
                 "name": "Hell Lord's Throne",
                 "path": [(1280, 430), (1030, 430), (1030, 110), (430, 110), (430, 630), (1280, 630)],
-                "color": (218, 179, 0), "bg": None, "desc": "Face the ultimate test!"
+                "color": (218, 179, 0), "bg": "hell_lord", "desc": "Face the ultimate test!"
             }
         ]
 
@@ -130,6 +142,8 @@ class StoryManager:
                 # Final sub-stage of EVERY chapter has True Boss
                 true_boss = is_last
                 
+                bg_type = map_data["bg"]
+
                 stages.append(StoryStage(
                     stage_id=stage_id,
                     name=map_data["name"],
@@ -140,7 +154,7 @@ class StoryManager:
                     has_true_boss=true_boss,
                     difficulty=1.0 + i * 0.5 + s_num * 0.1,
                     path_color=map_data["color"],
-                    bg_type=map_data["bg"]
+                    bg_type=bg_type
                 ))
             
             self.chapters[f"chapter{ch_num}"] = StoryChapter(
@@ -169,16 +183,24 @@ class StoryManager:
                     return stage
         return None
     
-    def is_stage_unlocked(self, stage_id: str, chapter_name: str = "hell") -> bool:
+    def is_stage_unlocked(self, stage_id: str) -> bool:
         """Check if a stage is unlocked."""
-        stages = self.get_chapter_stages(chapter_name)
-        return self.progress.is_stage_unlocked(stage_id, stages)
+        # For testing, all stages unlocked
+        return True
     
     def complete_stage(self, stage_id: str):
         """Mark a stage as completed (session-based)."""
         self.progress.complete_stage(stage_id)
-        # Persistence disabled
-        # self.save_progress()
+        self.save_progress()
+    
+    def complete_chapter(self, chapter_id: str):
+        """Mark a chapter as completed."""
+        self.progress.complete_chapter(chapter_id)
+        self.save_progress()
+    
+    def is_chapter_completed(self, chapter_id: str) -> bool:
+        """Check if a chapter is completed."""
+        return self.progress.is_chapter_completed(chapter_id)
     
     def save_progress(self):
         """Save progress to file."""
