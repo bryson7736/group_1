@@ -1147,6 +1147,9 @@ class Game:
             warn = self.font_big.render(self._upgrade_msg, True, col_msg)
             self.screen.blit(warn, (base_x, base_y - 60))
         self.upg_back.draw(self.screen)
+        
+        if self.show_coin_purchase:
+            self.coin_purchase_popup.draw(self.screen)
 
     def _draw_upgrade_btn(self, rect, text, cost):
         can_buy = self.upgrades.coins >= cost
