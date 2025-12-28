@@ -102,7 +102,7 @@ class StoryManager:
         original_maps = [
             {
                 "name": "Hell Gate",
-                "path": [(1280, 100), (900, 100), (900, 300), (600, 300), (600, 600), (1280, 600)],
+                "path": [(1280, 100), (900, 100), (900, 350), (600, 350), (600, 620), (1280, 620)],
                 "color": (0, 0, 0), "bg": "hell", "desc": "The entrance to the infernal realm."
             },
             {
