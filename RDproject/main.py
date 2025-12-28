@@ -676,16 +676,34 @@ class Game:
 
     def upgrades_handle(self, event: pygame.event.Event) -> None:
         """Handle events during upgrades screen."""
+        if self.show_remove_ads:
+            action = self.remove_ads_popup.handle_input(event)
+            if action == "close":
+                self.sound_mgr.play("click")
+                self.show_remove_ads = False
+                self.pending_purchase_coins = 0 # Cancel pending purchase
+            elif action == "pay":
+                self.sound_mgr.play("spawn") # Success sound
+                if self.pending_purchase_coins > 0:
+                    self.upgrades.add_coin(self.pending_purchase_coins)
+                    self.pending_purchase_coins = 0
+                else:
+                    # Fallback if opened for other reasons (though in upgrades screen it's mostly for coins)
+                    self.ads_removed = True
+                self.show_remove_ads = False
+            return
+
         if self.show_coin_purchase:
             action = self.coin_purchase_popup.handle_input(event)
             if action == "close":
                 self.sound_mgr.play("click")
                 self.show_coin_purchase = False
             elif isinstance(action, int):
-                # Purchased coins
-                self.upgrades.add_coin(action)
-                self.sound_mgr.play("spawn") # Success sound
+                # Selected a coin package -> Go to payment
+                self.pending_purchase_coins = action
                 self.show_coin_purchase = False
+                self.show_remove_ads = True
+                self.sound_mgr.play("click")
             return
 
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
