@@ -36,17 +36,18 @@ jobs:
       - name: Lint with flake8
         run: |
           # Check for syntax errors or undefined names
-          flake8 RDproject --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Setting PYTHONPATH to ensure relative imports or module lookups work if needed
+          $env:PYTHONPATH = "RDproject"
+          python -m flake8 RDproject --count --select=E9,F63,F7,F82 --show-source --statistics
           # exit-zero treats all errors as warnings.
-          flake8 RDproject --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+          python -m flake8 RDproject --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
       # Testing (pytest)
-      # Note: Will look for tests in the repository.
       - name: Run Tests with pytest
         run: |
-          # Add current directory to PYTHONPATH so modules in RDproject can be found
+          # Add RDproject directory to PYTHONPATH so modules can be found
           $env:PYTHONPATH = "RDproject"
-          pytest
+          python -m pytest
 
   # 3. CD Pipeline (Continuous Deployment)
   cd_pipeline:
@@ -77,8 +78,9 @@ jobs:
         run: |
           # --onefile: Create a single exe file
           # --name: Name of the output file
-          # --noconsole: Optional, generally for GUI apps (remove prompt if needed, but keeping for debug)
-          pyinstaller --onefile --name "GameBuild" RDproject/main.py
+          # --add-data: Include assets folder into the EXE
+          # Note: On Windows, the delimiter is ';'
+          pyinstaller --onefile --name "GameBuild" --add-data "RDproject/assets;assets" RDproject/main.py
 
       # Upload Artifact (Deployment)
       - name: Upload Build Artifact
