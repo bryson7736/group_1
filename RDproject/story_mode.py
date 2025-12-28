@@ -124,7 +124,7 @@ class StoryManager:
             },
             {
                 "name": "Chamber of Torment",
-                "path": [(1280, 400), (900, 400), (900, 200), (600, 200), (600, 600), (1280, 600)],
+                "path": [(1280, 350), (900, 350), (900, 180), (630, 180), (630, 620), (1280, 620)],
                 "color": (139, 69, 19), "bg": "torture_chamber", "desc": "The air itself burns."
             },
             {
