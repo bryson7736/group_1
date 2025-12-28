@@ -228,7 +228,7 @@ class Grid:
                     
                 rect = self.rect_at(c, r)
                 # Darker, more subtle grid borders
-                pygame.draw.rect(screen, (40, 45, 60), rect, width=2, border_radius=10)
+                pygame.draw.rect(screen, (40, 45, 60), rect, width=4, border_radius=10)
                 die = self.get(c, r)
                 if die:
                     # Only draw as selected if actually selected, not just hovered

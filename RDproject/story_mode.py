@@ -104,7 +104,8 @@ class StoryManager:
                     (350, 100), (650, 100), (650, 400), (450, 400), (450, 650), (1280, 650)
                 ],
                 difficulty=1.5,
-                path_color=(255, 0, 0) # RED
+                path_color=(255, 0, 0), # RED
+                bg_type="burning_path"
             ),
             StoryStage(
                 stage_id="1-3",

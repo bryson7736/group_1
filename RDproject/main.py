@@ -284,13 +284,23 @@ class Game:
     def _render_bg(self, bg_type: str) -> None:
         """Load and scale a background image based on type."""
         try:
-            filename = "bg_space.png" if bg_type == "space" else "bg_hell.png"
+            if bg_type == "space":
+                filename = "bg_space.png"
+            elif bg_type == "hell":
+                filename = "bg_hell.png"
+            elif bg_type == "burning_path":
+                filename = "bg_burning_path.png"
+            else:
+                filename = "bg_space.png" # default
+
             raw_bg = pygame.image.load(os.path.join(ASSETS_DIR, filename)).convert()
             scaled_bg = pygame.transform.smoothscale(raw_bg, (SCREEN_W, SCREEN_H))
             
             # Special treatment for space background (lower alpha)
             if bg_type == "space":
                 scaled_bg.set_alpha(160)
+            elif bg_type == "burning_path":
+                scaled_bg.set_alpha(180)
             
             self._bg_surface = scaled_bg
         except Exception as e:
