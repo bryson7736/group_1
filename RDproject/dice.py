@@ -327,6 +327,10 @@ class IronDice(Die):
     def fire_at(self, target):
         dmg = self.base_dmg * self.damage_multiplier()
         
+        # Synergy: Iron + Ice -> +20% Damage
+        if self.synergy_buffs.get("iron_ice"):
+            dmg *= 1.20
+        
         # Bonus vs Boss
         from enemy import BigEnemy
         from boss import TrueBoss
