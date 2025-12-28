@@ -259,12 +259,12 @@ class HelpPopup:
             return r.right
             
         synergies = [
-            ("fire", "wind", "Inferno: Fire +Splash, Wind +Speed", (255, 100, 0)),
-            ("iron", "poison", "Toxic Spikes: Iron poisons, Poison +Dmg", (150, 0, 150)),
+            ("fire", "wind", "Inferno: Fire +Splash, Wind +Speed", (255, 69, 0)),
+            ("iron", "poison", "Toxic Spikes: Iron poisons, Poison +Dmg", (138, 43, 226)),
             ("freeze", "multi", "Frost Volley: Multi slows, Freeze +Range", (0, 255, 255)),
-            ("single", "wind", "Sniper Nest: Single +Range/Dmg, Wind +Speed", (200, 255, 200)),
-            ("fire", "iron", "Magma: Fire +Dmg, Iron Explodes", (255, 50, 50)),
-            ("poison", "multi", "Plague: Poison AOE, Multi poisons", (100, 200, 100))
+            ("single", "wind", "Sniper Nest: Single +Range/Dmg, Wind +Speed", (50, 205, 50)),
+            ("fire", "iron", "Magma: Fire +Dmg, Iron Explodes", (220, 20, 60)),
+            ("poison", "multi", "Plague: Poison AOE, Multi poisons", (0, 128, 0))
         ]
         
         start_x = self.rect.x + 40
@@ -280,8 +280,13 @@ class HelpPopup:
             # Draw link line
             pygame.draw.line(screen, color, (start_x + 15, py+35), (start_x + 15 + 30 + 15, py+35), 3)
             
+            # Draw Dot Indicator explanation
+            dot_x = lx + 15
+            pygame.draw.circle(screen, color, (dot_x, py + 15), 6)
+            pygame.draw.circle(screen, WHITE, (dot_x, py + 15), 7, width=1)
+            
             desc = self.font_small.render(desc_text, True, color)
-            screen.blit(desc, (lx, py + 5))
+            screen.blit(desc, (dot_x + 15, py + 5))
             py += 45
 
         # Close instruction
