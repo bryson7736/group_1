@@ -28,6 +28,7 @@ class SoundManager:
         self._load_or_generate("spawn", "spawn.wav", self._gen_spawn)
         self._load_or_generate("error", "error.wav", self._gen_error)
         self._load_or_generate("upgrade", "upgrade.wav", self._gen_upgrade)
+        self._load_or_generate("bark", "bark.mp3", lambda: self._gen_tone(400, 0.2)) # Fallback tone
 
     def _load_or_generate(self, name, filename, gen_func):
         path = os.path.join(self.sound_dir, filename)
