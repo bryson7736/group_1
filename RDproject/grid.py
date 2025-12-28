@@ -238,46 +238,41 @@ class Grid:
                 d = self.cells[c][r]
                 if d:
                     d.synergy_buffs = {}
-                    d.synergy_partner = None
+                    d.synergy_partners = []
 
         # Priority List of Synergies
-        synergies = [
-            ("inferno", "fire", "wind"),
-            ("toxic_spikes", "iron", "poison"),
-            ("frost_volley", "freeze", "multi"),
-            ("sniper_nest", "single", "wind"),
-            ("magma", "fire", "iron"),
-            ("plague", "poison", "multi")
-        ]
+        # Using frozenset for order-independent lookup
+        synergies_map = {
+            frozenset(["fire", "wind"]): "inferno",
+            frozenset(["iron", "poison"]): "toxic_spikes",
+            frozenset(["freeze", "multi"]): "frost_volley",
+            frozenset(["single", "wind"]): "sniper_nest",
+            frozenset(["fire", "iron"]): "magma",
+            frozenset(["poison", "multi"]): "plague"
+        }
         
-        processed = set() 
-        
-        # 1. Check Pair Synergies
-        for syn_name, type1, type2 in synergies:
-            for c in range(self.cols):
-                for r in range(self.rows):
-                    d1 = self.cells[c][r]
-                    if not d1 or d1 in processed:
-                        continue
-                    
-                    target_type = None
-                    if d1.type == type1:
-                        target_type = type2
-                    elif d1.type == type2:
-                        target_type = type1
-                    
-                    if target_type:
-                        neighbor = self._find_neighbor(c, r, target_type, processed)
-                        if neighbor:
-                            d1.synergy_buffs[syn_name] = True
-                            neighbor.synergy_buffs[syn_name] = True
-                            d1.synergy_partner = neighbor
-                            neighbor.synergy_partner = d1
-                            processed.add(d1)
-                            processed.add(neighbor)
+        # 1. Check Pair Synergies (Field Logic)
+        for c in range(self.cols):
+            for r in range(self.rows):
+                d = self.cells[c][r]
+                if not d:
+                    continue
+                
+                # Check all 4 neighbors
+                for dc, dr in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+                    nc, nr = c + dc, r + dr
+                    if self.in_bounds(nc, nr):
+                        n = self.cells[nc][nr]
+                        if n:
+                            pair = frozenset([d.type, n.type])
+                            if pair in synergies_map:
+                                syn_name = synergies_map[pair]
+                                d.synergy_buffs[syn_name] = True
+                                # Add to partners for visualization
+                                if n not in d.synergy_partners:
+                                    d.synergy_partners.append(n)
 
         # 2. Chain Check (Connected Components of same type >= 3)
-        # Only check dice not already in a special synergy
         visited = set()
         for c in range(self.cols):
             for r in range(self.rows):
@@ -285,7 +280,7 @@ class Grid:
                     continue
                 
                 d = self.cells[c][r]
-                if not d or d in processed:
+                if not d:
                     continue
                 
                 # BFS to find component
@@ -303,7 +298,7 @@ class Grid:
                         nc, nr = curr_c + dc, curr_r + dr
                         if self.in_bounds(nc, nr) and (nc, nr) not in visited:
                             neighbor = self.cells[nc][nr]
-                            if neighbor and neighbor.type == d.type and neighbor not in processed:
+                            if neighbor and neighbor.type == d.type:
                                 visited.add((nc, nr))
                                 queue.append((nc, nr))
                 
