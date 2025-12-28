@@ -104,11 +104,34 @@ class Die:
         # 4. Selection/Border logic
         if selected:
             pygame.draw.rect(surf, BLUE, rect, width=5, border_radius=14)
-        elif self.synergy_buffs.get("chain"):
-            # Gold border for chain synergy
-            pygame.draw.rect(surf, (255, 215, 0), rect, width=3, border_radius=14)
         else:
-            pygame.draw.rect(surf, (255,255,255), rect, width=2, border_radius=14)
+            # Check for synergies to color the border
+            border_col = (255, 255, 255)
+            width = 2
+            
+            if self.synergy_buffs.get("chain"):
+                border_col = (255, 215, 0) # Gold
+                width = 3
+            elif self.synergy_buffs.get("inferno"):
+                border_col = (255, 69, 0)
+                width = 3
+            elif self.synergy_buffs.get("toxic_spikes"):
+                border_col = (138, 43, 226)
+                width = 3
+            elif self.synergy_buffs.get("frost_volley"):
+                border_col = (0, 255, 255)
+                width = 3
+            elif self.synergy_buffs.get("sniper_nest"):
+                border_col = (50, 205, 50)
+                width = 3
+            elif self.synergy_buffs.get("magma"):
+                border_col = (220, 20, 60)
+                width = 3
+            elif self.synergy_buffs.get("plague"):
+                border_col = (0, 128, 0)
+                width = 3
+                
+            pygame.draw.rect(surf, border_col, rect, width=width, border_radius=14)
         
         
         # Synergy Indicators - Removed for cleaner visual
