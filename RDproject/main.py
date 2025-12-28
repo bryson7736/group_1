@@ -61,7 +61,9 @@ class Game:
         self.level_mgr = LevelManager()
         self.level: Any = None  # Level object
         self.story_mgr = StoryManager()
+        self.current_story_chapter: Any = None  # StoryChapter object
         self.current_story_stage: Any = None  # StoryStage object
+        self.current_stage_index: int = 0
         self.story_max_waves: int = 0  # Max waves for current story stage
 
         self.grid = Grid(self)
@@ -191,6 +193,10 @@ class Game:
 
         self.leaderboard_mgr = LeaderboardManager()
         self.input_name_str = ""
+
+        # Transition and notification
+        self.stage_complete_timer: float = 0.0
+        self.stage_complete_msg: str = ""
 
         # Load summon icon
         try:
@@ -367,6 +373,51 @@ class Game:
             # Must set state to STORY before reset_runtime so Grid knows to use dynamic layout
             self.state = STATE_STORY
             self.reset_runtime()
+
+    def start_story_chapter(self, chapter_id: str) -> None:
+        """Start a story chapter (sequences of stages)."""
+        chapter = self.story_mgr.get_chapter(chapter_id)
+        if chapter and chapter.stages:
+            self.current_story_chapter = chapter
+            self.current_stage_index = 0
+            self.state = STATE_STORY
+            self.reset_runtime()
+            self._load_current_story_stage()
+
+    def _load_current_story_stage(self) -> None:
+        """Load the current stage within a chapter without fully resetting the game."""
+        if not self.current_story_chapter: return
+        
+        stage = self.current_story_chapter.stages[self.current_stage_index]
+        self.current_story_stage = stage
+        self.story_max_waves = stage.waves
+        
+        from level_manager import Level
+        p_color = getattr(stage, 'path_color', (80, 85, 100))
+        bg_t = getattr(stage, 'bg_type', None)
+        if not bg_t and "Space" in stage.name:
+            bg_t = "space"
+        
+        self.level = Level(stage.name, stage.path_points, stage.difficulty, p_color, bg_type=bg_t)
+        
+        if self.level.bg_type:
+            self._render_bg(self.level.bg_type)
+        else:
+            self._bg_surface = None
+            
+        # Reset wave count for the new stage segment
+        self.wave = -1
+        self.to_spawn = 0
+        self.spawn_cd = 0.0
+        self.wave_timer = 0.0
+        
+        # Notify
+        self.stage_complete_msg = f"{stage.stage_id} {stage.name} START!"
+        self.stage_complete_timer = 3.0
+        
+        # Ensure grid layout is updated for the new stage path
+        if hasattr(self, 'grid'):
+            self.grid.reset_layout()
 
     def back_to_lobby(self) -> None:
         """Return to lobby screen."""
@@ -649,16 +700,12 @@ class Game:
             start_x = (SCREEN_W - btn_w) // 2
             start_y = 180
             
-            hell_stages = self.story_mgr.get_chapter_stages("hell")
-            for i, stage in enumerate(hell_stages):
+            chapters = self.story_mgr.get_chapters()
+            for i, chapter in enumerate(chapters):
                 r = pygame.Rect(start_x, start_y + i * (btn_h + gap), btn_w, btn_h)
                 if r.collidepoint(mx, my):
-                    # Check if unlocked
-                    if self.story_mgr.is_stage_unlocked(stage.stage_id):
-                        self.start_story_stage(stage.stage_id)
-                        self.sound_mgr.play("click")
-                    else:
-                        self.sound_mgr.play("error")
+                    self.start_story_chapter(chapter.chapter_id)
+                    self.sound_mgr.play("click")
                     break
     
     def story_handle(self, event: pygame.event.Event) -> None:
@@ -961,6 +1008,9 @@ class Game:
 
         self.game_time += dt
 
+        if self.stage_complete_timer > 0:
+            self.stage_complete_timer -= dt
+
         if self.to_spawn > 0:
             self.spawn_cd += dt * self.speed_mult
             if self.spawn_cd >= self.spawn_interval:
@@ -1003,14 +1053,27 @@ class Game:
         if self.to_spawn <= 0 and len(self.enemies) == 0:
             # Story Mode: Check for victory or next wave
             if self.state == STATE_STORY and self.current_story_stage:
-                # Check if stage is complete
-                if self.wave >= self.story_max_waves - 1:  # All waves including boss defeated
-                    # Victory!
-                    self.story_mgr.complete_stage(self.current_story_stage.stage_id)
-                    # Go back to stage select
-                    self.goto_story_select()
-                    return
-                elif self.wave >= self.story_max_waves - 2:  # This was the final regular wave
+                # Check if stage is complete (all waves and special enemies gone)
+                if self.wave >= self.story_max_waves - 1 and len(self.enemies) == 0:
+                    # Current stage is complete!
+                    if self.current_story_chapter:
+                        if self.current_stage_index < len(self.current_story_chapter.stages) - 1:
+                            # Move to next stage in chapter
+                            self.current_stage_index += 1
+                            self._load_current_story_stage()
+                            return # Skip regular wave start for this frame
+                        else:
+                            # Chapter complete!
+                            self.story_mgr.complete_stage(self.current_story_stage.stage_id)
+                            self.goto_story_select()
+                            return
+                    else:
+                        # Fallback for single stage mode
+                        self.story_mgr.complete_stage(self.current_story_stage.stage_id)
+                        self.goto_story_select()
+                        return
+
+                elif self.wave >= self.story_max_waves - 2:
                     # If this stage has a big enemy or true boss, spawn it next
                     if self.current_story_stage.has_true_boss:
                         self.wave_timer += dt * self.speed_mult
@@ -1470,34 +1533,22 @@ class Game:
         start_x = (SCREEN_W - btn_w) // 2
         start_y = 180
         
-        hell_stages = self.story_mgr.get_chapter_stages("hell")
-        for i, stage in enumerate(hell_stages):
+        start_y = 180
+        
+        chapters = self.story_mgr.get_chapters()
+        for i, chapter in enumerate(chapters):
             r = pygame.Rect(start_x, start_y + i * (btn_h + gap), btn_w, btn_h)
-            unlocked = self.story_mgr.is_stage_unlocked(stage.stage_id)
-            completed = stage.stage_id in self.story_mgr.progress.completed_stages
             
-            # Button color based on state
-            if completed:
-                color = (50, 150, 50)  # Green for completed
-                text_color = WHITE
-            elif unlocked:
-                color = (200, 80, 40)  # Orange/red for unlocked
-                text_color = WHITE
-            else:
-                color = (60, 60, 60)  # Gray for locked
-                text_color = (120, 120, 120)
+            # Simple check for unlock (optional)
+            unlocked = True # For now let them play all
+            
+            color = (200, 80, 40) if unlocked else (60, 60, 60)
+            text_color = WHITE if unlocked else (120, 120, 120)
             
             pygame.draw.rect(self.screen, color, r, border_radius=8)
             pygame.draw.rect(self.screen, (255, 150, 100) if unlocked else (100, 100, 100), r, width=3, border_radius=8)
             
-            # Stage text
-            stage_text = f"{stage.stage_id} {stage.name}"
-            if completed:
-                stage_text += " ✓"
-            elif not unlocked:
-                stage_text = f"{stage.stage_id} 🔒 Locked"
-            
-            txt = self.font_big.render(stage_text, True, text_color)
+            txt = self.font_big.render(chapter.name, True, text_color)
             self.screen.blit(txt, (r.centerx - txt.get_width() // 2, r.centery - txt.get_height() // 2))
         
         self.story_back.draw(self.screen)
@@ -1574,6 +1625,16 @@ class Game:
         self.draw_ingame_upgrades()
         # Draw Boss State
         draw_boss_state(self.screen, self.font_huge, self.enemies)
+
+        # Stage Notification
+        if self.stage_complete_timer > 0:
+            msg = self.font_huge.render(self.stage_complete_msg, True, (255, 255, 100))
+            # Black overlay for text readability
+            bg_rect = pygame.Rect(SCREEN_W//2 - msg.get_width()//2 - 20, SCREEN_H//2 - 50, msg.get_width() + 40, 100)
+            overlay = pygame.Surface((bg_rect.w, bg_rect.h), pygame.SRCALPHA)
+            overlay.fill((0, 0, 0, 180))
+            self.screen.blit(overlay, bg_rect.topleft)
+            self.screen.blit(msg, (SCREEN_W // 2 - msg.get_width() // 2, SCREEN_H // 2 - msg.get_height() // 2))
 
     # --------------- Frame ---------------
     def draw(self) -> None:
