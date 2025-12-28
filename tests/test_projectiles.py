@@ -14,15 +14,21 @@ class MockEnemy:
         if self.hp <= 0:
             self.dead = True
 
+class MockSoundMgr:
+    def play(self, name):
+        pass
+
 class MockGame:
-    def __init__(self, enemies):
-        self.enemies = enemies
+    def __init__(self, enemies=None):
+        self.enemies = enemies or []
+        self.sound_mgr = MockSoundMgr()
 
 def test_bullet_hit():
     target = MockEnemy(100, 0)
+    game = MockGame([target])
     # Target is at 100, 0. Bullet at 0, 0. Speed 200.
     # Time 0.5s -> travels 100. Should hit.
-    bullet = Bullet(None, 0, 0, target, dmg=10)
+    bullet = Bullet(game, 0, 0, target, dmg=10)
     bullet.base_speed = 200
     
     hit = bullet.update(0.5)
@@ -34,7 +40,8 @@ def test_bullet_hit():
 
 def test_bullet_travel():
     target = MockEnemy(200, 0)
-    bullet = Bullet(None, 0, 0, target, dmg=10)
+    game = MockGame([target])
+    bullet = Bullet(game, 0, 0, target, dmg=10)
     bullet.base_speed = 100
     
     # 0.5s -> 50 units
