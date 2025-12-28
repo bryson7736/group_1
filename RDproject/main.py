@@ -317,8 +317,8 @@ class Game:
                 scaled_bg.set_alpha(190)
             elif bg_type == "demon_fortress":
                 scaled_bg.set_alpha(180)
-            elif bg_type == "demon_fortress":
-                scaled_bg.set_alpha(180)
+            elif bg_type == "hell_lord":
+                scaled_bg.set_alpha(170)
             
             self._bg_surface = scaled_bg
         except Exception as e:

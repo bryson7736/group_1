@@ -147,6 +147,21 @@ class Grid:
                 for c in [6, 7, 8]:
                     self.valid_cells.add((c, 3))
 
+        # Manual overrides for Chapter 5 "Hell Lord's Throne" (all stages)
+        if hasattr(self.game, 'current_story_stage') and self.game.current_story_stage:
+            if self.game.current_story_stage.stage_id.startswith("5-"):
+                # Remove bottom-left slots that are blocked by upgrade UI
+                self.valid_cells.discard((1, 4))
+                self.valid_cells.discard((1, 5))
+                self.valid_cells.discard((2, 4))
+                self.valid_cells.discard((2, 5))
+                
+                # Add relocated slots higher up (as indicated by user's drawing)
+                self.valid_cells.add((1, 1))
+                self.valid_cells.add((1, 2))
+                self.valid_cells.add((2, 1))
+                self.valid_cells.add((2, 2))
+
     def _point_segment_msg_dist(self, px, py, p1, p2):
         """Distance from point (px, py) to segment p1-p2."""
         x1, y1 = p1
