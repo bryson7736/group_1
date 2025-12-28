@@ -341,3 +341,65 @@ class AdsPopup:
             if self.close_rect.collidepoint(event.pos):
                 return "close"
         return None
+
+class RemoveAdsPopup:
+    def __init__(self, font_big, font_small):
+        self.font_big = font_big
+        self.font_small = font_small
+        
+        # Popup dimensions
+        self.w, self.h = 400, 300
+        self.x = (SCREEN_W - self.w) // 2
+        self.y = (SCREEN_H - self.h) // 2
+        self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
+        
+        # Pay Button
+        self.btn_w, self.btn_h = 160, 50
+        self.pay_rect = pygame.Rect(0, 0, self.btn_w, self.btn_h)
+        self.pay_rect.center = (self.rect.centerx, self.rect.bottom - 60)
+        
+        # Close button (top right)
+        self.close_btn_size = 30
+        self.close_rect = pygame.Rect(self.rect.right - self.close_btn_size - 10, 
+                                      self.rect.top + 10, 
+                                      self.close_btn_size, 
+                                      self.close_btn_size)
+
+    def draw(self, screen):
+        # Draw background
+        pygame.draw.rect(screen, (40, 40, 50), self.rect, border_radius=12)
+        pygame.draw.rect(screen, WHITE, self.rect, width=2, border_radius=12)
+        
+        # Title
+        title = self.font_big.render("Remove Ads", True, WHITE)
+        screen.blit(title, (self.rect.centerx - title.get_width() // 2, self.rect.y + 30))
+        
+        # Message
+        msg1 = self.font_small.render("Tired of interruptions?", True, WHITE)
+        msg2 = self.font_small.render("Pay /usr/bin/bash.99 to remove ads!", True, WHITE)
+        screen.blit(msg1, (self.rect.centerx - msg1.get_width() // 2, self.rect.y + 100))
+        screen.blit(msg2, (self.rect.centerx - msg2.get_width() // 2, self.rect.y + 130))
+
+        # Pay Button
+        pygame.draw.rect(screen, (100, 200, 100), self.pay_rect, border_radius=8)
+        pygame.draw.rect(screen, WHITE, self.pay_rect, width=2, border_radius=8)
+        t_pay = self.font_big.render("Pay", True, WHITE)
+        screen.blit(t_pay, (self.pay_rect.centerx - t_pay.get_width()//2, self.pay_rect.centery - t_pay.get_height()//2))
+
+        # Close button (X)
+        pygame.draw.rect(screen, (200, 50, 50), self.close_rect, border_radius=4)
+        # Draw X
+        start_pos = (self.close_rect.left + 8, self.close_rect.top + 8)
+        end_pos = (self.close_rect.right - 8, self.close_rect.bottom - 8)
+        pygame.draw.line(screen, WHITE, start_pos, end_pos, 3)
+        start_pos2 = (self.close_rect.right - 8, self.close_rect.top + 8)
+        end_pos2 = (self.close_rect.left + 8, self.close_rect.bottom - 8)
+        pygame.draw.line(screen, WHITE, start_pos2, end_pos2, 3)
+
+    def handle_input(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.close_rect.collidepoint(event.pos):
+                return "close"
+            if self.pay_rect.collidepoint(event.pos):
+                return "pay"
+        return None
