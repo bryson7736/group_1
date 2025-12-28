@@ -55,6 +55,7 @@ class Game:
         self.font_huge = pygame.font.SysFont(["segoe uiemoji", "segoe ui symbol", "arial"], 48, bold=True)
         
         self.sound_mgr = SoundManager()
+        self.sound_mgr.play_bgm("background.mp3")
 
         self.state: str = STATE_LOBBY
         self.level_mgr = LevelManager()
@@ -346,6 +347,9 @@ class Game:
     def back_to_lobby(self) -> None:
         """Return to lobby screen."""
         self.state = STATE_LOBBY
+        # If BGM is not playing, start it (optional if it's already looping)
+        if not pygame.mixer.music.get_busy():
+            self.sound_mgr.play_bgm("background.mp3")
         self._build_lobby()
 
     def reset_runtime(self) -> None:

@@ -102,3 +102,28 @@ class SoundManager:
                 self.sounds[name].play()
             except:
                 pass
+
+    def play_bgm(self, filename, loops=-1, volume=0.5):
+        """Play background music using pygame.mixer.music (better for long files/MP3s)."""
+        if not self.enabled:
+            return
+            
+        path = os.path.join("assets", "sounds", filename)
+        if not os.path.exists(path):
+            print(f"BGM file not found: {path}")
+            return
+            
+        try:
+            pygame.mixer.music.load(path)
+            pygame.mixer.music.set_volume(volume)
+            pygame.mixer.music.play(loops)
+        except Exception as e:
+            print(f"Failed to play BGM {path}: {e}")
+
+    def stop_bgm(self):
+        """Stop background music."""
+        pygame.mixer.music.stop()
+
+    def set_bgm_volume(self, volume):
+        """Set background music volume."""
+        pygame.mixer.music.set_volume(volume)
