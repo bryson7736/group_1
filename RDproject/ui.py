@@ -106,11 +106,26 @@ def draw_panel(surf, rect, title, title_font, body_fn=None):
     if body_fn:
         body_fn()
 def draw_pips(surf, rect, level, color=WHITE):
-    """Draw dots (pips) for levels 1-6, and a star for level 7."""
+    """Draw dots (pips) for levels 1-7."""
     import pygame
-    if level >= 7:
-        # Star for level 7+
-        # Use a large font for the star
+    
+    pip_radius = max(3, int(rect.width / 12))
+    gap = rect.width // 4
+    
+    patterns = {
+        1: [(0, 0)],
+        2: [(-gap, -gap), (gap, gap)],
+        3: [(-gap, -gap), (0, 0), (gap, gap)],
+        4: [(-gap, -gap), (gap, -gap), (-gap, gap), (gap, gap)],
+        5: [(-gap, -gap), (gap, -gap), (0, 0), (-gap, gap), (gap, gap)],
+        # Level 6: Two columns of 3 pips each (3x2 grid)
+        6: [(-gap, -gap), (-gap, 0), (-gap, gap), (gap, -gap), (gap, 0), (gap, gap)],
+        # Level 7: 1-3-3 pyramid pattern (top center, middle row 3, bottom row 3)
+        7: [(0, -gap), (-gap, 0), (0, 0), (gap, 0), (-gap, gap), (0, gap), (gap, gap)],
+    }
+    
+    # For level 7+, use star
+    if level > 7:
         font_size = int(rect.height * 0.6)
         try:
             star_font = pygame.font.SysFont(["segoe uiemoji", "segoe ui symbol", "arial"], font_size, bold=True)
@@ -120,17 +135,6 @@ def draw_pips(surf, rect, level, color=WHITE):
         star = star_font.render("★", True, color)
         surf.blit(star, (rect.centerx - star.get_width()//2, rect.centery - star.get_height()//2))
         return
-
-    pip_radius = max(3, int(rect.width / 12))
-    gap = rect.width // 4
-    patterns = {
-        1: [(0, 0)],
-        2: [(-gap, -gap), (gap, gap)],
-        3: [(-gap, -gap), (0, 0), (gap, gap)],
-        4: [(-gap, -gap), (gap, -gap), (-gap, gap), (gap, gap)],
-        5: [(-gap, -gap), (gap, -gap), (0, 0), (-gap, gap), (gap, gap)],
-        6: [(-gap, -gap), (-gap, 0), (gap, 0), (-gap, gap), (0, gap), (gap, gap)],
-    }
     
     for dx, dy in patterns.get(level, []):
         pygame.draw.circle(surf, color, (rect.centerx + dx, rect.centery + dy), pip_radius)
