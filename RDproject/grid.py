@@ -378,3 +378,83 @@ class Grid:
                         self.selected = None
                     else:
                         self.selected = None
+
+    def check_synergies(self):
+        # Clear all synergies first
+        for c in range(self.cols):
+            for r in range(self.rows):
+                d = self.cells[c][r]
+                if d:
+                    d.synergy_buffs = {}
+                    d.synergy_partner = None
+
+        # Priority List of Synergies
+        synergies = [
+            ("inferno", "fire", "wind"),
+            ("toxic_spikes", "iron", "poison"),
+            ("frost_volley", "freeze", "multi"),
+            ("sniper_nest", "single", "wind"),
+            ("magma", "fire", "iron"),
+            ("plague", "poison", "multi")
+        ]
+        
+        processed = set() 
+        
+        for syn_name, type1, type2 in synergies:
+            for c in range(self.cols):
+                for r in range(self.rows):
+                    d1 = self.cells[c][r]
+                    if not d1 or d1 in processed:
+                        continue
+                    
+                    target_type = None
+                    if d1.type == type1:
+                        target_type = type2
+                    elif d1.type == type2:
+                        target_type = type1
+                    
+                    if target_type:
+                        neighbor = self._find_neighbor(c, r, target_type, processed)
+                        if neighbor:
+                            d1.synergy_buffs[syn_name] = True
+                            neighbor.synergy_buffs[syn_name] = True
+                            d1.synergy_partner = neighbor
+                            neighbor.synergy_partner = d1
+                            processed.add(d1)
+                            processed.add(neighbor)
+
+    def _find_neighbor(self, c, r, target_type, processed):
+        offsets = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        for dc, dr in offsets:
+            nc, nr = c + dc, r + dr
+            if 0 <= nc < self.cols and 0 <= nr < self.rows:
+                n = self.cells[nc][nr]
+                if n and n.type == target_type and n not in processed:
+                    return n
+        return None
+
+    def draw_synergy_links(self, surf):
+        drawn_pairs = set()
+        for c in range(self.cols):
+            for r in range(self.rows):
+                d = self.cells[c][r]
+                if d and hasattr(d, 'synergy_partner') and d.synergy_partner:
+                    p = d.synergy_partner
+                    pair_id = tuple(sorted((id(d), id(p))))
+                    if pair_id in drawn_pairs:
+                        continue
+                    drawn_pairs.add(pair_id)
+                    
+                    color = (255, 255, 255)
+                    width = 6
+                    if d.synergy_buffs.get("inferno"): color = (255, 69, 0) 
+                    elif d.synergy_buffs.get("toxic_spikes"): color = (138, 43, 226) 
+                    elif d.synergy_buffs.get("frost_volley"): color = (0, 255, 255) 
+                    elif d.synergy_buffs.get("sniper_nest"): color = (50, 205, 50) 
+                    elif d.synergy_buffs.get("magma"): color = (220, 20, 60) 
+                    elif d.synergy_buffs.get("plague"): color = (0, 128, 0) 
+                    
+                    start = self.center_of(d.c, d.r)
+                    end = self.center_of(p.c, p.r)
+                    pygame.draw.line(surf, color, start, end, width)
+
