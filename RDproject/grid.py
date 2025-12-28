@@ -123,6 +123,28 @@ class Grid:
                     for r in [4, 5]:
                         self.valid_cells.discard((c, r))
 
+        # Final Manual overrides for Stage 2-1 "Burning Path"
+        if hasattr(self.game, 'current_story_stage') and self.game.current_story_stage:
+            if self.game.current_story_stage.stage_id == "2-1":
+                # Clear automated layout for a clean result
+                self.valid_cells.clear()
+                
+                # Top-Left Row (3)
+                for c in [1, 2, 3]:
+                    self.valid_cells.add((c, 1))
+                
+                # Center-Vertical Stack (4)
+                for r in [0, 1, 2, 3]:
+                    self.valid_cells.add((5, r))
+                
+                # Bottom-Left Vertical Stack (3)
+                for r in [2, 3, 4]:
+                    self.valid_cells.add((2, r))
+                
+                # Bottom-Right Horizontal Row (3)
+                for c in [6, 7, 8]:
+                    self.valid_cells.add((c, 3))
+
     def _point_segment_msg_dist(self, px, py, p1, p2):
         """Distance from point (px, py) to segment p1-p2."""
         x1, y1 = p1
