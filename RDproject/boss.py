@@ -277,3 +277,20 @@ class TrueBoss(Enemy):
 
         hp_txt = font.render(str(max(0, int(self.hp + 0.5))), True, WHITE)
         surf.blit(hp_txt, (r.centerx - hp_txt.get_width()//2, r.centery - hp_txt.get_height()//2))
+
+        # Draw Target Indicators on Grid
+        if self.state == STATE_ATTACK and self.attack_targets:
+            for c, r in self.attack_targets:
+                if self.game and self.game.grid:
+                    rect = self.game.grid.rect_at(c, r)
+                    # Draw a crosshair or target symbol
+                    cx, cy = rect.centerx, rect.centery
+                    # Pulsing effect
+                    pulse = (pygame.time.get_ticks() % 500) / 500.0
+                    radius = 20 + int(pulse * 10)
+                    
+                    # Red circle
+                    pygame.draw.circle(surf, (255, 0, 0), (cx, cy), radius, width=3)
+                    # Cross
+                    pygame.draw.line(surf, (255, 0, 0), (cx - radius, cy), (cx + radius, cy), 3)
+                    pygame.draw.line(surf, (255, 0, 0), (cx, cy - radius), (cx, cy + radius), 3)
