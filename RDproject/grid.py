@@ -391,50 +391,6 @@ class Grid:
                     else:
                         self.selected = None
 
-    def check_synergies(self):
-        # Clear all synergies first
-        for c in range(self.cols):
-            for r in range(self.rows):
-                d = self.cells[c][r]
-                if d:
-                    d.synergy_buffs = {}
-                    d.synergy_partner = None
-
-        # Priority List of Synergies
-        synergies = [
-            ("inferno", "fire", "wind"),
-            ("toxic_spikes", "iron", "poison"),
-            ("frost_volley", "freeze", "multi"),
-            ("sniper_nest", "single", "wind"),
-            ("magma", "fire", "iron"),
-            ("plague", "poison", "multi")
-        ]
-        
-        processed = set() 
-        
-        for syn_name, type1, type2 in synergies:
-            for c in range(self.cols):
-                for r in range(self.rows):
-                    d1 = self.cells[c][r]
-                    if not d1 or d1 in processed:
-                        continue
-                    
-                    target_type = None
-                    if d1.type == type1:
-                        target_type = type2
-                    elif d1.type == type2:
-                        target_type = type1
-                    
-                    if target_type:
-                        neighbor = self._find_neighbor(c, r, target_type, processed)
-                        if neighbor:
-                            d1.synergy_buffs[syn_name] = True
-                            neighbor.synergy_buffs[syn_name] = True
-                            d1.synergy_partner = neighbor
-                            neighbor.synergy_partner = d1
-                            processed.add(d1)
-                            processed.add(neighbor)
-
     def _find_neighbor(self, c, r, target_type, processed):
         offsets = [(0, 1), (0, -1), (1, 0), (-1, 0)]
         for dc, dr in offsets:
@@ -447,6 +403,10 @@ class Grid:
 
     def draw_synergy_links(self, surf):
         drawn_pairs = set()
+        import math
+        ticks = pygame.time.get_ticks()
+        pulse = (math.sin(ticks * 0.005) + 1) * 0.5 # 0 to 1
+        
         for c in range(self.cols):
             for r in range(self.rows):
                 d = self.cells[c][r]
@@ -469,13 +429,15 @@ class Grid:
                     start = self.center_of(d.c, d.r)
                     end = self.center_of(p.c, p.r)
                     
-                    # Draw glow
-                    pygame.draw.line(surf, (color[0]//2, color[1]//2, color[2]//2), start, end, width + 6)
+                    # Draw glow (pulsing)
+                    glow_width = width + 6 + int(pulse * 6)
+                    glow_color = (color[0]//2, color[1]//2, color[2]//2)
+                    pygame.draw.line(surf, glow_color, start, end, glow_width)
                     pygame.draw.line(surf, color, start, end, width)
                     
                     # Draw connection circle at center
                     mid_x = (start[0] + end[0]) // 2
                     mid_y = (start[1] + end[1]) // 2
-                    pygame.draw.circle(surf, color, (mid_x, mid_y), 6)
+                    pygame.draw.circle(surf, color, (mid_x, mid_y), 6 + int(pulse * 3))
                     pygame.draw.circle(surf, (255, 255, 255), (mid_x, mid_y), 3)
 
