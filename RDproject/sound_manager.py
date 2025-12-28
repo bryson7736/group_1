@@ -28,6 +28,7 @@ class SoundManager:
         self._load_or_generate("spawn", "spawn.wav", self._gen_spawn)
         self._load_or_generate("error", "error.wav", self._gen_error)
         self._load_or_generate("upgrade", "upgrade.wav", self._gen_upgrade)
+        self._load_or_generate("bark", "bark.mp3", lambda: self._gen_tone(400, 0.2)) # Fallback tone
 
     def _load_or_generate(self, name, filename, gen_func):
         path = os.path.join(self.sound_dir, filename)
@@ -107,30 +108,45 @@ class SoundManager:
                 pass
 
     def play_bgm(self, filename, loops=-1, volume=0.5):
-        """Play background music using pygame.mixer.music (better for long files/MP3s)."""
+        """Play background music with automatic format discovery."""
         if not self.enabled:
             return
             
-        path = os.path.join(self.sound_dir, filename)
-        if not os.path.exists(path):
-            print(f"BGM file NOT FOUND at: {os.path.abspath(path)}")
+        # Try original path first
+        base, ext_orig = os.path.splitext(filename)
+        extensions = [ext_orig, ".mp3", ".ogg", ".wav", ".m4a"]
+        # Remove empty, duplicates, keep order
+        extensions = list(dict.fromkeys([e for e in extensions if e]))
+        
+        path = None
+        for ext in extensions:
+            test_path = os.path.join(self.sound_dir, base + ext)
+            if os.path.exists(test_path):
+                path = test_path
+                break
+        
+        if not path:
             # Fallback check one level up
-            alt_path = os.path.join(os.path.dirname(os.path.dirname(self.sound_dir)), "assets", "sounds", filename)
-            if os.path.exists(alt_path):
-                 print(f"BGM found at fallback path: {alt_path}")
-                 path = alt_path
-            else:
-                return
+            alt_dir = os.path.join(os.path.dirname(os.path.dirname(self.sound_dir)), "assets", "sounds")
+            for ext in extensions:
+                test_path = os.path.join(alt_dir, base + ext)
+                if os.path.exists(test_path):
+                    path = test_path
+                    break
+        
+        if not path:
+            print(f"BGM file NOT FOUND: {filename} in {self.sound_dir}")
+            return
             
         try:
-            print(f"Loading BGM: {path} (Size: {os.path.getsize(path)} bytes)")
+            print(f"Loading BGM: {path} ({os.path.getsize(path)} bytes)")
             pygame.mixer.music.load(path)
             pygame.mixer.music.set_volume(volume)
             pygame.mixer.music.play(loops)
             print("BGM Started Successfully")
         except Exception as e:
             print(f"CRITICAL: Failed to play BGM {path}: {e}")
-            print("Possible cause: m4a/mp3 codec missing or file corrupted.")
+            print("Advice: Your system might not support this format. Try converting to .mp3 or .ogg.")
 
     def stop_bgm(self):
         """Stop background music."""
