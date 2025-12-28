@@ -219,6 +219,16 @@ class HelpPopup:
         self.y = (SCREEN_H - self.h) // 2
         self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
         
+        self.tips = [
+            "- Drag dice from Loadout to Grid.",
+            "- 3 same color dice adjacent = Merge (Level Up).",
+            "- Dice attack automatically.",
+            "- Enemies move from top to bottom.",
+            "- Don't let enemies reach the bottom!",
+            "- Click 'Roll' to get new dice.",
+            "- Use 'Trash' to remove unwanted dice."
+        ]
+
         # Close Button
         self.close_btn = Button(
             rect=(self.rect.centerx - 60, self.rect.bottom - 50, 120, 40),
