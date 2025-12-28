@@ -29,17 +29,18 @@ class LeaderboardManager:
         Add a new score, sort the leaderboard, keep top 10, and save to file.
         If the name already exists, keep only the highest score.
         """
-        # Check if name exists
+        # Check if name exists (case-insensitive)
         existing_idx = -1
         for i, s in enumerate(self.scores):
-            if s["name"] == name:
+            if s["name"].lower() == name.lower():
                 existing_idx = i
                 break
         
         if existing_idx != -1:
-            # If new score is higher, update it
+            # If new score is higher, update it and update the name casing
             if waves > self.scores[existing_idx]["waves"]:
                 self.scores[existing_idx]["waves"] = waves
+                self.scores[existing_idx]["name"] = name
             # If lower or equal, do nothing (keep existing high score)
         else:
             # New name
