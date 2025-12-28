@@ -198,11 +198,6 @@ class Game:
         self.ads_popup = AdsPopup(self.font_big, self.font_small)
         self.show_ads = False
         
-        self.remove_ads_popup = RemoveAdsPopup(self.font_big, self.font_small)
-        self.show_remove_ads = False
-        self.ads_removed = False
-        self.ad_timer = 0.0
-        
         self.coin_purchase_popup = CoinPurchasePopup(self.font_big, self.font_small)
         self.show_coin_purchase = False
 
