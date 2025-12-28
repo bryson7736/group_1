@@ -47,8 +47,13 @@ class Die:
     @property
     def range(self):
         """Effective range."""
-        # Base range is constant for now, or could be upgraded
-        return self.base_range
+        r = self.base_range
+        # Synergies
+        if self.synergy_buffs.get("sniper_nest") and self.type == DIE_SINGLE:
+            r *= 1.5
+        if self.synergy_buffs.get("frost_volley") and self.type == DIE_FREEZE:
+            r *= 1.3
+        return r
 
     @property
     def x(self):
@@ -145,6 +150,12 @@ class Die:
         # Synergy: Chain (3+ same dice) -> +20% Speed
         if self.synergy_buffs.get("chain"):
             ingame_mult += 0.20
+            
+        # New Synergies
+        if self.synergy_buffs.get("inferno") and self.type == DIE_WIND:
+            ingame_mult += 0.30
+        if self.synergy_buffs.get("sniper_nest") and self.type == DIE_WIND:
+            ingame_mult += 0.30
         
         return perm_mult / ingame_mult
 
@@ -221,6 +232,8 @@ class SingleDice(Die):
 
     def fire_at(self, target):
         dmg = self.apply_crit(self.base_dmg * self.damage_multiplier())
+        if self.synergy_buffs.get("sniper_nest"):
+            dmg *= 1.5
         self.game.bullets.append(Bullet(self.game, self.x, self.y, target, dmg, speed_mult_provider=lambda: self.game.speed_mult))
 
 
