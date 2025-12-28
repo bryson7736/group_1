@@ -357,6 +357,7 @@ class RemoveAdsPopup:
         self.card_number = ""
         self.input_rect = pygame.Rect(0, 0, 300, 40)
         self.input_rect.center = (self.rect.centerx, self.rect.centery + 20)
+        self.active = True  # Auto-focus
         
         # Pay Button
         self.btn_w, self.btn_h = 160, 50
@@ -384,10 +385,18 @@ class RemoveAdsPopup:
         screen.blit(msg1, (self.rect.centerx - msg1.get_width() // 2, self.rect.y + 100))
 
         # Input Box
-        pygame.draw.rect(screen, WHITE, self.input_rect, border_radius=5)
-        if self.card_number:
-            txt_surf = self.font_big.render(self.card_number, True, DARK)
-            screen.blit(txt_surf, (self.input_rect.x + 10, self.input_rect.y + (self.input_rect.height - txt_surf.get_height()) // 2))
+        box_color = WHITE if self.active else (200, 200, 200)
+        pygame.draw.rect(screen, box_color, self.input_rect, border_radius=5)
+        
+        # Render text
+        txt_surf = self.font_big.render(self.card_number, True, DARK)
+        screen.blit(txt_surf, (self.input_rect.x + 10, self.input_rect.y + (self.input_rect.height - txt_surf.get_height()) // 2))
+        
+        # Cursor
+        if self.active and (pygame.time.get_ticks() // 500) % 2 == 0:
+            cursor_x = self.input_rect.x + 10 + txt_surf.get_width()
+            cursor_y = self.input_rect.y + 10
+            pygame.draw.line(screen, DARK, (cursor_x, cursor_y), (cursor_x, cursor_y + 20), 2)
         
         # Pay Button
         can_pay = len(self.card_number) == 16
@@ -409,16 +418,29 @@ class RemoveAdsPopup:
         pygame.draw.line(screen, WHITE, start_pos2, end_pos2, 3)
 
     def handle_input(self, event):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_BACKSPACE:
-                self.card_number = self.card_number[:-1]
-            elif event.unicode.isdigit() and len(self.card_number) < 16:
-                self.card_number += event.unicode
-                
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.input_rect.collidepoint(event.pos):
+                self.active = True
+            else:
+                self.active = False
+
             if self.close_rect.collidepoint(event.pos):
                 return "close"
             if self.pay_rect.collidepoint(event.pos):
                 if len(self.card_number) == 16:
                     return "pay"
+
+        if event.type == pygame.KEYDOWN and self.active:
+            if event.key == pygame.K_BACKSPACE:
+                self.card_number = self.card_number[:-1]
+            else:
+                # Handle numbers manually to be safe across platforms/numpads
+                digit = None
+                if pygame.K_0 <= event.key <= pygame.K_9:
+                    digit = str(event.key - pygame.K_0)
+                elif pygame.K_KP0 <= event.key <= pygame.K_KP9:
+                    digit = str(event.key - pygame.K_KP0)
+                
+                if digit and len(self.card_number) < 16:
+                    self.card_number += digit
         return None
