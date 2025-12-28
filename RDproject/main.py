@@ -993,7 +993,8 @@ class Game:
         head_name = self.font_big.render("Name", True, (200, 200, 200))
         head_wave = self.font_big.render("Waves", True, (200, 200, 200))
         
-        col_x = [SCREEN_W//2 - 200, SCREEN_W//2 - 80, SCREEN_W//2 + 120]
+        # Adjusted columns to prevent overlap
+        col_x = [SCREEN_W//2 - 220, SCREEN_W//2 - 100, SCREEN_W//2 + 150]
         
         self.screen.blit(head_rank, (col_x[0], start_y))
         self.screen.blit(head_name, (col_x[1], start_y))
