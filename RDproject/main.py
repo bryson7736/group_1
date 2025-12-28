@@ -231,6 +231,15 @@ class Game:
 
         self._build_lobby()
 
+    def cheat_unlock_all(self) -> None:
+        """Unlock everything (Cheat)."""
+        self.story_mgr.unlock_all_chapters()
+        self.upgrades.coins = 99999
+        self.ads_removed = True
+        self.speed_ctrl.locked_indices = []
+        self.sound_mgr.play("upgrade")
+        print("CHEAT ACTIVATED: All Unlocked, Rich, Pro Mode")
+
     # --------------- Lobby ---------------
     def _build_lobby(self) -> None:
         """Initialize lobby UI elements."""
@@ -298,6 +307,11 @@ class Game:
             Button((center_x, row_y, btn_w // 2 - 10, btn_h), "Help", self.font_big, self.goto_help)
         )
         self.quit_btn = Button((center_x + btn_w // 2 + 10, row_y, btn_w // 2 - 10, btn_h), "Quit", self.font_big, self.quit)
+
+        # Creator Button (Bottom Left)
+        self.buttons.append(
+            Button((20, SCREEN_H - 80, 120, 60), "Creator", self.font_big, self.cheat_unlock_all, bg=(100, 100, 200))
+        )
 
 
     def start_level(self, idx: int) -> None:
