@@ -535,7 +535,7 @@ class RemoveAdsPopup:
             mm = int(self.expiry[:2])
             yy = int(self.expiry[2:])
             if not (1 <= mm <= 12): return False
-            if yy < 25: return False # Assuming 2025+
+            if not (26 <= yy <= 50): return False # 2026-2050
             return True
         except ValueError:
             return False
@@ -627,7 +627,10 @@ class RemoveAdsPopup:
             pygame.draw.rect(screen, (255, 50, 50), self.error_rect, width=2, border_radius=10)
             
             msg = self.font_big.render("Invalid Date!", True, WHITE)
-            screen.blit(msg, (self.error_rect.centerx - msg.get_width()//2, self.error_rect.y + 40))
+            screen.blit(msg, (self.error_rect.centerx - msg.get_width()//2, self.error_rect.y + 30))
+            
+            msg2 = self.font_small.render("MM: 01-12, YY: 26-50", True, (200, 200, 200))
+            screen.blit(msg2, (self.error_rect.centerx - msg2.get_width()//2, self.error_rect.y + 70))
             
             pygame.draw.rect(screen, (200, 50, 50), self.error_close_rect, border_radius=5)
             close_txt = self.font_small.render("Close", True, WHITE)
