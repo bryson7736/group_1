@@ -72,6 +72,8 @@ class Die:
         self.cool = 0.0
 
     def can_merge_with(self, other):
+        if self.level >= MAX_DIE_LEVEL:
+            return False
         return other and (self.type == other.type) and (self.level == other.level)
 
     def draw(self, surf, selected):
