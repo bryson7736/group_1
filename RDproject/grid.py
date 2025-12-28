@@ -68,6 +68,35 @@ class Grid:
                 if min_dist < min_dist_to_path < max_dist:
                     self.valid_cells.add((c, r))
 
+        # Manual overrides for Stage 1-2 "Burning Path"
+        if hasattr(self.game, 'current_story_stage') and self.game.current_story_stage:
+            if self.game.current_story_stage.stage_id == "1-2":
+                # 1. Relocate top-left horizontal pair (upwards)
+                self.valid_cells.discard((1, 2))
+                self.valid_cells.discard((2, 2))
+                self.valid_cells.add((1, 1))
+                self.valid_cells.add((2, 1))
+                
+                # 2. Relocate bottom-left vertical pair (to the right)
+                self.valid_cells.discard((1, 3))
+                self.valid_cells.discard((1, 4))
+                self.valid_cells.add((2, 3))
+                self.valid_cells.add((2, 4))
+                
+                # 3. Remove slots marked with 'X' on the right
+                # Top horizontal section (beyond the path turn)
+                for c in [5, 6, 7, 8]:
+                    for r in [0, 1]:
+                        self.valid_cells.discard((c, r))
+                # Mid section
+                for c in [7, 8]:
+                    for r in [2, 3]:
+                        self.valid_cells.discard((c, r))
+                # End section
+                for c in [8, 9]:
+                    for r in [4, 5]:
+                        self.valid_cells.discard((c, r))
+
     def _point_segment_msg_dist(self, px, py, p1, p2):
         """Distance from point (px, py) to segment p1-p2."""
         x1, y1 = p1
