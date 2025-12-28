@@ -1,0 +1,145 @@
+# -*- coding: utf-8 -*-
+import math
+import pygame
+from colors import YELLOW, ORANGE, CYAN
+from settings import BULLET_SPEED, CHAIN_MAX_DISTANCE
+
+class Bullet:
+    """Basic single-target projectile."""
+    def __init__(self, game, x, y, target, dmg, *, speed_mult_provider=lambda:1.0, poison=None, slow=None):
+        self.game = game
+        self.x = x
+        self.y = y
+        self.target = target
+        self.dmg = dmg
+        self.base_speed = BULLET_SPEED
+        self.speed_mult_provider = speed_mult_provider
+        self.poison = poison # (dps, duration)
+        self.slow = slow     # (ratio, duration)
+
+    def update(self, dt):
+        if not self.target or self.target.dead:
+            return True
+
+        speed = self.base_speed * self.speed_mult_provider()
+        tx, ty = self.target.x, self.target.y
+        dx, dy = tx - self.x, ty - self.y
+        dist = math.hypot(dx, dy)
+        if dist <= 0.0001:
+            self.on_hit()
+            return True
+
+        # step reach/overrun check to avoid afterimage at high speed
+        step = speed * dt
+        if step >= dist:
+            self.x, self.y = tx, ty
+            self.on_hit()
+            return True
+
+        nx, ny = dx / dist, dy / dist
+        self.x += nx * step
+        self.y += ny * step
+        return False
+    
+    def on_hit(self):
+        self.target.hit(self.dmg)
+        if self.poison:
+            self.target.apply_poison(*self.poison)
+        if self.slow:
+            self.target.apply_slow(*self.slow)
+        self.game.sound_mgr.play("hit")
+        
+    def draw(self, surf):
+        color = YELLOW
+        if self.poison: color = (100, 255, 100) # Greenish for poison
+        if self.slow: color = (100, 200, 255)   # Icy for slow
+        pygame.draw.circle(surf, color, (int(self.x), int(self.y)), 6)
+
+
+class ChainBolt(Bullet):
+    """Chains to nearby enemies (for Multi dice)."""
+    def __init__(self, game, x, y, first_target, dmg, remaining_jumps, enemies, *, speed_mult_provider=lambda:1.0, poison=None, slow=None):
+        super().__init__(game, x, y, first_target, dmg, speed_mult_provider=speed_mult_provider, poison=poison, slow=slow)
+        self.remaining = remaining_jumps
+        self.enemies = enemies
+        self.visited = {first_target}
+
+    def update(self, dt):
+        if not self.target or self.target.dead:
+            return True
+
+        speed = self.base_speed * self.speed_mult_provider()
+        tx, ty = self.target.x, self.target.y
+        dx, dy = tx - self.x, ty - self.y
+        dist = math.hypot(dx, dy)
+        
+        hit = False
+        if dist <= 0.0001:
+            hit = True
+        else:
+            step = speed * dt
+            if step >= dist:
+                self.x, self.y = tx, ty
+                hit = True
+            else:
+                nx, ny = dx / dist, dy / dist
+                self.x += nx * step
+                self.y += ny * step
+        
+        if hit:
+            self.on_hit() # Apply dmg/poison/slow
+            
+            if self.remaining > 0:
+                pivot = self.target
+                if pivot and not pivot.dead:
+                    candidates = [e for e in self.enemies if (not e.dead) and e is not pivot and e not in self.visited]
+                    best = None
+                    bestd2 = 1e9
+                    for e in candidates:
+                        d2 = (e.x - pivot.x) ** 2 + (e.y - pivot.y) ** 2
+                        if d2 < bestd2 and d2 <= CHAIN_MAX_DISTANCE ** 2:
+                            bestd2 = d2
+                            best = e
+                    if best:
+                        self.target = best
+                        self.visited.add(best)
+                        self.remaining -= 1
+                        return False # Continue to next target
+            return True # Done
+            
+        return False
+
+    def draw(self, surf):
+        color = ORANGE
+        if self.poison: color = (150, 255, 100)
+        if self.slow: color = (100, 255, 255)
+        pygame.draw.circle(surf, color, (int(self.x), int(self.y)), 6)
+        pygame.draw.circle(surf, CYAN, (int(self.x), int(self.y)), 3)
+
+
+class ExplosiveBullet(Bullet):
+    """Explodes on impact, dealing damage to nearby enemies."""
+    def __init__(self, game, x, y, target, dmg, splash_dmg, splash_radius, *, speed_mult_provider=lambda:1.0, poison=None, slow=None):
+        super().__init__(game, x, y, target, dmg, speed_mult_provider=speed_mult_provider, poison=poison, slow=slow)
+        self.splash_dmg = splash_dmg
+        self.splash_radius = splash_radius
+
+    def on_hit(self):
+        # Main target hit
+        super().on_hit()
+        
+        # Splash
+        for e in self.game.enemies:
+            if e is self.target or e.dead:
+                continue
+            d2 = (e.x - self.x)**2 + (e.y - self.y)**2
+            if d2 <= self.splash_radius**2:
+                e.hit(self.splash_dmg)
+                if self.poison:
+                    e.apply_poison(*self.poison)
+                if self.slow:
+                    e.apply_slow(*self.slow)
+
+    def draw(self, surf):
+        pygame.draw.circle(surf, (255, 50, 0), (int(self.x), int(self.y)), 7)
+        pygame.draw.circle(surf, (255, 200, 0), (int(self.x), int(self.y)), 4)
