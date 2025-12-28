@@ -795,8 +795,11 @@ class Game:
             for i, chapter in enumerate(chapters):
                 r = pygame.Rect(start_x, start_y + i * (btn_h + gap), btn_w, btn_h)
                 if r.collidepoint(mx, my):
-                    self.start_story_chapter(chapter.chapter_id)
-                    self.sound_mgr.play("click")
+                    if self.story_mgr.is_chapter_unlocked(chapter.chapter_id):
+                        self.start_story_chapter(chapter.chapter_id)
+                        self.sound_mgr.play("click")
+                    else:
+                        self.sound_mgr.play("error")
                     break
     
     def story_handle(self, event: pygame.event.Event) -> None:
@@ -1728,8 +1731,8 @@ class Game:
         for i, chapter in enumerate(chapters):
             r = pygame.Rect(start_x, start_y + i * (btn_h + gap), btn_w, btn_h)
             
-            # Simple check for unlock (optional)
-            unlocked = True # For now let them play all
+            # Check for unlock
+            unlocked = self.story_mgr.is_chapter_unlocked(chapter.chapter_id)
             
             color = (200, 80, 40) if unlocked else (60, 60, 60)
             text_color = WHITE if unlocked else (120, 120, 120)
@@ -1739,6 +1742,17 @@ class Game:
             
             txt = self.font_big.render(chapter.name, True, text_color)
             self.screen.blit(txt, (r.centerx - txt.get_width() // 2, r.centery - txt.get_height() // 2))
+            
+            if not unlocked:
+                # Draw Lock Icon
+                lock_size = 30
+                lock_x = r.right - lock_size - 20
+                lock_y = r.centery - lock_size // 2
+                
+                # Body
+                pygame.draw.rect(self.screen, (200, 200, 200), (lock_x, lock_y + 10, lock_size, lock_size - 10))
+                # Shackle
+                pygame.draw.arc(self.screen, (200, 200, 200), (lock_x + 5, lock_y - 5, lock_size - 10, 30), 0, 3.14159, 3)
             
             # Draw checkmark if chapter is completed
             if self.story_mgr.is_chapter_completed(chapter.chapter_id):
