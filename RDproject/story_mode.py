@@ -202,6 +202,19 @@ class StoryManager:
         """Check if a chapter is completed."""
         return self.progress.is_chapter_completed(chapter_id)
     
+    def is_chapter_unlocked(self, chapter_id: str) -> bool:
+        """Check if a chapter is unlocked."""
+        if chapter_id == "chapter1":
+            return True
+        
+        # Extract number
+        try:
+            num = int(chapter_id.replace("chapter", ""))
+            prev_chapter = f"chapter{num-1}"
+            return self.progress.is_chapter_completed(prev_chapter)
+        except ValueError:
+            return False
+    
     def save_progress(self):
         """Save progress to file."""
         try:
