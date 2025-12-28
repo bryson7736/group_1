@@ -655,8 +655,11 @@ class Game:
         """Handle events during help screen."""
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.back_to_lobby()
-        if self.help_back.handle(event):
+        
+        action = self.help_popup.handle_input(event)
+        if action == "close":
             self.sound_mgr.play("click")
+            self.back_to_lobby()
 
     def loadout_handle(self, event: pygame.event.Event) -> None:
         """Handle events during loadout screen."""
@@ -1578,21 +1581,7 @@ class Game:
     def help_draw(self) -> None:
         """Draw the help screen."""
         self.screen.fill((22, 24, 36))
-        title = self.font_huge.render("Help", True, (255, 255, 255))
-        self.screen.blit(title, (40, 60))
-        lines = [
-            "• Left click die: select / merge (same TYPE & LEVEL)",
-            "• Right click: cancel selection / exit Trash",
-            "• Speed: top-right control or 1~5 keys",
-            "• When field is clear press N to immediately start next wave",
-            "• R to restart; ESC for lobby",
-        ]
-        y = 140
-        for s in lines:
-            t = self.font.render(s, True, (230, 230, 240))
-            self.screen.blit(t, (40, y))
-            y += 30
-        self.help_back.draw(self.screen)
+        self.help_popup.draw(self.screen)
 
     def loadout_draw(self) -> None:
         """Draw the loadout screen."""
