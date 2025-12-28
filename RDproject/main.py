@@ -1079,8 +1079,14 @@ class Game:
                     self.upgrades.add_coin(1)
                 self.enemies.remove(e)
             elif e.reached:
-                self.base_hp -= 1
-                self.enemies.remove(e)
+                # Special handling for boss enemies
+                if isinstance(e, TrueBoss):
+                    # Boss reached the end - instant defeat
+                    self.base_hp = 0
+                    self.enemies.remove(e)
+                else:
+                    self.base_hp -= 1
+                    self.enemies.remove(e)
 
         # Auto-wave logic
         if self.to_spawn <= 0 and len(self.enemies) == 0:
