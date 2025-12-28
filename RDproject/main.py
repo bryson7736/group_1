@@ -308,6 +308,11 @@ class Game:
         )
         self.quit_btn = Button((center_x + btn_w // 2 + 10, row_y, btn_w // 2 - 10, btn_h), "Quit", self.font_big, self.quit)
 
+        # Creator Button (Bottom Left)
+        self.buttons.append(
+            Button((20, SCREEN_H - 80, 120, 60), "Creator", self.font_big, self.cheat_unlock_all, bg=(100, 100, 200))
+        )
+
 
     def start_level(self, idx: int) -> None:
         """Start a specific level."""
