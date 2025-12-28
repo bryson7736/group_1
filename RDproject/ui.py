@@ -439,6 +439,27 @@ class AdsPopup:
             
         if self.ads:
             img = self.ads[self.current_ad_idx]
+            
+            # Auto-fit logic
+            max_w = self.w - 40
+            max_h = self.h - 80
+            
+            img_w = img.get_width()
+            img_h = img.get_height()
+            
+            # Calculate scale to fit within max dimensions while maintaining aspect ratio
+            scale = min(max_w / img_w, max_h / img_h)
+            
+            # Apply scaling
+            new_w = int(img_w * scale)
+            new_h = int(img_h * scale)
+            
+            # Use smoothscale for better quality, but fallback to scale if needed
+            try:
+                img = pygame.transform.smoothscale(img, (new_w, new_h))
+            except:
+                img = pygame.transform.scale(img, (new_w, new_h))
+            
             # Center the image
             ix = self.rect.centerx - img.get_width() // 2
             iy = self.rect.centery - img.get_height() // 2 + 20
