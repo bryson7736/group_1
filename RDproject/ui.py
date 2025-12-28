@@ -499,6 +499,25 @@ class RemoveAdsPopup:
                                       self.rect.top + 10, 
                                       self.close_btn_size, 
                                       self.close_btn_size)
+                                      
+        # Error Popup
+        self.show_error = False
+        self.error_rect = pygame.Rect(0, 0, 300, 150)
+        self.error_rect.center = self.rect.center
+        
+        self.error_close_rect = pygame.Rect(0, 0, 100, 40)
+        self.error_close_rect.center = (self.error_rect.centerx, self.error_rect.bottom - 20)
+
+    def validate_date(self):
+        if len(self.expiry) != 4: return False
+        try:
+            mm = int(self.expiry[:2])
+            yy = int(self.expiry[2:])
+            if not (1 <= mm <= 12): return False
+            if yy < 25: return False # Assuming 2025+
+            return True
+        except ValueError:
+            return False
 
     def draw(self, screen):
         # Draw background
@@ -581,7 +600,25 @@ class RemoveAdsPopup:
         end_pos2 = (self.close_rect.left + 8, self.close_rect.bottom - 8)
         pygame.draw.line(screen, WHITE, start_pos2, end_pos2, 3)
 
+        # Draw Error Popup
+        if self.show_error:
+            pygame.draw.rect(screen, (50, 0, 0), self.error_rect, border_radius=10)
+            pygame.draw.rect(screen, (255, 50, 50), self.error_rect, width=2, border_radius=10)
+            
+            msg = self.font_big.render("Invalid Date!", True, WHITE)
+            screen.blit(msg, (self.error_rect.centerx - msg.get_width()//2, self.error_rect.y + 40))
+            
+            pygame.draw.rect(screen, (200, 50, 50), self.error_close_rect, border_radius=5)
+            close_txt = self.font_small.render("Close", True, WHITE)
+            screen.blit(close_txt, (self.error_close_rect.centerx - close_txt.get_width()//2, self.error_close_rect.centery - close_txt.get_height()//2))
+
     def handle_input(self, event):
+        if self.show_error:
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.error_close_rect.collidepoint(event.pos):
+                    self.show_error = False
+            return None
+
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.input_rect.collidepoint(event.pos):
                 self.active_field = "card"
@@ -596,7 +633,10 @@ class RemoveAdsPopup:
                 return "close"
             if self.pay_rect.collidepoint(event.pos):
                 if (len(self.card_number) == 16) and (len(self.cvv) == 3) and (len(self.expiry) == 4):
-                    return "pay"
+                    if self.validate_date():
+                        return "pay"
+                    else:
+                        self.show_error = True
 
         if event.type == pygame.KEYDOWN and self.active_field:
             if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
@@ -605,7 +645,10 @@ class RemoveAdsPopup:
                 elif self.active_field == "cvv": self.active_field = "expiry"
                 elif self.active_field == "expiry":
                     if (len(self.card_number) == 16) and (len(self.cvv) == 3) and (len(self.expiry) == 4):
-                        return "pay"
+                        if self.validate_date():
+                            return "pay"
+                        else:
+                            self.show_error = True
             elif event.key == pygame.K_TAB:
                  if self.active_field == "card": self.active_field = "cvv"
                  elif self.active_field == "cvv": self.active_field = "expiry"
