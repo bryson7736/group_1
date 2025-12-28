@@ -210,7 +210,7 @@ class HelpPopup:
         self.font_small = font_small
         
         # Popup dimensions
-        self.w, self.h = 400, 300
+        self.w, self.h = 600, 500
         self.x = (SCREEN_W - self.w) // 2
         self.y = (SCREEN_H - self.h) // 2
         self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
@@ -238,6 +238,55 @@ class HelpPopup:
             screen.blit(t, (self.rect.x + 30, py))
             py += 30
             
+        # Synergies Section
+        py += 20
+        syn_title = self.font_big.render("Synergies (Place Adjacent)", True, (255, 215, 0))
+        screen.blit(syn_title, (self.rect.centerx - syn_title.get_width() // 2, py))
+        py += 40
+        
+        # Helper to draw die icon
+        def draw_icon(x, y, color, label):
+            r = pygame.Rect(x, y, 30, 30)
+            pygame.draw.rect(screen, color, r, border_radius=5)
+            pygame.draw.rect(screen, WHITE, r, width=2, border_radius=5)
+            # Initial letter
+            l = self.font_small.render(label[0].upper(), True, WHITE)
+            screen.blit(l, (r.centerx - l.get_width()//2, r.centery - l.get_height()//2))
+            return r.right
+            
+        # 1. Fire + Wind
+        start_x = self.rect.x + 50
+        lx = start_x
+        lx = draw_icon(lx, py, DICE_COLORS.get("fire", (200, 50, 50)), "Fire") + 10
+        plus = self.font.render("+", True, WHITE)
+        screen.blit(plus, (lx, py))
+        lx += 20
+        lx = draw_icon(lx, py, DICE_COLORS.get("wind", (50, 200, 50)), "Wind") + 20
+        
+        desc = self.font.render("= Fire gets +50% Splash Radius", True, (255, 200, 200))
+        screen.blit(desc, (lx, py + 2))
+        
+        # 2. Iron + Ice
+        py += 50
+        lx = start_x
+        lx = draw_icon(lx, py, DICE_COLORS.get("iron", (100, 100, 100)), "Iron") + 10
+        screen.blit(plus, (lx, py))
+        lx += 20
+        lx = draw_icon(lx, py, DICE_COLORS.get("freeze", (100, 100, 255)), "Ice") + 20
+        
+        desc = self.font.render("= Iron deals +20% Damage", True, (200, 200, 255))
+        screen.blit(desc, (lx, py + 2))
+        
+        # 3. Chain
+        py += 50
+        lx = start_x
+        lx = draw_icon(lx, py, (150, 150, 150), "?") + 5
+        lx = draw_icon(lx, py, (150, 150, 150), "?") + 5
+        lx = draw_icon(lx, py, (150, 150, 150), "?") + 20
+        
+        desc = self.font.render("= Chain 3+ Same Dice: +20% Speed", True, (255, 255, 150))
+        screen.blit(desc, (lx, py + 2))
+
         # Close instruction
         close_txt = self.font_small.render("Click Help again to close", True, (200, 200, 200))
         screen.blit(close_txt, (self.rect.centerx - close_txt.get_width() // 2, self.rect.bottom - 30))
