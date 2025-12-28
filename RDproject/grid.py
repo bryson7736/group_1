@@ -315,6 +315,9 @@ class Grid:
                 if rect.collidepoint(mx, my):
                     hover_cell = (c, r)
 
+        # Draw synergy links first (under dice)
+        self.draw_synergy_links(screen)
+
         for c in range(self.cols):
             for r in range(self.rows):
                 if not self.in_bounds(c, r):

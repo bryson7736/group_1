@@ -1031,6 +1031,9 @@ class Game:
         if self.state not in (STATE_PLAY, STATE_STORY):
             return
 
+        # Check synergies
+        self.grid.check_synergies()
+
         # Periodic Ads Logic
         if not self.ads_removed:
             self.ad_timer += dt

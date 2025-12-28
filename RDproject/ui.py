@@ -214,7 +214,7 @@ class HelpPopup:
         self.font_small = font_small
         
         # Popup dimensions
-        self.w, self.h = 600, 500
+        self.w, self.h = 700, 650
         self.x = (SCREEN_W - self.w) // 2
         self.y = (SCREEN_H - self.h) // 2
         self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
@@ -236,14 +236,14 @@ class HelpPopup:
         title = self.font_big.render("How to Play", True, WHITE)
         screen.blit(title, (self.rect.centerx - title.get_width() // 2, self.rect.y + 20))
         
-        py = self.rect.y + 70
+        py = self.rect.y + 60
         for tip in self.tips:
-            t = self.font.render(tip, True, WHITE)
+            t = self.font_small.render(tip, True, WHITE)
             screen.blit(t, (self.rect.x + 30, py))
-            py += 30
+            py += 25
             
         # Synergies Section
-        py += 20
+        py += 10
         syn_title = self.font_big.render("Synergies (Place Adjacent)", True, (255, 215, 0))
         screen.blit(syn_title, (self.rect.centerx - syn_title.get_width() // 2, py))
         py += 40
@@ -258,38 +258,31 @@ class HelpPopup:
             screen.blit(l, (r.centerx - l.get_width()//2, r.centery - l.get_height()//2))
             return r.right
             
-        # 1. Fire + Wind
-        start_x = self.rect.x + 50
-        lx = start_x
-        lx = draw_icon(lx, py, DICE_COLORS.get("fire", (200, 50, 50)), "Fire") + 10
-        plus = self.font.render("+", True, WHITE)
-        screen.blit(plus, (lx, py))
-        lx += 20
-        lx = draw_icon(lx, py, DICE_COLORS.get("wind", (50, 200, 50)), "Wind") + 20
+        synergies = [
+            ("fire", "wind", "Inferno: Fire +Splash, Wind +Speed", (255, 100, 0)),
+            ("iron", "poison", "Toxic Spikes: Iron poisons, Poison +Dmg", (150, 0, 150)),
+            ("freeze", "multi", "Frost Volley: Multi slows, Freeze +Range", (0, 255, 255)),
+            ("single", "wind", "Sniper Nest: Single +Range/Dmg, Wind +Speed", (200, 255, 200)),
+            ("fire", "iron", "Magma: Fire +Dmg, Iron Explodes", (255, 50, 50)),
+            ("poison", "multi", "Plague: Poison AOE, Multi poisons", (100, 200, 100))
+        ]
         
-        desc = self.font.render("= Fire gets +50% Splash Radius", True, (255, 200, 200))
-        screen.blit(desc, (lx, py + 2))
+        start_x = self.rect.x + 40
         
-        # 2. Iron + Ice
-        py += 50
-        lx = start_x
-        lx = draw_icon(lx, py, DICE_COLORS.get("iron", (100, 100, 100)), "Iron") + 10
-        screen.blit(plus, (lx, py))
-        lx += 20
-        lx = draw_icon(lx, py, DICE_COLORS.get("freeze", (100, 100, 255)), "Ice") + 20
-        
-        desc = self.font.render("= Iron deals +20% Damage", True, (200, 200, 255))
-        screen.blit(desc, (lx, py + 2))
-        
-        # 3. Chain
-        py += 50
-        lx = start_x
-        lx = draw_icon(lx, py, (150, 150, 150), "?") + 5
-        lx = draw_icon(lx, py, (150, 150, 150), "?") + 5
-        lx = draw_icon(lx, py, (150, 150, 150), "?") + 20
-        
-        desc = self.font.render("= Chain 3+ Same Dice: +20% Speed", True, (255, 255, 150))
-        screen.blit(desc, (lx, py + 2))
+        for t1, t2, desc_text, color in synergies:
+            lx = start_x
+            lx = draw_icon(lx, py, DICE_COLORS.get(t1, (100,100,100)), t1) + 5
+            plus = self.font_small.render("+", True, WHITE)
+            screen.blit(plus, (lx, py+5))
+            lx += 15
+            lx = draw_icon(lx, py, DICE_COLORS.get(t2, (100,100,100)), t2) + 15
+            
+            # Draw link line
+            pygame.draw.line(screen, color, (start_x + 15, py+35), (start_x + 15 + 30 + 15, py+35), 3)
+            
+            desc = self.font_small.render(desc_text, True, color)
+            screen.blit(desc, (lx, py + 5))
+            py += 45
 
         # Close instruction
         close_txt = self.font_small.render("Click Help again to close", True, (200, 200, 200))
