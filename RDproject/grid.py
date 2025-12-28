@@ -64,8 +64,8 @@ class Grid:
 
         path = self.game.level.path
         # Reduced gap and tighten distribution as requested
-        min_dist = CELL_SIZE * 0.35   # Relaxed from 0.45
-        max_dist = CELL_SIZE * 1.8    # Expanded from 1.5
+        min_dist = CELL_SIZE * 0.45   # Closer to path (< half cell)
+        max_dist = CELL_SIZE * 2.2    # Tighter spread
         
         # Mission Panel Rect (approximate based on main.py)
         # Avoid placement in top-left UI area + margin
