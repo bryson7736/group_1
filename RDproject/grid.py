@@ -128,11 +128,87 @@ class Grid:
         return empty
 
     def update(self, dt):
-        for c, r, d in self.iterate():
-            if d:
-                d.update(dt)
+        for c in range(self.cols):
+            for r in range(self.rows):
+                d = self.cells[c][r]
+                if d:
+                    d.update(dt)
+        
+        # Update Synergies
+        self.update_synergies()
 
-    def draw(self, surf):
+    def update_synergies(self):
+        # Reset all buffs
+        for c in range(self.cols):
+            for r in range(self.rows):
+                d = self.cells[c][r]
+                if d:
+                    d.synergy_buffs = {}
+
+        # 1. Adjacency Checks
+        for c in range(self.cols):
+            for r in range(self.rows):
+                d = self.cells[c][r]
+                if not d:
+                    continue
+                
+                neighbors = []
+                for dc, dr in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+                    nc, nr = c + dc, r + dr
+                    if self.in_bounds(nc, nr):
+                        n = self.cells[nc][nr]
+                        if n:
+                            neighbors.append(n)
+                
+                # Fire + Wind
+                if d.type == "fire":
+                    for n in neighbors:
+                        if n.type == "wind":
+                            d.synergy_buffs["fire_wind"] = True
+                            break
+                
+                # Iron + Ice (Freeze)
+                if d.type == "iron":
+                    for n in neighbors:
+                        if n.type == "freeze":
+                            d.synergy_buffs["iron_ice"] = True
+                            break
+
+        # 2. Chain Check (Connected Components of same type >= 3)
+        visited = set()
+        for c in range(self.cols):
+            for r in range(self.rows):
+                if (c, r) in visited:
+                    continue
+                
+                d = self.cells[c][r]
+                if not d:
+                    continue
+                
+                # BFS to find component
+                queue = [(c, r)]
+                component = []
+                visited.add((c, r))
+                
+                idx = 0
+                while idx < len(queue):
+                    curr_c, curr_r = queue[idx]
+                    idx += 1
+                    component.append(self.cells[curr_c][curr_r])
+                    
+                    for dc, dr in [(0, 1), (0, -1), (1, 0), (-1, 0)]:
+                        nc, nr = curr_c + dc, curr_r + dr
+                        if self.in_bounds(nc, nr) and (nc, nr) not in visited:
+                            neighbor = self.cells[nc][nr]
+                            if neighbor and neighbor.type == d.type:
+                                visited.add((nc, nr))
+                                queue.append((nc, nr))
+                
+                if len(component) >= 3:
+                    for member in component:
+                        member.synergy_buffs["chain"] = True
+
+    def draw(self, screen):
         mx, my = pygame.mouse.get_pos()
         hover_cell = None
         
@@ -152,16 +228,16 @@ class Grid:
                     
                 rect = self.rect_at(c, r)
                 # Darker, more subtle grid borders
-                pygame.draw.rect(surf, (40, 45, 60), rect, width=2, border_radius=10)
+                pygame.draw.rect(screen, (40, 45, 60), rect, width=2, border_radius=10)
                 die = self.get(c, r)
                 if die:
                     # Only draw as selected if actually selected, not just hovered
                     selected = (self.selected == (c, r))
-                    die.draw(surf, selected)
+                    die.draw(screen, selected)
                     
         # Draw hover effect (blue border only, like selection)
         if hover_cell and hover_cell != self.selected:
-            pygame.draw.rect(surf, BLUE, self.rect_at(*hover_cell).inflate(-12, -12), width=3, border_radius=14)
+            pygame.draw.rect(screen, BLUE, self.rect_at(*hover_cell).inflate(-12, -12), width=3, border_radius=14)
 
     def handle_click(self, event):
         if event.button != 1:

@@ -7,7 +7,7 @@ import math
 from typing import List, Tuple, Optional, Dict, Any
 
 from settings import *
-from ui import Button, draw_panel, Segmented, draw_pips, PauseMenu, HelpPopup, draw_wave_title, draw_boss_state, AdsPopup, RemoveAdsPopup
+from ui import Button, draw_panel, Segmented, draw_pips, PauseMenu, HelpPopup, draw_wave_title, draw_boss_state, AdsPopup, RemoveAdsPopup, CoinPurchasePopup
 from grid import Grid
 from level_manager import LevelManager
 from loadout import Loadout
@@ -180,6 +180,9 @@ class Game:
         self.show_remove_ads = False
         self.ads_removed = False
         self.ad_timer = 0.0
+        
+        self.coin_purchase_popup = CoinPurchasePopup(self.font_big, self.font_small)
+        self.show_coin_purchase = False
 
         # Lobby upgrades UI message (shown on upgrades screen)
         self._upgrade_msg = ""
@@ -545,6 +548,18 @@ class Game:
 
     def upgrades_handle(self, event: pygame.event.Event) -> None:
         """Handle events during upgrades screen."""
+        if self.show_coin_purchase:
+            action = self.coin_purchase_popup.handle_input(event)
+            if action == "close":
+                self.sound_mgr.play("click")
+                self.show_coin_purchase = False
+            elif isinstance(action, int):
+                # Purchased coins
+                self.upgrades.add_coin(action)
+                self.sound_mgr.play("spawn") # Success sound
+                self.show_coin_purchase = False
+            return
+
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.back_to_lobby()
         if self.upg_back.handle(event):
@@ -571,6 +586,7 @@ class Game:
                     else:
                         self._upgrade_msg = "Not enough coins!"
                         self.sound_mgr.play("error")
+                        self.show_coin_purchase = True
                     self._upgrade_msg_t = 1.6
                     return
 
@@ -583,6 +599,7 @@ class Game:
                     else:
                         self._upgrade_msg = "Not enough coins!"
                         self.sound_mgr.play("error")
+                        self.show_coin_purchase = True
                     self._upgrade_msg_t = 1.6
                     return
 
@@ -595,6 +612,9 @@ class Game:
                     else:
                         self._upgrade_msg = "Not enough coins!"
                         self.sound_mgr.play("error")
+                        self.show_coin_purchase = True
+                    self._upgrade_msg_t = 1.6
+                    return
                     self._upgrade_msg_t = 1.6
                     return
     
@@ -1025,6 +1045,17 @@ class Game:
         # Show persistent coins at top right
         coin_txt = self.font_big.render(f"Coins: {self.upgrades.coins}", True, (255, 220, 80))
         self.screen.blit(coin_txt, (SCREEN_W - coin_txt.get_width() - 40, 40))
+        
+        # PRO Icon if ads removed
+        if self.ads_removed:
+            # Draw a golden badge at top left
+            badge_rect = pygame.Rect(20, 20, 80, 40)
+            pygame.draw.rect(self.screen, (255, 215, 0), badge_rect, border_radius=8) # Gold
+            pygame.draw.rect(self.screen, WHITE, badge_rect, width=2, border_radius=8)
+            
+            pro_txt = self.font_big.render("PRO", True, DARK)
+            self.screen.blit(pro_txt, (badge_rect.centerx - pro_txt.get_width()//2, badge_rect.centery - pro_txt.get_height()//2))
+
         for b in self.buttons:
             b.draw(self.screen)
         self.quit_btn.draw(self.screen)
@@ -1116,6 +1147,9 @@ class Game:
             warn = self.font_big.render(self._upgrade_msg, True, col_msg)
             self.screen.blit(warn, (base_x, base_y - 60))
         self.upg_back.draw(self.screen)
+        
+        if self.show_coin_purchase:
+            self.coin_purchase_popup.draw(self.screen)
 
     def _draw_upgrade_btn(self, rect, text, cost):
         can_buy = self.upgrades.coins >= cost
