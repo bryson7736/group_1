@@ -192,6 +192,13 @@ class Game:
         self.leaderboard_mgr = LeaderboardManager()
         self.input_name_str = ""
 
+        # Load summon icon
+        try:
+            self.img_add_die = pygame.image.load(os.path.join(ASSETS_DIR, "add_dice.png")).convert_alpha()
+            self.img_add_die = pygame.transform.smoothscale(self.img_add_die, (40, 40))
+        except:
+            self.img_add_die = None
+
         self._build_lobby()
 
     # --------------- Lobby ---------------
@@ -360,6 +367,7 @@ class Game:
         self.telegraphs = []
         self.money = START_MONEY
         self.die_cost = DIE_COST  # Reset to base cost
+        self.summon_btn_rect = pygame.Rect(0,0,0,0)
         self.base_hp = BASE_HP
         self.last_hp = BASE_HP
         self.hp_anim_timer = 0.0
@@ -426,20 +434,7 @@ class Game:
                 if self.to_spawn <= 0 and len(self.enemies) == 0:
                     self.start_wave()
             elif event.key == pygame.K_SPACE:
-                # Random spawn
-                if self.money >= self.die_cost:
-                    empties = self.grid.get_empty_cells()
-                    if empties:
-                        c, r = random.choice(empties)
-                        pool = self.loadout.selected or DIE_TYPES
-                        t = random.choice(pool)
-                        die = make_die(self, c, r, t, level=1)
-                        self.grid.set(c, r, die)
-                        self.money -= self.die_cost
-                        self.die_cost += 10  # Increase cost by 10
-                        self.sound_mgr.play("spawn")
-                else:
-                    self.sound_mgr.play("error")
+                self.request_summon()
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             self.grid.selected = None
             self.trash_active = False
@@ -673,20 +668,7 @@ class Game:
             elif event.key == pygame.K_ESCAPE:
                 self.goto_story_select()
             elif event.key == pygame.K_SPACE:
-                # Random spawn
-                if self.money >= self.die_cost:
-                    empties = self.grid.get_empty_cells()
-                    if empties:
-                        c, r = random.choice(empties)
-                        pool = self.loadout.selected or DIE_TYPES
-                        t = random.choice(pool)
-                        die = make_die(self, c, r, t, level=1)
-                        self.grid.set(c, r, die)
-                        self.money -= self.die_cost
-                        self.die_cost += 10  # Increase cost by 10
-                        self.sound_mgr.play("spawn")
-                else:
-                    self.sound_mgr.play("error")
+                self.request_summon()
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             self.grid.selected = None
             self.trash_active = False
@@ -741,10 +723,33 @@ class Game:
                         if 0 <= idx < len(dice_types):
                             self.purchase_ingame_upgrade(dice_types[idx])
                             return
+
+                # Check for Summon Icon Click
+                if hasattr(self, 'summon_btn_rect') and self.summon_btn_rect.collidepoint(mx, my):
+                    self.request_summon()
+                    return
             
             self.grid.handle_click(event)
 
-    # --------------- Flow ---------------
+    def request_summon(self) -> None:
+        """Handle request to summon a new die."""
+        if self.money >= self.die_cost:
+            empties = self.grid.get_empty_cells()
+            if empties:
+                c, r = random.choice(empties)
+                pool = self.loadout.selected or DIE_TYPES
+                t = random.choice(pool)
+                die = make_die(self, c, r, t, level=1)
+                self.grid.set(c, r, die)
+                self.money -= self.die_cost
+                self.die_cost += 10
+                self.sound_mgr.play("spawn")
+            else:
+                # No space left? Play error sound too
+                self.sound_mgr.play("error")
+        else:
+            self.sound_mgr.play("error")
+
     def start_wave(self) -> None:
         """Start the next wave of enemies."""
         self.telegraphs = []
@@ -1189,6 +1194,17 @@ class Game:
         money_val = self.font_big.render(str(self.money), True, WHITE)
         self.screen.blit(money_val, (cx - 50, cy - money_val.get_height()//2))
         
+        # Summon Icon & Cost (Left of Money)
+        if self.img_add_die:
+            summon_x = cx - 240
+            self.screen.blit(self.img_add_die, (summon_x, cy - 20))
+            cost_txt = self.font_big.render(str(self.die_cost), True, (200, 200, 255))
+            self.screen.blit(cost_txt, (summon_x + 50, cy - cost_txt.get_height()//2))
+            # Store the rect for click detection
+            self.summon_btn_rect = pygame.Rect(summon_x, cy - 20, 100, 40)
+        else:
+            self.summon_btn_rect = pygame.Rect(0,0,0,0)
+        
         # HP Display (Right of Money)
         hp_x = cx + 60
         
@@ -1366,12 +1382,10 @@ class Game:
         title = self.font_huge.render("Help", True, (255, 255, 255))
         self.screen.blit(title, (40, 60))
         lines = [
-            "• Left click empty: place Lv1 die",
             "• Left click die: select / merge (same TYPE & LEVEL)",
             "• Right click: cancel selection / exit Trash",
             "• Speed: top-right control or 1~5 keys",
-            "• Target mode: press T to cycle (Nearest / Front / Weak / Strong)",
-            "• When field is clear press N to start next wave",
+            "• When field is clear press N to immediately start next wave",
             "• R to restart; ESC for lobby",
         ]
         y = 140
