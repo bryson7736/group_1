@@ -388,13 +388,22 @@ class RemoveAdsPopup:
         box_color = WHITE if self.active else (200, 200, 200)
         pygame.draw.rect(screen, box_color, self.input_rect, border_radius=5)
         
-        # Render text
-        txt_surf = self.font_big.render(self.card_number, True, DARK)
+        # Render text with formatting (groups of 4)
+        display_text = " ".join([self.card_number[i:i+4] for i in range(0, len(self.card_number), 4)])
+        
+        if not self.card_number and not self.active:
+            txt_surf = self.font_big.render("0000 0000 0000 0000", True, (180, 180, 180))
+        else:
+            txt_surf = self.font_big.render(display_text, True, DARK)
+            
         screen.blit(txt_surf, (self.input_rect.x + 10, self.input_rect.y + (self.input_rect.height - txt_surf.get_height()) // 2))
         
         # Cursor
         if self.active and (pygame.time.get_ticks() // 500) % 2 == 0:
             cursor_x = self.input_rect.x + 10 + txt_surf.get_width()
+            # Adjust cursor if text is empty
+            if not self.card_number:
+                cursor_x = self.input_rect.x + 10
             cursor_y = self.input_rect.y + 10
             pygame.draw.line(screen, DARK, (cursor_x, cursor_y), (cursor_x, cursor_y + 20), 2)
         
@@ -433,14 +442,6 @@ class RemoveAdsPopup:
         if event.type == pygame.KEYDOWN and self.active:
             if event.key == pygame.K_BACKSPACE:
                 self.card_number = self.card_number[:-1]
-            else:
-                # Handle numbers manually to be safe across platforms/numpads
-                digit = None
-                if pygame.K_0 <= event.key <= pygame.K_9:
-                    digit = str(event.key - pygame.K_0)
-                elif pygame.K_KP0 <= event.key <= pygame.K_KP9:
-                    digit = str(event.key - pygame.K_KP0)
-                
-                if digit and len(self.card_number) < 16:
-                    self.card_number += digit
+            elif event.unicode.isdigit() and len(self.card_number) < 16:
+                self.card_number += event.unicode
         return None
