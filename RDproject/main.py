@@ -142,7 +142,7 @@ class Game:
 
         # Speed Control (Top Right)
         self.speed_ctrl = Segmented(
-            (SCREEN_W - 220, 80, 200, 40),
+            (20, 60, 200, 40),
             ["0.5x", "1x", "2x", "4x", "8x"],
             self.font_small,
             self.speed_index,
