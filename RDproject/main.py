@@ -236,9 +236,15 @@ class Game:
         row_y = y_offset + 2 * (btn_h + gap) - 10  # Reduced spacing to move up
         self.buttons.pop() # Remove Help from previous append
         
-        # Leaderboard button (New)
+        # Leaderboard and Ads buttons
+        lb_w = int(btn_w * 0.65)
+        ads_w = btn_w - lb_w - 10
+        
         self.buttons.append(
-            Button((center_x, row_y, btn_w, btn_h), "Leaderboard", self.font_big, self.goto_leaderboard)
+            Button((center_x, row_y, lb_w, btn_h), "Leaderboard", self.font_big, self.goto_leaderboard)
+        )
+        self.buttons.append(
+            Button((center_x + lb_w + 10, row_y, ads_w, btn_h), "Ads", self.font_big, self.toggle_ads)
         )
         
         row_y += (btn_h + gap)
