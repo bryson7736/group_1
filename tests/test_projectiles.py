@@ -2,20 +2,27 @@ import pytest
 from projectiles import Bullet, ExplosiveBullet
 import math
 
+class MockSoundMgr:
+    def play(self, name):
+        pass
+
 class MockEnemy:
     def __init__(self, x, y):
         self.x = x
         self.y = y
         self.hp = 100
         self.dead = False
+        self.damage_history = []
         
     def hit(self, dmg):
         self.hp -= dmg
         if self.hp <= 0:
             self.dead = True
-
-class MockSoundMgr:
-    def play(self, name):
+            
+    def apply_poison(self, dmg, duration):
+        pass
+        
+    def apply_slow(self, ratio, duration):
         pass
 
 class MockGame:
