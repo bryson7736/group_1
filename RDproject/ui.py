@@ -401,17 +401,51 @@ class AdsPopup:
                                       self.close_btn_size, 
                                       self.close_btn_size)
 
+        # Load Ads
+        self.ads = []
+        import os
+        # Assuming assets/ads is relative to this file or main.py. 
+        # Since ui.py is in RDproject, and assets is in RDproject/assets
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        ads_dir = os.path.join(base_dir, "assets", "ads")
+        
+        if os.path.exists(ads_dir):
+            for f in sorted(os.listdir(ads_dir)):
+                if f.endswith(".png"):
+                    try:
+                        img = pygame.image.load(os.path.join(ads_dir, f))
+                        self.ads.append(img)
+                    except Exception as e:
+                        print(f"Failed to load ad {f}: {e}")
+        
+        self.current_ad_idx = 0
+        self.last_switch_time = 0
+        self.switch_interval = 3000 # 3 seconds
+
     def draw(self, screen):
         # Draw background (White interface as requested)
         pygame.draw.rect(screen, WHITE, self.rect, border_radius=12)
         pygame.draw.rect(screen, (200, 200, 200), self.rect, width=2, border_radius=12)
         
-        # Placeholder text
+        # Title
         title = self.font_big.render("Advertisement", True, DARK)
-        screen.blit(title, (self.rect.centerx - title.get_width() // 2, self.rect.y + 50))
+        screen.blit(title, (self.rect.centerx - title.get_width() // 2, self.rect.y + 20))
         
-        msg = self.font_small.render("(Future Ads Content)", True, GRAY)
-        screen.blit(msg, (self.rect.centerx - msg.get_width() // 2, self.rect.centery))
+        # Cycle Ads
+        current_time = pygame.time.get_ticks()
+        if self.ads and current_time - self.last_switch_time > self.switch_interval:
+            self.current_ad_idx = (self.current_ad_idx + 1) % len(self.ads)
+            self.last_switch_time = current_time
+            
+        if self.ads:
+            img = self.ads[self.current_ad_idx]
+            # Center the image
+            ix = self.rect.centerx - img.get_width() // 2
+            iy = self.rect.centery - img.get_height() // 2 + 20
+            screen.blit(img, (ix, iy))
+        else:
+            msg = self.font_small.render("(No Ads Found)", True, GRAY)
+            screen.blit(msg, (self.rect.centerx - msg.get_width() // 2, self.rect.centery))
 
         # Close button (X)
         pygame.draw.rect(screen, (200, 50, 50), self.close_rect, border_radius=4)
