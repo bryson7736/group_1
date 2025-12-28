@@ -572,7 +572,7 @@ class Game:
             btn_w, btn_h = 160, 50
             gap_x, gap_y = 20, 15
             row_h = btn_h + gap_y
-            cost = 50
+            cost = 30
             
             for row, t in enumerate(DIE_TYPES):
                 y_pos = base_y + row * row_h
@@ -1087,7 +1087,7 @@ class Game:
         btn_w, btn_h = 160, 50
         gap_x, gap_y = 20, 15
         row_h = btn_h + gap_y
-        cost = 50
+        cost = 30
         
         # Labels for columns
         col_labels = ["Damage +10%", "Speed +5%", "Crit +5%"]
