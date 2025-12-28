@@ -4,15 +4,19 @@ Error: name 'SCREEN_W' is not defined
 
 Traceback:
 Traceback (most recent call last):
-  File "c:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 1723, in <module>
+  File "c:\Users\5594i\group_1\RDproject\main.py", line 1729, in <module>
     Game().run()
-    ^^^^^^
-  File "c:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 63, in __init__
-    self.story_mgr = StoryManager()
-                     ^^^^^^^^^^^^^^
-  File "c:\Users\洪崧祐\github_project\group_1\RDproject\story_mode.py", line 84, in __init__
-    self._init_chapters()
-  File "c:\Users\洪崧祐\github_project\group_1\RDproject\story_mode.py", line 114, in _init_chapters
-    [(SCREEN_W//2, 0), (SCREEN_W//2, SCREEN_H)],
-     ^^^^^^^^
+  File "c:\Users\5594i\group_1\RDproject\main.py", line 1710, in run
+    self.story_select_handle(event)
+  File "c:\Users\5594i\group_1\RDproject\main.py", line 707, in story_select_handle
+    self.start_story_chapter(chapter.chapter_id)
+  File "c:\Users\5594i\group_1\RDproject\main.py", line 385, in start_story_chapter
+    self._load_current_story_stage()
+  File "c:\Users\5594i\group_1\RDproject\main.py", line 420, in _load_current_story_stage
+    self.grid.reset_layout()
+  File "c:\Users\5594i\group_1\RDproject\grid.py", line 52, in reset_layout
+    self._calculate_valid_cells()
+  File "c:\Users\5594i\group_1\RDproject\grid.py", line 74, in _calculate_valid_cells
+    title_rect = pygame.Rect(SCREEN_W // 2 - 250, 0, 500, 150)
+                             ^^^^^^^^
 NameError: name 'SCREEN_W' is not defined
