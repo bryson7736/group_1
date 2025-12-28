@@ -1,17 +1,18 @@
 CRASH REPORT
 ====================
-Error: name 'surf' is not defined
+Error: name 'SCREEN_W' is not defined
 
 Traceback:
 Traceback (most recent call last):
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1629, in <module>
+  File "c:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 1723, in <module>
     Game().run()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1619, in run
-    self.draw()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1547, in draw
-    self.play_draw()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1227, in play_draw
-    self.grid.draw(self.screen)
-  File "/home/sutender/rdproject/group_1/RDproject/grid.py", line 231, in draw
-    pygame.draw.rect(surf, (40, 45, 60), rect, width=2, border_radius=10)
-NameError: name 'surf' is not defined
+    ^^^^^^
+  File "c:\Users\洪崧祐\github_project\group_1\RDproject\main.py", line 63, in __init__
+    self.story_mgr = StoryManager()
+                     ^^^^^^^^^^^^^^
+  File "c:\Users\洪崧祐\github_project\group_1\RDproject\story_mode.py", line 84, in __init__
+    self._init_chapters()
+  File "c:\Users\洪崧祐\github_project\group_1\RDproject\story_mode.py", line 114, in _init_chapters
+    [(SCREEN_W//2, 0), (SCREEN_W//2, SCREEN_H)],
+     ^^^^^^^^
+NameError: name 'SCREEN_W' is not defined
