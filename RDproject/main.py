@@ -996,6 +996,9 @@ class Game:
         for b in self.buttons:
             b.draw(self.screen)
         self.quit_btn.draw(self.screen)
+        
+        if self.show_ads:
+            self.ads_popup.draw(self.screen)
     def earn_coins(self, amount):
         if not hasattr(self, '_coins_awarded'):
             self.upgrades.add_coin(amount)
@@ -1499,11 +1502,17 @@ class Game:
                     # don't auto-quit on game over; here only explicit window close
                     self.quit()
                 if self.state == STATE_LOBBY:
-                    for b in self.buttons:
-                        if b.handle(event):
+                    if self.show_ads:
+                        action = self.ads_popup.handle_input(event)
+                        if action == "close":
                             self.sound_mgr.play("click")
-                    if self.quit_btn.handle(event):
-                        self.sound_mgr.play("click")
+                            self.toggle_ads()
+                    else:
+                        for b in self.buttons:
+                            if b.handle(event):
+                                self.sound_mgr.play("click")
+                        if self.quit_btn.handle(event):
+                            self.sound_mgr.play("click")
                 elif self.state == STATE_PLAY:
                     self.handle_play(event)
                 elif self.state == STATE_GAMEOVER:
