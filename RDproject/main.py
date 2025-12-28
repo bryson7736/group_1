@@ -372,6 +372,10 @@ class Game:
     def toggle_pause(self) -> None:
         """Toggle pause state."""
         self.paused = not self.paused
+
+    def toggle_ads(self) -> None:
+        """Toggle ads popup."""
+        self.show_ads = not self.show_ads
     
     def purchase_ingame_upgrade(self, upgrade_type: str) -> None:
         """Purchase an in-game upgrade with money."""
