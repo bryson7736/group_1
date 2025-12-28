@@ -142,7 +142,7 @@ class Game:
 
         # Speed Control (Top Right)
         self.speed_ctrl = Segmented(
-            (20, 60, 200, 40),
+            (20, 75, 200, 40),
             ["0.5x", "1x", "2x", "4x", "8x"],
             self.font_small,
             self.speed_index,
@@ -1524,7 +1524,7 @@ class Game:
         if self.current_story_stage:
             # Draw below Coin display
             sx = 20
-            sy = 70
+            sy = 130
             stage_txt = self.font_big.render(f"Stage: {self.current_story_stage.stage_id}", True, (255, 150, 50))
             self.screen.blit(stage_txt, (sx, sy))
             
