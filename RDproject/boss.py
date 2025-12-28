@@ -50,7 +50,7 @@ INITIAL_SKILL_COOLDOWN = 2.0    # Initial cooldown at spawn
 # Skill Durations (seconds)
 SKILL_DURATION = {
     STATE_DEFENSE: 3.0,
-    STATE_ATTACK: 1.0,  # Cast time
+    STATE_ATTACK: 4.0,  # Cast time prolonged to 4s
     STATE_HEAL: 3.0,
 }
 
@@ -209,8 +209,9 @@ class TrueBoss(Enemy):
                 filled = []
                 for c in range(self.game.grid.cols):
                     for r in range(self.game.grid.rows):
-                        if self.game.grid.get(c, r):
-                            filled.append((c, r))
+                        d = self.game.grid.get(c, r)
+                        if d:
+                            filled.append((c, r, d))
                 
                 if filled:
                     count = min(ATTACK_DESTROY_DICE_COUNT, len(filled))
@@ -221,9 +222,10 @@ class TrueBoss(Enemy):
         if not self.game or not self.game.grid:
             return
             
-        for c, r in self.attack_targets:
-            # Verify die still exists there (it might have been merged/trashed)
-            if self.game.grid.get(c, r):
+        for c, r, target_die in self.attack_targets:
+            # Verify die still exists there and is the SAME die (hasn't fled/merged)
+            current_die = self.game.grid.get(c, r)
+            if current_die and current_die is target_die:
                 self.game.grid.remove(c, r)
         
         self.attack_targets = []
@@ -288,17 +290,28 @@ class TrueBoss(Enemy):
 
         # Draw Target Indicators on Grid
         if self.state == STATE_ATTACK and self.attack_targets:
-            for c, r in self.attack_targets:
-                if self.game and self.game.grid:
-                    rect = self.game.grid.rect_at(c, r)
-                    # Draw a crosshair or target symbol
-                    cx, cy = rect.centerx, rect.centery
-                    # Pulsing effect
-                    pulse = (pygame.time.get_ticks() % 500) / 500.0
-                    radius = 20 + int(pulse * 10)
-                    
-                    # Red circle
-                    pygame.draw.circle(surf, (255, 0, 0), (cx, cy), radius, width=3)
-                    # Cross
-                    pygame.draw.line(surf, (255, 0, 0), (cx - radius, cy), (cx + radius, cy), 3)
-                    pygame.draw.line(surf, (255, 0, 0), (cx, cy - radius), (cx, cy + radius), 3)
+            # Shine once every second
+            # state_timer counts down from 4.0.
+            # We want a flash at 3.x, 2.x, 1.x, 0.x
+            # Let's say flash lasts 0.3s at the start of each second interval
+            time_fraction = self.state_timer % 1.0
+            is_shining = time_fraction > 0.7 # Shine in the last 0.3s of each second (e.g. 3.9-3.7)
+            
+            if is_shining:
+                for c, r, target_die in self.attack_targets:
+                    # Only draw if the target is still valid (hasn't fled yet)
+                    current_die = self.game.grid.get(c, r)
+                    if current_die and current_die is target_die:
+                        rect = self.game.grid.rect_at(c, r)
+                        cx, cy = rect.centerx, rect.centery
+                        
+                        # Flash effect
+                        radius = 25
+                        # Red circle
+                        pygame.draw.circle(surf, (255, 50, 50), (cx, cy), radius, width=4)
+                        # Cross
+                        pygame.draw.line(surf, (255, 0, 0), (cx - radius, cy), (cx + radius, cy), 4)
+                        pygame.draw.line(surf, (255, 0, 0), (cx, cy - radius), (cx, cy + radius), 4)
+                        
+                        # Inner bright flash
+                        pygame.draw.circle(surf, (255, 200, 200), (cx, cy), radius - 5, width=2)
