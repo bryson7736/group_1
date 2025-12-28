@@ -777,10 +777,21 @@ class Game:
         self.speed_ctrl.handle(event)
         if self.btn_trash.handle(event):
             self.sound_mgr.play("click")
+            return
+        if self.btn_help.handle(event):
             self.sound_mgr.play("click")
+            return
         if self.btn_pause.handle(event):
             self.sound_mgr.play("click")
+            return
         
+        if self.show_help:
+            action = self.help_popup.handle_input(event)
+            if action == "close":
+                self.sound_mgr.play("click")
+                self.show_help = False
+            return
+
         if self.paused:
             action = self.pause_menu.handle_input(event)
             if action:
