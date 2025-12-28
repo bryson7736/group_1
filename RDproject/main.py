@@ -819,6 +819,8 @@ class Game:
         self.telegraphs = []
         self.wave += 1
         self.wave_timer = 0.0  # Reset timer
+        self.is_big_enemy_wave = False
+        self.is_true_boss_wave = False
         
         # Reset special wave flags (unless set by Story Mode logic below)
         # Actually, Story Mode logic sets them BEFORE calling start_wave.
@@ -858,16 +860,16 @@ class Game:
         hp = 30 * (wave_num ** 1.1) * self.level.difficulty
         speed = (36 + min(140, self.wave * 6)) * (0.9 + 0.2 * random.random())
         path = list(self.level.path)
-        if self.is_true_boss_wave and self.to_spawn == 0:
+        if self.is_true_boss_wave and self.to_spawn == 1:
             boss_hp = calculate_boss_hp(self.wave, self.level.difficulty)
             boss_speed = calculate_boss_speed(speed)
             e = TrueBoss(path, boss_hp, boss_speed, game=self)
-        elif self.is_big_enemy_wave and self.to_spawn == 0:
+        elif self.is_big_enemy_wave and self.to_spawn == 1:
             hp *= BIG_ENEMY_HP_MULT
             e = BigEnemy(path, hp, speed * 0.85)
         else:
             e = Enemy(path, hp, speed)
-        if self.to_spawn == 0:
+        if self.to_spawn == 1:
             e.carries_coin = True
         if len(path) == 2:
             e.y += random.randint(-60, 60)
@@ -1078,13 +1080,13 @@ class Game:
                     if self.current_story_stage.has_true_boss:
                         self.wave_timer += dt * self.speed_mult
                         if self.wave_timer >= self.wave_delay:
-                            self.is_true_boss_wave = True
                             self.start_wave()
+                            self.is_true_boss_wave = True
                     elif self.current_story_stage.has_big_enemy:
                         self.wave_timer += dt * self.speed_mult
                         if self.wave_timer >= self.wave_delay:
-                            self.is_big_enemy_wave = True
                             self.start_wave()
+                            self.is_big_enemy_wave = True
                     else:
                         self.wave_timer += dt * self.speed_mult
                         if self.wave_timer >= self.wave_delay:
