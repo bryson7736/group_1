@@ -42,9 +42,8 @@ def test_true_boss_defense(boss):
     for s in boss.timers:
         boss.timers[s] = 0
     
-    # Force defense state for deterministic testing
-    boss.state = STATE_DEFENSE
-    boss.state_timer = 3.0
+    # Use proper state entry
+    boss._enter_state(STATE_DEFENSE)
     
     # Check damage reduction
     boss.hit(100)
@@ -55,6 +54,7 @@ def test_true_boss_heal(boss):
     for s in boss.timers:
         boss.timers[s] = 0
     
+    # Trigger AI transition in idle state
     boss.update(0.1)
     assert boss.state == STATE_HEAL
     
@@ -64,21 +64,23 @@ def test_true_boss_heal(boss):
     assert boss.hp > 400
 
 def test_true_boss_attack(boss):
-    # Clear and setup grid
-    boss.game.grid.cells = {(2, 1): "Dice"}
+    # Setup grid FIRST so _enter_state can find targets
+    boss.game.grid.cells[(2, 1)] = "Dice"
     
     # Reset cooldowns
     for s in boss.timers:
         boss.timers[s] = 0
     
-    # Force attack state
-    boss.state = STATE_ATTACK
-    boss.state_timer = 0 # Force execution on next update
+    # Use proper state entry logic which pre-selects targets
+    boss._enter_state(STATE_ATTACK)
     
-    # Initial state check
-    assert (2, 1) in boss.game.grid.cells
+    # Verify target was selected
+    assert (2, 1) in boss.attack_targets
     
-    # Trigger cast - state_timer is 0, so update should call _cast_attack immediately
+    # Force execution on next update by setting timer to 0
+    boss.state_timer = 0
+    
+    # Trigger cast
     boss.update(0.1)
     
     # Should be back to IDLE and dice removed
