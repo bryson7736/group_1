@@ -173,6 +173,8 @@ class Game:
         
         self.pause_menu = PauseMenu(self.font_big, self.font)
         self.help_popup = HelpPopup(self.font_big, self.font, self.font_small)
+        self.ads_popup = AdsPopup(self.font_big, self.font_small)
+        self.show_ads = False
 
         # Lobby upgrades UI message (shown on upgrades screen)
         self._upgrade_msg = ""
