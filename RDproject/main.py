@@ -533,15 +533,12 @@ class Game:
         self.speed_ctrl.handle(event)
         if self.btn_trash.handle(event):
             self.sound_mgr.play("click")
-            self.trash_active = not self.trash_active
             return
         if self.btn_help.handle(event):
             self.sound_mgr.play("click")
-            self.show_help = not self.show_help
             return
         if self.btn_pause.handle(event):
             self.sound_mgr.play("click")
-            self.toggle_pause()
             return
         
         if self.show_help:
