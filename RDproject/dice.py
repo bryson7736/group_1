@@ -42,6 +42,7 @@ class Die:
         self.image = None
         # Ensure period in seconds initialized at construction
         self.base_period_sec = self.base_fire_rate / FPS
+        self.synergy_buffs = {} # Stores active synergy flags
     
     @property
     def range(self):
