@@ -53,7 +53,7 @@ FREEZE_DURATION = 2.0
 TITLE = "Random Dice Tower Defense v2.3a (RDpro7a)"
 
 # Game speed presets (affects enemy move, fire rate, and projectile motion)
-GAME_SPEEDS = [0.5, 1.0, 2.0, 4.0, 8.0]
+GAME_SPEEDS = [0.5, 1.0, 2.0, 4.0, 8.0, 16.0]
 DEFAULT_SPEED_INDEX = 1
 
 # Asset files (optional, looked up in assets/)

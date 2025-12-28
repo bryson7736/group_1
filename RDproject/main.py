@@ -150,12 +150,19 @@ class Game:
                 continue
 
         # Speed Control (Top Right)
+        # 16x speed (index 5) is locked for non-pro users
+        locked_indices = []
+        if not self.ads_removed:
+            locked_indices = [5]
+            
         self.speed_ctrl = Segmented(
-            (20, 75, 200, 40),
-            ["0.5x", "1x", "2x", "4x", "8x"],
+            (20, 75, 240, 40), # Widened to fit 16x
+            ["0.5x", "1x", "2x", "4x", "8x", "16x"],
             self.font_small,
             self.speed_index,
-            self.on_speed_change
+            self.on_speed_change,
+            locked_indices=locked_indices,
+            on_locked_click=self.on_locked_speed_click
         )
 
         self.btn_trash = Button(
@@ -477,6 +484,12 @@ class Game:
         self.speed_index = idx
         self.speed_mult = GAME_SPEEDS[idx]
 
+    def on_locked_speed_click(self, idx: int) -> None:
+        """Handle click on locked speed option."""
+        self.sound_mgr.play("bark")
+        self.paused = True
+        self.show_remove_ads = True
+
     def toggle_trash(self) -> None:
         """Toggle trash mode for deleting dice."""
         self.trash_active = not self.trash_active
@@ -488,6 +501,16 @@ class Game:
     def toggle_remove_ads(self) -> None:
         """Toggle remove ads popup."""
         self.show_remove_ads = not self.show_remove_ads
+        if not self.show_remove_ads:
+            # If closing, check if we bought it (simulated)
+            # In a real scenario, this would be set by the purchase callback
+            pass
+        
+        # Update locked state of speed control
+        if self.ads_removed:
+            self.speed_ctrl.locked_indices = []
+        else:
+            self.speed_ctrl.locked_indices = [5]
 
     def toggle_pause(self) -> None:
         """Toggle pause state."""

@@ -47,20 +47,28 @@ class Button:
 
 class Segmented:
     """Segmented control (used for game speed)."""
-    def __init__(self, rect, labels, font, index, on_change):
+    def __init__(self, rect, labels, font, index, on_change, locked_indices=None, on_locked_click=None):
         self.rect = pygame.Rect(rect)
         self.labels = labels
         self.font = font
         self.index = index
         self.on_change = on_change
+        self.locked_indices = locked_indices or []
+        self.on_locked_click = on_locked_click
 
     def handle(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(event.pos):
                 w = self.rect.w // len(self.labels)
                 off = (event.pos[0] - self.rect.x) // w
-                self.index = int(max(0, min(len(self.labels) - 1, off)))
-                self.on_change(self.index)
+                idx = int(max(0, min(len(self.labels) - 1, off)))
+                
+                if idx in self.locked_indices:
+                    if self.on_locked_click:
+                        self.on_locked_click(idx)
+                else:
+                    self.index = idx
+                    self.on_change(self.index)
 
     def draw(self, surf):
         n = len(self.labels)
@@ -75,8 +83,18 @@ class Segmented:
             if active:
                 pygame.draw.rect(surf, ACCENT, r.inflate(-4, -4), border_radius=8)
             
-            t = self.font.render(lab, True, WHITE if active else SLATE)
-            surf.blit(t, (r.centerx - t.get_width() // 2, r.centery - t.get_height() // 2))
+            if i in self.locked_indices:
+                # Draw lock icon
+                lock_color = (200, 50, 50)
+                # Simple lock shape
+                lr = r.inflate(-10, -10)
+                # Body
+                pygame.draw.rect(surf, lock_color, (lr.centerx - 6, lr.centery - 4, 12, 10))
+                # Shackle
+                pygame.draw.arc(surf, lock_color, (lr.centerx - 6, lr.centery - 12, 12, 12), 0, 3.14159, 2)
+            else:
+                t = self.font.render(lab, True, WHITE if active else SLATE)
+                surf.blit(t, (r.centerx - t.get_width() // 2, r.centery - t.get_height() // 2))
 
 
 def draw_panel(surf, rect, title, title_font, body_fn=None):
