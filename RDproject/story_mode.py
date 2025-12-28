@@ -57,6 +57,13 @@ class StoryProgress:
         """Check if a chapter is completed."""
         return chapter_id in self.completed_chapters
     
+    def unlock_all_chapters(self):
+        """Unlock all chapters for testing/cheats."""
+        for i in range(1, 6):
+            cid = f"chapter{i}"
+            if cid not in self.completed_chapters:
+                self.completed_chapters.append(cid)
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for saving."""
         return {
@@ -201,6 +208,11 @@ class StoryManager:
     def is_chapter_completed(self, chapter_id: str) -> bool:
         """Check if a chapter is completed."""
         return self.progress.is_chapter_completed(chapter_id)
+    
+    def unlock_all_chapters(self):
+        """Unlock all chapters."""
+        self.progress.unlock_all_chapters()
+        self.save_progress()
     
     def is_chapter_unlocked(self, chapter_id: str) -> bool:
         """Check if a chapter is unlocked."""
