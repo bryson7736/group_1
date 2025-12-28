@@ -15,9 +15,14 @@ class MockGrid:
         if (c, r) in self.cells:
             del self.cells[(c, r)]
             
+class MockSoundMgr:
+    def play(self, name):
+        pass
+
 class MockGame:
     def __init__(self):
         self.grid = MockGrid()
+        self.sound_mgr = MockSoundMgr()
 
 @pytest.fixture
 def boss():
