@@ -219,13 +219,17 @@ class HelpPopup:
         self.y = (SCREEN_H - self.h) // 2
         self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
         
-        self.tips = [
-            "Hotkeys: 1~5 speed, N next wave",
-            "Right click cancels / exits Trash",
-            "Press ESC for lobby",
-            "Click empty slot to spawn die",
-            "Drag same dice to merge",
-        ]
+        # Close Button
+        self.close_btn = Button(
+            rect=(self.rect.centerx - 60, self.rect.bottom - 50, 120, 40),
+            text="Close",
+            font=self.font,
+            on_click=lambda: None, # Handled externally or we can return a signal
+            bg=(200, 50, 50),
+            fg=WHITE,
+            hover=(220, 70, 70),
+            radius=8
+        )
 
     def draw(self, screen):
         # Draw background
@@ -289,9 +293,13 @@ class HelpPopup:
             screen.blit(desc, (dot_x + 15, py + 5))
             py += 45
 
-        # Close instruction
-        close_txt = self.font_small.render("Click Help again to close", True, (200, 200, 200))
-        screen.blit(close_txt, (self.rect.centerx - close_txt.get_width() // 2, self.rect.bottom - 30))
+        # Close Button
+        self.close_btn.draw(screen)
+
+    def handle_input(self, event):
+        if self.close_btn.handle(event):
+            return "close"
+        return None
 
 def draw_wave_title(screen, font_huge, wave):
     """Draw the artistic WAVE X title at top center."""
