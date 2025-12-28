@@ -1025,6 +1025,17 @@ class Game:
         # Show persistent coins at top right
         coin_txt = self.font_big.render(f"Coins: {self.upgrades.coins}", True, (255, 220, 80))
         self.screen.blit(coin_txt, (SCREEN_W - coin_txt.get_width() - 40, 40))
+        
+        # PRO Icon if ads removed
+        if self.ads_removed:
+            # Draw a golden badge at top left
+            badge_rect = pygame.Rect(20, 20, 80, 40)
+            pygame.draw.rect(self.screen, (255, 215, 0), badge_rect, border_radius=8) # Gold
+            pygame.draw.rect(self.screen, WHITE, badge_rect, width=2, border_radius=8)
+            
+            pro_txt = self.font_big.render("PRO", True, DARK)
+            self.screen.blit(pro_txt, (badge_rect.centerx - pro_txt.get_width()//2, badge_rect.centery - pro_txt.get_height()//2))
+
         for b in self.buttons:
             b.draw(self.screen)
         self.quit_btn.draw(self.screen)
