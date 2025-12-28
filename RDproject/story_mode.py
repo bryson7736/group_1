@@ -127,14 +127,14 @@ class StoryManager:
             for s_num in range(1, 6):
                 stage_id = f"{ch_num}-{s_num}"
                 is_last = (s_num == 5)
-                # Final sub-stage of Chapter 5 has True Boss
-                true_boss = (ch_num == 5 and is_last)
+                # Final sub-stage of EVERY chapter has True Boss
+                true_boss = is_last
                 
                 stages.append(StoryStage(
                     stage_id=stage_id,
                     name=map_data["name"],
                     description=map_data["desc"],
-                    waves=10 if is_last else 5,
+                    waves=5,
                     has_big_enemy=True,
                     path_points=map_data["path"],
                     has_true_boss=true_boss,
