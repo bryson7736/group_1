@@ -128,7 +128,7 @@ class StoryManager:
         ]
 
         # Chapter Names (optional display names)
-        chapter_names = ["Hell Gate", "Burning Path", "Demon Fortress", "Chamber of Torment", "Hell Lord"]
+        chapter_names = ["Hell Gate", "Burning Path", "Demon Fortress", "Chamber of Torment", "Hell Lord's Throne"]
 
         for i in range(5):
             ch_num = i + 1
