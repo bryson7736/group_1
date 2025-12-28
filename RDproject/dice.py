@@ -110,27 +110,33 @@ class Die:
         else:
             pygame.draw.rect(surf, (255,255,255), rect, width=2, border_radius=14)
         
-        # Synergy Dot Indicator (Top Right)
-        dot_color = None
-        if self.synergy_buffs.get("inferno"):
-            dot_color = (255, 69, 0) # Orange Red
-        elif self.synergy_buffs.get("toxic_spikes"):
-            dot_color = (138, 43, 226) # Blue Violet
-        elif self.synergy_buffs.get("frost_volley"):
-            dot_color = (0, 255, 255) # Cyan
-        elif self.synergy_buffs.get("sniper_nest"):
-            dot_color = (50, 205, 50) # Lime Green
-        elif self.synergy_buffs.get("magma"):
-            dot_color = (220, 20, 60) # Crimson
-        elif self.synergy_buffs.get("plague"):
-            dot_color = (0, 128, 0) # Green
+        # Synergy Dot Indicators
+        synergy_colors = {
+            "inferno": (255, 69, 0),      # Orange Red
+            "toxic_spikes": (138, 43, 226), # Blue Violet
+            "frost_volley": (0, 255, 255),  # Cyan
+            "sniper_nest": (50, 205, 50),   # Lime Green
+            "magma": (220, 20, 60),         # Crimson
+            "plague": (0, 128, 0)           # Green
+        }
+        
+        active_colors = []
+        for syn, color in synergy_colors.items():
+            if self.synergy_buffs.get(syn):
+                active_colors.append(color)
+                
+        if active_colors:
+            # Draw dots in top right area, moving inwards ("middler")
+            # Start position: shifted in from the corner
+            start_x = rect.right - 25
+            start_y = rect.top + 25
+            spacing = 18
             
-        if dot_color:
-            # Draw dot in top right corner
-            # rect.topright is (x, y)
-            dot_pos = (rect.right - 8, rect.top + 8)
-            pygame.draw.circle(surf, dot_color, dot_pos, 6)
-            pygame.draw.circle(surf, WHITE, dot_pos, 7, width=1) # White outline for visibility
+            for i, color in enumerate(active_colors):
+                # Arrange horizontally to the left
+                dot_pos = (start_x - (i * spacing), start_y)
+                pygame.draw.circle(surf, color, dot_pos, 7)
+                pygame.draw.circle(surf, WHITE, dot_pos, 8, width=2) # White outline for visibility
         
         
         # Synergy Indicators - Removed for cleaner visual
