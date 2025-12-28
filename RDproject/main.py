@@ -219,6 +219,15 @@ class Game:
             self.img_add_die = pygame.transform.smoothscale(self.img_add_die, (40, 40))
         except:
             self.img_add_die = None
+        
+        # Load boss icons for chapters
+        self.boss_icons = {}
+        try:
+            boss_ch5_path = os.path.join(ASSETS_DIR, "boss_chapter5.png")
+            if os.path.exists(boss_ch5_path):
+                self.boss_icons["chapter5"] = pygame.image.load(boss_ch5_path).convert_alpha()
+        except:
+            pass
 
         self._build_lobby()
 
@@ -960,7 +969,11 @@ class Game:
         if self.is_true_boss_wave and self.to_spawn == 1:
             boss_hp = calculate_boss_hp(self.wave, self.level.difficulty)
             boss_speed = calculate_boss_speed(speed)
-            e = TrueBoss(path, boss_hp, boss_speed, game=self)
+            boss_icon = None
+            # Check if this is Chapter 5 and load its icon
+            if self.current_story_chapter and self.current_story_chapter.chapter_id == "chapter5":
+                boss_icon = self.boss_icons.get("chapter5")
+            e = TrueBoss(path, boss_hp, boss_speed, game=self, icon_surface=boss_icon)
         elif self.is_big_enemy_wave and self.to_spawn == 1:
             hp *= BIG_ENEMY_HP_MULT
             e = BigEnemy(path, hp, speed * 0.85)

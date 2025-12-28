@@ -78,10 +78,11 @@ class TrueBoss(Enemy):
     - HEAL: Stops to regenerate HP
     """
     
-    def __init__(self, path_points, hp, speed, game=None):
+    def __init__(self, path_points, hp, speed, game=None, icon_surface=None):
         super().__init__(path_points, hp, speed, size=ENEMY_SIZE * BOSS_SIZE_MULT)
         self.game = game
         self.money_drop = BOSS_MONEY_DROP
+        self.icon = icon_surface  # Boss icon for display
         
         # FSM State
         self.state = STATE_IDLE
@@ -253,6 +254,13 @@ class TrueBoss(Enemy):
         pygame.draw.rect(surf, color, r, border_radius=10)
         if border_color:
             pygame.draw.rect(surf, border_color, r, width=border_width, border_radius=10)
+        
+        # Draw boss icon if available
+        if self.icon:
+            icon_size = int(self.size * 0.8)
+            icon_scaled = pygame.transform.smoothscale(self.icon, (icon_size, icon_size))
+            icon_rect = icon_scaled.get_rect(center=r.center)
+            surf.blit(icon_scaled, icon_rect)
         
         # Debuff indicators
         if self.poison_timer > 0:
