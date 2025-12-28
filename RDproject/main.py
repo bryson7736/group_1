@@ -548,6 +548,18 @@ class Game:
 
     def upgrades_handle(self, event: pygame.event.Event) -> None:
         """Handle events during upgrades screen."""
+        if self.show_coin_purchase:
+            action = self.coin_purchase_popup.handle_input(event)
+            if action == "close":
+                self.sound_mgr.play("click")
+                self.show_coin_purchase = False
+            elif isinstance(action, int):
+                # Purchased coins
+                self.upgrades.add_coin(action)
+                self.sound_mgr.play("spawn") # Success sound
+                self.show_coin_purchase = False
+            return
+
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.back_to_lobby()
         if self.upg_back.handle(event):
@@ -574,6 +586,7 @@ class Game:
                     else:
                         self._upgrade_msg = "Not enough coins!"
                         self.sound_mgr.play("error")
+                        self.show_coin_purchase = True
                     self._upgrade_msg_t = 1.6
                     return
 
@@ -586,6 +599,7 @@ class Game:
                     else:
                         self._upgrade_msg = "Not enough coins!"
                         self.sound_mgr.play("error")
+                        self.show_coin_purchase = True
                     self._upgrade_msg_t = 1.6
                     return
 
@@ -598,6 +612,9 @@ class Game:
                     else:
                         self._upgrade_msg = "Not enough coins!"
                         self.sound_mgr.play("error")
+                        self.show_coin_purchase = True
+                    self._upgrade_msg_t = 1.6
+                    return
                     self._upgrade_msg_t = 1.6
                     return
     
