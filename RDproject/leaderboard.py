@@ -27,8 +27,24 @@ class LeaderboardManager:
     def save_score(self, name: str, waves: int) -> None:
         """
         Add a new score, sort the leaderboard, keep top 10, and save to file.
+        If the name already exists, keep only the highest score.
         """
-        self.scores.append({"name": name, "waves": waves})
+        # Check if name exists
+        existing_idx = -1
+        for i, s in enumerate(self.scores):
+            if s["name"] == name:
+                existing_idx = i
+                break
+        
+        if existing_idx != -1:
+            # If new score is higher, update it
+            if waves > self.scores[existing_idx]["waves"]:
+                self.scores[existing_idx]["waves"] = waves
+            # If lower or equal, do nothing (keep existing high score)
+        else:
+            # New name
+            self.scores.append({"name": name, "waves": waves})
+
         # Sort descending by waves
         self.scores.sort(key=lambda x: x["waves"], reverse=True)
         # Keep top 10
