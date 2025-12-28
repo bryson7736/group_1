@@ -104,34 +104,33 @@ class Die:
         # 4. Selection/Border logic
         if selected:
             pygame.draw.rect(surf, BLUE, rect, width=5, border_radius=14)
+        elif self.synergy_buffs.get("chain"):
+            # Gold border for chain synergy
+            pygame.draw.rect(surf, (255, 215, 0), rect, width=3, border_radius=14)
         else:
-            # Check for synergies to color the border
-            border_col = (255, 255, 255)
-            width = 2
+            pygame.draw.rect(surf, (255,255,255), rect, width=2, border_radius=14)
+        
+        # Synergy Dot Indicator (Top Right)
+        dot_color = None
+        if self.synergy_buffs.get("inferno"):
+            dot_color = (255, 69, 0) # Orange Red
+        elif self.synergy_buffs.get("toxic_spikes"):
+            dot_color = (138, 43, 226) # Blue Violet
+        elif self.synergy_buffs.get("frost_volley"):
+            dot_color = (0, 255, 255) # Cyan
+        elif self.synergy_buffs.get("sniper_nest"):
+            dot_color = (50, 205, 50) # Lime Green
+        elif self.synergy_buffs.get("magma"):
+            dot_color = (220, 20, 60) # Crimson
+        elif self.synergy_buffs.get("plague"):
+            dot_color = (0, 128, 0) # Green
             
-            if self.synergy_buffs.get("chain"):
-                border_col = (255, 215, 0) # Gold
-                width = 3
-            elif self.synergy_buffs.get("inferno"):
-                border_col = (255, 69, 0)
-                width = 3
-            elif self.synergy_buffs.get("toxic_spikes"):
-                border_col = (138, 43, 226)
-                width = 3
-            elif self.synergy_buffs.get("frost_volley"):
-                border_col = (0, 255, 255)
-                width = 3
-            elif self.synergy_buffs.get("sniper_nest"):
-                border_col = (50, 205, 50)
-                width = 3
-            elif self.synergy_buffs.get("magma"):
-                border_col = (220, 20, 60)
-                width = 3
-            elif self.synergy_buffs.get("plague"):
-                border_col = (0, 128, 0)
-                width = 3
-                
-            pygame.draw.rect(surf, border_col, rect, width=width, border_radius=14)
+        if dot_color:
+            # Draw dot in top right corner
+            # rect.topright is (x, y)
+            dot_pos = (rect.right - 8, rect.top + 8)
+            pygame.draw.circle(surf, dot_color, dot_pos, 6)
+            pygame.draw.circle(surf, WHITE, dot_pos, 7, width=1) # White outline for visibility
         
         
         # Synergy Indicators - Removed for cleaner visual
