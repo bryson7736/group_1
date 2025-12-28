@@ -440,7 +440,10 @@ class RemoveAdsPopup:
                     return "pay"
 
         if event.type == pygame.KEYDOWN and self.active:
-            if event.key == pygame.K_BACKSPACE:
+            if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
+                if len(self.card_number) == 16:
+                    return "pay"
+            elif event.key == pygame.K_BACKSPACE:
                 self.card_number = self.card_number[:-1]
             elif event.unicode.isdigit() and len(self.card_number) < 16:
                 self.card_number += event.unicode
