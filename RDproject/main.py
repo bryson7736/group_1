@@ -901,7 +901,7 @@ class Game:
                 pass
 
             if e.dead:
-                self.money += int(e.money_drop + self.wave)
+                self.money += int(e.money_drop)
                 if getattr(e, "carries_coin", False):
                     self.upgrades.add_coin(1)
                 self.enemies.remove(e)
