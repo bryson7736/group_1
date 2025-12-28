@@ -105,15 +105,16 @@ class Die:
         else:
             pygame.draw.rect(surf, (255,255,255), rect, width=2, border_radius=14)
         
-        # Synergy Indicators
-        if self.synergy_buffs.get("fire_wind"):
-            # Red/Green ring for Fire+Wind
-            pygame.draw.circle(surf, (255, 100, 0), rect.topleft, 8)
-            pygame.draw.circle(surf, (100, 255, 100), rect.topleft, 5)
-        if self.synergy_buffs.get("iron_ice"):
-            # Blue/Gray ring for Iron+Ice
-            pygame.draw.circle(surf, (100, 100, 255), rect.topright, 8)
-            pygame.draw.circle(surf, (200, 200, 200), rect.topright, 5)
+        
+        # Synergy Indicators - Removed for cleaner visual
+        # if self.synergy_buffs.get("fire_wind"):
+        #     # Red/Green ring for Fire+Wind
+        #     pygame.draw.circle(surf, (255, 100, 0), rect.topleft, 8)
+        #     pygame.draw.circle(surf, (100, 255, 100), rect.topleft, 5)
+        # if self.synergy_buffs.get("iron_ice"):
+        #     # Blue/Gray ring for Iron+Ice
+        #     pygame.draw.circle(surf, (100, 100, 255), rect.topright, 8)
+        #     pygame.draw.circle(surf, (200, 200, 200), rect.topright, 5)
 
         glow = rect.copy()
         glow.h = int(rect.h * 0.35)
