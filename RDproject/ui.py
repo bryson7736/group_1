@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pygame
-from colors import WHITE, DARK, DARKER, GRAY, ACCENT, SLATE
+from colors import WHITE, DARK, DARKER, GRAY, ACCENT, SLATE, DICE_COLORS
 from settings import SCREEN_W, SCREEN_H
 
 class Button:
