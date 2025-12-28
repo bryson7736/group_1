@@ -200,6 +200,7 @@ class Game:
         
         self.coin_purchase_popup = CoinPurchasePopup(self.font_big, self.font_small)
         self.show_coin_purchase = False
+        self.pending_purchase_coins = 0
 
         # Lobby upgrades UI message (shown on upgrades screen)
         self._upgrade_msg = ""
