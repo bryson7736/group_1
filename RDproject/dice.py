@@ -128,11 +128,11 @@ class Die:
                 active_colors.append(color)
                 
         if active_colors:
-            # Draw dots in top right area, moving inwards ("middler")
-            # Start position: shifted in from the corner
-            start_x = rect.right - 25
-            start_y = rect.top + 25
-            spacing = 18
+            # Draw dots in top right area
+            # Start position: shifted in closer to the corner
+            start_x = rect.right - 14
+            start_y = rect.top + 14
+            spacing = 16
             
             for i, color in enumerate(active_colors):
                 # Arrange horizontally to the left
