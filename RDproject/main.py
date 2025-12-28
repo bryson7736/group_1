@@ -538,6 +538,13 @@ class Game:
         if self.btn_pause.handle(event):
             self.sound_mgr.play("click")
         
+        if self.show_help:
+            action = self.help_popup.handle_input(event)
+            if action == "close":
+                self.sound_mgr.play("click")
+                self.show_help = False
+            return
+
         if self.show_ads:
             action = self.ads_popup.handle_input(event)
             if action == "close":
