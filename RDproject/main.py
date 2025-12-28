@@ -7,7 +7,7 @@ import math
 from typing import List, Tuple, Optional, Dict, Any
 
 from settings import *
-from ui import Button, draw_panel, Segmented, draw_pips, PauseMenu, HelpPopup, draw_wave_title, draw_boss_state
+from ui import Button, draw_panel, Segmented, draw_pips, PauseMenu, HelpPopup, draw_wave_title, draw_boss_state, AdsPopup, RemoveAdsPopup, CoinPurchasePopup
 from grid import Grid
 from level_manager import LevelManager
 from loadout import Loadout
@@ -173,6 +173,16 @@ class Game:
         
         self.pause_menu = PauseMenu(self.font_big, self.font)
         self.help_popup = HelpPopup(self.font_big, self.font, self.font_small)
+        self.ads_popup = AdsPopup(self.font_big, self.font_small)
+        self.show_ads = False
+        
+        self.remove_ads_popup = RemoveAdsPopup(self.font_big, self.font_small)
+        self.show_remove_ads = False
+        self.ads_removed = False
+        self.ad_timer = 0.0
+        
+        self.coin_purchase_popup = CoinPurchasePopup(self.font_big, self.font_small)
+        self.show_coin_purchase = False
 
         # Lobby upgrades UI message (shown on upgrades screen)
         self._upgrade_msg = ""
@@ -234,10 +244,15 @@ class Game:
         row_y = y_offset + 2 * (btn_h + gap) - 10  # Reduced spacing to move up
         self.buttons.pop() # Remove Help from previous append
         
-        # Leaderboard button (New)
+        # Leaderboard and Ads buttons
+        lb_w = int(btn_w * 0.65)
+        ads_w = btn_w - lb_w - 10
+        
         self.buttons.append(
-            Button((center_x, row_y, btn_w, btn_h), "Leaderboard", self.font_big, self.goto_leaderboard)
+            Button((center_x, row_y, lb_w, btn_h), "Leaderboard", self.font_big, self.goto_leaderboard)
         )
+        self.btn_remove_ads = Button((center_x + lb_w + 10, row_y, ads_w, btn_h), "No Ads", self.font_big, self.toggle_remove_ads)
+        self.buttons.append(self.btn_remove_ads)
         
         row_y += (btn_h + gap)
 
@@ -367,9 +382,17 @@ class Game:
         """Toggle help popup."""
         self.show_help = not self.show_help
 
+    def toggle_remove_ads(self) -> None:
+        """Toggle remove ads popup."""
+        self.show_remove_ads = not self.show_remove_ads
+
     def toggle_pause(self) -> None:
         """Toggle pause state."""
         self.paused = not self.paused
+
+    def toggle_ads(self) -> None:
+        """Toggle ads popup."""
+        self.show_ads = not self.show_ads
     
     def purchase_ingame_upgrade(self, upgrade_type: str) -> None:
         """Purchase an in-game upgrade with money."""
@@ -425,6 +448,14 @@ class Game:
         if self.btn_pause.handle(event):
             self.sound_mgr.play("click")
         
+        if self.show_ads:
+            action = self.ads_popup.handle_input(event)
+            if action == "close":
+                self.sound_mgr.play("click")
+                self.show_ads = False
+                self.toggle_pause()
+            return
+
         if self.paused:
             action = self.pause_menu.handle_input(event)
             if action:
@@ -517,6 +548,18 @@ class Game:
 
     def upgrades_handle(self, event: pygame.event.Event) -> None:
         """Handle events during upgrades screen."""
+        if self.show_coin_purchase:
+            action = self.coin_purchase_popup.handle_input(event)
+            if action == "close":
+                self.sound_mgr.play("click")
+                self.show_coin_purchase = False
+            elif isinstance(action, int):
+                # Purchased coins
+                self.upgrades.add_coin(action)
+                self.sound_mgr.play("spawn") # Success sound
+                self.show_coin_purchase = False
+            return
+
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             self.back_to_lobby()
         if self.upg_back.handle(event):
@@ -529,7 +572,7 @@ class Game:
             btn_w, btn_h = 160, 50
             gap_x, gap_y = 20, 15
             row_h = btn_h + gap_y
-            cost = 50
+            cost = 30
             
             for row, t in enumerate(DIE_TYPES):
                 y_pos = base_y + row * row_h
@@ -543,6 +586,7 @@ class Game:
                     else:
                         self._upgrade_msg = "Not enough coins!"
                         self.sound_mgr.play("error")
+                        self.show_coin_purchase = True
                     self._upgrade_msg_t = 1.6
                     return
 
@@ -555,6 +599,7 @@ class Game:
                     else:
                         self._upgrade_msg = "Not enough coins!"
                         self.sound_mgr.play("error")
+                        self.show_coin_purchase = True
                     self._upgrade_msg_t = 1.6
                     return
 
@@ -567,6 +612,9 @@ class Game:
                     else:
                         self._upgrade_msg = "Not enough coins!"
                         self.sound_mgr.play("error")
+                        self.show_coin_purchase = True
+                    self._upgrade_msg_t = 1.6
+                    return
                     self._upgrade_msg_t = 1.6
                     return
     
@@ -599,6 +647,14 @@ class Game:
     
     def story_handle(self, event: pygame.event.Event) -> None:
         """Handle events during story mode gameplay."""
+        if self.show_ads:
+            action = self.ads_popup.handle_input(event)
+            if action == "close":
+                self.sound_mgr.play("click")
+                self.show_ads = False
+                self.toggle_pause()
+            return
+
         # Similar to play mode but with story-specific logic
         if event.type == pygame.KEYDOWN:
             if event.unicode in ('1', '2', '3', '4', '5'):
@@ -869,6 +925,14 @@ class Game:
         if self.state not in (STATE_PLAY, STATE_STORY):
             return
 
+        # Periodic Ads Logic
+        if not self.ads_removed:
+            self.ad_timer += dt
+            if self.ad_timer >= 20.0:
+                self.ad_timer = 0.0
+                self.toggle_pause()
+                self.show_ads = True
+
         self.game_time += dt
 
         if self.to_spawn > 0:
@@ -981,9 +1045,25 @@ class Game:
         # Show persistent coins at top right
         coin_txt = self.font_big.render(f"Coins: {self.upgrades.coins}", True, (255, 220, 80))
         self.screen.blit(coin_txt, (SCREEN_W - coin_txt.get_width() - 40, 40))
+        
+        # PRO Icon if ads removed
+        if self.ads_removed:
+            # Draw a golden badge at top left
+            badge_rect = pygame.Rect(20, 20, 80, 40)
+            pygame.draw.rect(self.screen, (255, 215, 0), badge_rect, border_radius=8) # Gold
+            pygame.draw.rect(self.screen, WHITE, badge_rect, width=2, border_radius=8)
+            
+            pro_txt = self.font_big.render("PRO", True, DARK)
+            self.screen.blit(pro_txt, (badge_rect.centerx - pro_txt.get_width()//2, badge_rect.centery - pro_txt.get_height()//2))
+
         for b in self.buttons:
             b.draw(self.screen)
         self.quit_btn.draw(self.screen)
+        
+        if self.show_ads:
+            self.ads_popup.draw(self.screen)
+        if self.show_remove_ads:
+            self.remove_ads_popup.draw(self.screen)
     def earn_coins(self, amount):
         if not hasattr(self, '_coins_awarded'):
             self.upgrades.add_coin(amount)
@@ -1007,7 +1087,7 @@ class Game:
         btn_w, btn_h = 160, 50
         gap_x, gap_y = 20, 15
         row_h = btn_h + gap_y
-        cost = 50
+        cost = 30
         
         # Labels for columns
         col_labels = ["Damage +10%", "Speed +5%", "Crit +5%"]
@@ -1067,6 +1147,9 @@ class Game:
             warn = self.font_big.render(self._upgrade_msg, True, col_msg)
             self.screen.blit(warn, (base_x, base_y - 60))
         self.upg_back.draw(self.screen)
+        
+        if self.show_coin_purchase:
+            self.coin_purchase_popup.draw(self.screen)
 
     def _draw_upgrade_btn(self, rect, text, cost):
         can_buy = self.upgrades.coins >= cost
@@ -1159,16 +1242,18 @@ class Game:
 
         # Draw New UI
         self.draw_new_ui()
-
+        
         self.speed_ctrl.draw(self.screen)
         draw_wave_title(self.screen, self.font_huge, self.wave)
         self.btn_trash.draw(self.screen)
         self.btn_help.draw(self.screen)
         self.btn_pause.draw(self.screen)
         self.draw_help_popup()
-        self.draw_pause_popup()
-        self.btn_help.draw(self.screen)
-        self.draw_help_popup()
+        
+        if self.show_ads:
+            self.ads_popup.draw(self.screen)
+        else:
+            self.draw_pause_popup()
 
         if self.to_spawn <= 0 and len(self.enemies) == 0:
             time_left = max(0.0, self.wave_delay - self.wave_timer)
@@ -1431,7 +1516,11 @@ class Game:
         self.btn_help.draw(self.screen)
         self.btn_pause.draw(self.screen)
         self.draw_help_popup()
-        self.draw_pause_popup()
+        
+        if self.show_ads:
+            self.ads_popup.draw(self.screen)
+        else:
+            self.draw_pause_popup()
 
         if self.to_spawn <= 0 and len(self.enemies) == 0:
             # 邏輯說明：當所有敵人生成完畢且場面上已無敵人時，計算並顯示下一波倒數或勝利訊息。
@@ -1487,11 +1576,26 @@ class Game:
                     # don't auto-quit on game over; here only explicit window close
                     self.quit()
                 if self.state == STATE_LOBBY:
-                    for b in self.buttons:
-                        if b.handle(event):
+                    if self.show_remove_ads:
+                        action = self.remove_ads_popup.handle_input(event)
+                        if action == "close":
                             self.sound_mgr.play("click")
-                    if self.quit_btn.handle(event):
-                        self.sound_mgr.play("click")
+                            self.toggle_remove_ads()
+                        elif action == "pay":
+                            self.sound_mgr.play("spawn") # Success sound
+                            self.ads_removed = True
+                            self.toggle_remove_ads()
+                    elif self.show_ads:
+                        action = self.ads_popup.handle_input(event)
+                        if action == "close":
+                            self.sound_mgr.play("click")
+                            self.toggle_ads()
+                    else:
+                        for b in self.buttons:
+                            if b.handle(event):
+                                self.sound_mgr.play("click")
+                        if self.quit_btn.handle(event):
+                            self.sound_mgr.play("click")
                 elif self.state == STATE_PLAY:
                     self.handle_play(event)
                 elif self.state == STATE_GAMEOVER:

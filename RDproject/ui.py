@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pygame
-from colors import WHITE, DARK, DARKER, GRAY, ACCENT, SLATE
+from colors import WHITE, DARK, DARKER, GRAY, ACCENT, SLATE, DICE_COLORS
 from settings import SCREEN_W, SCREEN_H
 
 class Button:
@@ -210,7 +210,7 @@ class HelpPopup:
         self.font_small = font_small
         
         # Popup dimensions
-        self.w, self.h = 400, 300
+        self.w, self.h = 600, 500
         self.x = (SCREEN_W - self.w) // 2
         self.y = (SCREEN_H - self.h) // 2
         self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
@@ -238,6 +238,55 @@ class HelpPopup:
             screen.blit(t, (self.rect.x + 30, py))
             py += 30
             
+        # Synergies Section
+        py += 20
+        syn_title = self.font_big.render("Synergies (Place Adjacent)", True, (255, 215, 0))
+        screen.blit(syn_title, (self.rect.centerx - syn_title.get_width() // 2, py))
+        py += 40
+        
+        # Helper to draw die icon
+        def draw_icon(x, y, color, label):
+            r = pygame.Rect(x, y, 30, 30)
+            pygame.draw.rect(screen, color, r, border_radius=5)
+            pygame.draw.rect(screen, WHITE, r, width=2, border_radius=5)
+            # Initial letter
+            l = self.font_small.render(label[0].upper(), True, WHITE)
+            screen.blit(l, (r.centerx - l.get_width()//2, r.centery - l.get_height()//2))
+            return r.right
+            
+        # 1. Fire + Wind
+        start_x = self.rect.x + 50
+        lx = start_x
+        lx = draw_icon(lx, py, DICE_COLORS.get("fire", (200, 50, 50)), "Fire") + 10
+        plus = self.font.render("+", True, WHITE)
+        screen.blit(plus, (lx, py))
+        lx += 20
+        lx = draw_icon(lx, py, DICE_COLORS.get("wind", (50, 200, 50)), "Wind") + 20
+        
+        desc = self.font.render("= Fire gets +50% Splash Radius", True, (255, 200, 200))
+        screen.blit(desc, (lx, py + 2))
+        
+        # 2. Iron + Ice
+        py += 50
+        lx = start_x
+        lx = draw_icon(lx, py, DICE_COLORS.get("iron", (100, 100, 100)), "Iron") + 10
+        screen.blit(plus, (lx, py))
+        lx += 20
+        lx = draw_icon(lx, py, DICE_COLORS.get("freeze", (100, 100, 255)), "Ice") + 20
+        
+        desc = self.font.render("= Iron deals +20% Damage", True, (200, 200, 255))
+        screen.blit(desc, (lx, py + 2))
+        
+        # 3. Chain
+        py += 50
+        lx = start_x
+        lx = draw_icon(lx, py, (150, 150, 150), "?") + 5
+        lx = draw_icon(lx, py, (150, 150, 150), "?") + 5
+        lx = draw_icon(lx, py, (150, 150, 150), "?") + 20
+        
+        desc = self.font.render("= Chain 3+ Same Dice: +20% Speed", True, (255, 255, 150))
+        screen.blit(desc, (lx, py + 2))
+
         # Close instruction
         close_txt = self.font_small.render("Click Help again to close", True, (200, 200, 200))
         screen.blit(close_txt, (self.rect.centerx - close_txt.get_width() // 2, self.rect.bottom - 30))
@@ -295,3 +344,241 @@ def draw_boss_state(screen, font_huge, enemies):
         y = SCREEN_H - txt.get_height() - 30
         
         screen.blit(txt, (x, y))
+
+class AdsPopup:
+    def __init__(self, font_big, font_small):
+        self.font_big = font_big
+        self.font_small = font_small
+        
+        # Popup dimensions
+        self.w, self.h = 500, 400
+        self.x = (SCREEN_W - self.w) // 2
+        self.y = (SCREEN_H - self.h) // 2
+        self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
+        
+        # Close button (top right)
+        self.close_btn_size = 30
+        self.close_rect = pygame.Rect(self.rect.right - self.close_btn_size - 10, 
+                                      self.rect.top + 10, 
+                                      self.close_btn_size, 
+                                      self.close_btn_size)
+
+    def draw(self, screen):
+        # Draw background (White interface as requested)
+        pygame.draw.rect(screen, WHITE, self.rect, border_radius=12)
+        pygame.draw.rect(screen, (200, 200, 200), self.rect, width=2, border_radius=12)
+        
+        # Placeholder text
+        title = self.font_big.render("Advertisement", True, DARK)
+        screen.blit(title, (self.rect.centerx - title.get_width() // 2, self.rect.y + 50))
+        
+        msg = self.font_small.render("(Future Ads Content)", True, GRAY)
+        screen.blit(msg, (self.rect.centerx - msg.get_width() // 2, self.rect.centery))
+
+        # Close button (X)
+        pygame.draw.rect(screen, (200, 50, 50), self.close_rect, border_radius=4)
+        # Draw X
+        start_pos = (self.close_rect.left + 8, self.close_rect.top + 8)
+        end_pos = (self.close_rect.right - 8, self.close_rect.bottom - 8)
+        pygame.draw.line(screen, WHITE, start_pos, end_pos, 3)
+        start_pos2 = (self.close_rect.right - 8, self.close_rect.top + 8)
+        end_pos2 = (self.close_rect.left + 8, self.close_rect.bottom - 8)
+        pygame.draw.line(screen, WHITE, start_pos2, end_pos2, 3)
+
+    def handle_input(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.close_rect.collidepoint(event.pos):
+                return "close"
+        return None
+
+class RemoveAdsPopup:
+    def __init__(self, font_big, font_small):
+        self.font_big = font_big
+        self.font_small = font_small
+        
+        # Popup dimensions
+        self.w, self.h = 400, 350
+        self.x = (SCREEN_W - self.w) // 2
+        self.y = (SCREEN_H - self.h) // 2
+        self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
+        
+        # Input Field
+        self.card_number = ""
+        self.input_rect = pygame.Rect(0, 0, 300, 40)
+        self.input_rect.center = (self.rect.centerx, self.rect.centery + 20)
+        self.active = True  # Auto-focus
+        
+        # Pay Button
+        self.btn_w, self.btn_h = 160, 50
+        self.pay_rect = pygame.Rect(0, 0, self.btn_w, self.btn_h)
+        self.pay_rect.center = (self.rect.centerx, self.rect.bottom - 60)
+        
+        # Close button (top right)
+        self.close_btn_size = 30
+        self.close_rect = pygame.Rect(self.rect.right - self.close_btn_size - 10, 
+                                      self.rect.top + 10, 
+                                      self.close_btn_size, 
+                                      self.close_btn_size)
+
+    def draw(self, screen):
+        # Draw background
+        pygame.draw.rect(screen, (40, 40, 50), self.rect, border_radius=12)
+        pygame.draw.rect(screen, WHITE, self.rect, width=2, border_radius=12)
+        
+        # Title
+        title = self.font_big.render("Remove Ads", True, WHITE)
+        screen.blit(title, (self.rect.centerx - title.get_width() // 2, self.rect.y + 30))
+        
+        # Message
+        msg1 = self.font_small.render("Enter 16-digit Credit Card Number:", True, WHITE)
+        screen.blit(msg1, (self.rect.centerx - msg1.get_width() // 2, self.rect.y + 100))
+
+        # Input Box
+        box_color = WHITE if self.active else (200, 200, 200)
+        pygame.draw.rect(screen, box_color, self.input_rect, border_radius=5)
+        
+        # Render text with formatting (groups of 4)
+        display_text = " ".join([self.card_number[i:i+4] for i in range(0, len(self.card_number), 4)])
+        
+        if not self.card_number and not self.active:
+            txt_surf = self.font_big.render("0000 0000 0000 0000", True, (180, 180, 180))
+        else:
+            txt_surf = self.font_big.render(display_text, True, DARK)
+            
+        screen.blit(txt_surf, (self.input_rect.x + 10, self.input_rect.y + (self.input_rect.height - txt_surf.get_height()) // 2))
+        
+        # Cursor
+        if self.active and (pygame.time.get_ticks() // 500) % 2 == 0:
+            cursor_x = self.input_rect.x + 10 + txt_surf.get_width()
+            # Adjust cursor if text is empty
+            if not self.card_number:
+                cursor_x = self.input_rect.x + 10
+            cursor_y = self.input_rect.y + 10
+            pygame.draw.line(screen, DARK, (cursor_x, cursor_y), (cursor_x, cursor_y + 20), 2)
+        
+        # Pay Button
+        can_pay = len(self.card_number) == 16
+        btn_color = (100, 200, 100) if can_pay else (100, 100, 100)
+        
+        pygame.draw.rect(screen, btn_color, self.pay_rect, border_radius=8)
+        pygame.draw.rect(screen, WHITE, self.pay_rect, width=2, border_radius=8)
+        t_pay = self.font_big.render("Confirm", True, WHITE)
+        screen.blit(t_pay, (self.pay_rect.centerx - t_pay.get_width()//2, self.pay_rect.centery - t_pay.get_height()//2))
+
+        # Close button (X)
+        pygame.draw.rect(screen, (200, 50, 50), self.close_rect, border_radius=4)
+        # Draw X
+        start_pos = (self.close_rect.left + 8, self.close_rect.top + 8)
+        end_pos = (self.close_rect.right - 8, self.close_rect.bottom - 8)
+        pygame.draw.line(screen, WHITE, start_pos, end_pos, 3)
+        start_pos2 = (self.close_rect.right - 8, self.close_rect.top + 8)
+        end_pos2 = (self.close_rect.left + 8, self.close_rect.bottom - 8)
+        pygame.draw.line(screen, WHITE, start_pos2, end_pos2, 3)
+
+    def handle_input(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.input_rect.collidepoint(event.pos):
+                self.active = True
+            else:
+                self.active = False
+
+            if self.close_rect.collidepoint(event.pos):
+                return "close"
+            if self.pay_rect.collidepoint(event.pos):
+                if len(self.card_number) == 16:
+                    return "pay"
+
+        if event.type == pygame.KEYDOWN and self.active:
+            if event.key == pygame.K_RETURN or event.key == pygame.K_KP_ENTER:
+                if len(self.card_number) == 16:
+                    return "pay"
+            elif event.key == pygame.K_BACKSPACE:
+                self.card_number = self.card_number[:-1]
+            elif event.unicode.isdigit() and len(self.card_number) < 16:
+                self.card_number += event.unicode
+        return None
+
+class CoinPurchasePopup:
+    def __init__(self, font_big, font_small):
+        self.font_big = font_big
+        self.font_small = font_small
+        
+        self.w, self.h = 600, 400
+        self.x = (SCREEN_W - self.w) // 2
+        self.y = (SCREEN_H - self.h) // 2
+        self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
+        
+        self.close_btn_size = 30
+        self.close_rect = pygame.Rect(self.rect.right - self.close_btn_size - 10, 
+                                      self.rect.top + 10, 
+                                      self.close_btn_size, 
+                                      self.close_btn_size)
+        
+        # Packages: (Coins, Price, Rect)
+        self.packages = [
+            {"coins": 100, "price": "$0.99", "rect": None, "color": (100, 200, 100)},
+            {"coins": 500, "price": "$4.99", "rect": None, "color": (50, 150, 255)},
+            {"coins": 1000, "price": "$9.99", "rect": None, "color": (200, 100, 255)}
+        ]
+        
+        # Layout packages
+        btn_w, btn_h = 160, 200
+        gap = 20
+        start_x = self.rect.x + (self.w - (3 * btn_w + 2 * gap)) // 2
+        start_y = self.rect.y + 100
+        
+        for i, pkg in enumerate(self.packages):
+            pkg["rect"] = pygame.Rect(start_x + i * (btn_w + gap), start_y, btn_w, btn_h)
+
+    def draw(self, screen):
+        # Background
+        pygame.draw.rect(screen, DARK, self.rect, border_radius=15)
+        pygame.draw.rect(screen, (255, 215, 0), self.rect, width=3, border_radius=15) # Gold border
+        
+        # Title
+        title = self.font_big.render("Need More Coins?", True, (255, 215, 0))
+        screen.blit(title, (self.rect.centerx - title.get_width() // 2, self.rect.y + 30))
+        
+        # Packages
+        for pkg in self.packages:
+            r = pkg["rect"]
+            # Card bg
+            pygame.draw.rect(screen, (40, 40, 50), r, border_radius=10)
+            pygame.draw.rect(screen, pkg["color"], r, width=2, border_radius=10)
+            
+            # Coin Amount
+            amt_txt = self.font_big.render(f"{pkg['coins']}", True, WHITE)
+            screen.blit(amt_txt, (r.centerx - amt_txt.get_width()//2, r.y + 30))
+            
+            lbl_txt = self.font_small.render("Coins", True, (200, 200, 200))
+            screen.blit(lbl_txt, (r.centerx - lbl_txt.get_width()//2, r.y + 60))
+            
+            # Circle Icon placeholder
+            pygame.draw.circle(screen, (255, 215, 0), (r.centerx, r.centery + 10), 20)
+            
+            # Price Button
+            price_rect = pygame.Rect(r.x + 10, r.bottom - 50, r.width - 20, 40)
+            pygame.draw.rect(screen, pkg["color"], price_rect, border_radius=5)
+            
+            p_txt = self.font_big.render(pkg["price"], True, WHITE)
+            screen.blit(p_txt, (price_rect.centerx - p_txt.get_width()//2, price_rect.centery - p_txt.get_height()//2))
+
+        # Close button
+        pygame.draw.rect(screen, (200, 50, 50), self.close_rect, border_radius=4)
+        start_pos = (self.close_rect.left + 8, self.close_rect.top + 8)
+        end_pos = (self.close_rect.right - 8, self.close_rect.bottom - 8)
+        pygame.draw.line(screen, WHITE, start_pos, end_pos, 3)
+        start_pos2 = (self.close_rect.right - 8, self.close_rect.top + 8)
+        end_pos2 = (self.close_rect.left + 8, self.close_rect.bottom - 8)
+        pygame.draw.line(screen, WHITE, start_pos2, end_pos2, 3)
+
+    def handle_input(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.close_rect.collidepoint(event.pos):
+                return "close"
+            
+            for pkg in self.packages:
+                # Check if clicked anywhere on the package card
+                if pkg["rect"].collidepoint(event.pos):
+                    return pkg["coins"]
+        return None

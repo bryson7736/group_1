@@ -63,14 +63,14 @@ class UpgradeState:
         return False
         
     # --- Class Upgrades (Lobby) ---
-    def upgrade_class_damage(self, t, *, step=0.10, cost=50):
+    def upgrade_class_damage(self, t, *, step=0.10, cost=30):
         self.ensure_type(t)
         if self.spend(cost):
             self.class_damage_mult[t] *= (1.0 + step)
             return True
         return False
 
-    def upgrade_class_fire_rate(self, t, *, step=0.05, cost=50):
+    def upgrade_class_fire_rate(self, t, *, step=0.05, cost=30):
         self.ensure_type(t)
         if self.spend(cost):
             # Reduces delay, so multiplier < 1.0
@@ -78,7 +78,7 @@ class UpgradeState:
             return True
         return False
 
-    def upgrade_class_crit_rate(self, t, *, step=0.05, cost=50):
+    def upgrade_class_crit_rate(self, t, *, step=0.05, cost=30):
         self.ensure_type(t)
         self.class_crit_rate.setdefault(t, 0.0)
         if self.class_crit_rate[t] >= 0.50: # Cap at 50%

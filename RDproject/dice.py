@@ -42,6 +42,7 @@ class Die:
         self.image = None
         # Ensure period in seconds initialized at construction
         self.base_period_sec = self.base_fire_rate / FPS
+        self.synergy_buffs = {} # Stores active synergy flags
     
     @property
     def range(self):
@@ -98,8 +99,22 @@ class Die:
         # 4. Selection/Border logic
         if selected:
             pygame.draw.rect(surf, BLUE, rect, width=5, border_radius=14)
+        elif self.synergy_buffs.get("chain"):
+            # Gold border for chain synergy
+            pygame.draw.rect(surf, (255, 215, 0), rect, width=3, border_radius=14)
         else:
             pygame.draw.rect(surf, (255,255,255), rect, width=2, border_radius=14)
+        
+        # Synergy Indicators
+        if self.synergy_buffs.get("fire_wind"):
+            # Red/Green ring for Fire+Wind
+            pygame.draw.circle(surf, (255, 100, 0), rect.topleft, 8)
+            pygame.draw.circle(surf, (100, 255, 100), rect.topleft, 5)
+        if self.synergy_buffs.get("iron_ice"):
+            # Blue/Gray ring for Iron+Ice
+            pygame.draw.circle(surf, (100, 100, 255), rect.topright, 8)
+            pygame.draw.circle(surf, (200, 200, 200), rect.topright, 5)
+
         glow = rect.copy()
         glow.h = int(rect.h * 0.35)
         highlight = pygame.Surface((glow.w, glow.h), pygame.SRCALPHA)
@@ -125,6 +140,10 @@ class Die:
         # In-game upgrade: +10% speed per level
         ingame_level = self.game.ingame_upgrades.get_level(self.type)
         ingame_mult = 1.0 + (ingame_level - 1) * 0.10
+        
+        # Synergy: Chain (3+ same dice) -> +20% Speed
+        if self.synergy_buffs.get("chain"):
+            ingame_mult += 0.20
         
         return perm_mult / ingame_mult
 
@@ -308,6 +327,10 @@ class IronDice(Die):
     def fire_at(self, target):
         dmg = self.base_dmg * self.damage_multiplier()
         
+        # Synergy: Iron + Ice -> +20% Damage
+        if self.synergy_buffs.get("iron_ice"):
+            dmg *= 1.20
+        
         # Bonus vs Boss
         from enemy import BigEnemy
         from boss import TrueBoss
@@ -352,9 +375,14 @@ class FireDice(Die):
         # Splash damage is 75% of main damage (Nerfed from 100%)
         splash = self.splash_dmg * self.damage_multiplier() * 0.75
         
+        # Synergy: Fire + Wind -> +50% Splash Radius
+        radius = self.splash_radius
+        if self.synergy_buffs.get("fire_wind"):
+            radius *= 1.5
+        
         self.game.bullets.append(ExplosiveBullet(
             self.game, self.x, self.y, target, 
-            dmg, splash, self.splash_radius, 
+            dmg, splash, radius, 
             speed_mult_provider=lambda: self.game.speed_mult
         ))
         self.game.sound_mgr.play("shoot")

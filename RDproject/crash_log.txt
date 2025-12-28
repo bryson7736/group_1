@@ -1,17 +1,17 @@
 CRASH REPORT
 ====================
-Error: 'Game' object has no attribute 'hp_anim_timer'
+Error: name 'surf' is not defined
 
 Traceback:
 Traceback (most recent call last):
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1557, in <module>
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1629, in <module>
     Game().run()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1547, in run
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1619, in run
     self.draw()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1504, in draw
-    self.story_draw()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1443, in story_draw
-    self.draw_new_ui()
-  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1045, in draw_new_ui
-    if self.hp_anim_timer > 0:
-AttributeError: 'Game' object has no attribute 'hp_anim_timer'
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1547, in draw
+    self.play_draw()
+  File "/home/sutender/rdproject/group_1/RDproject/main.py", line 1227, in play_draw
+    self.grid.draw(self.screen)
+  File "/home/sutender/rdproject/group_1/RDproject/grid.py", line 231, in draw
+    pygame.draw.rect(surf, (40, 45, 60), rect, width=2, border_radius=10)
+NameError: name 'surf' is not defined
