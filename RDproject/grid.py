@@ -98,7 +98,7 @@ class Grid:
 
         # Manual overrides for Stage 1-2 "Burning Path"
         if hasattr(self.game, 'current_story_stage') and self.game.current_story_stage:
-            if self.game.current_story_stage.stage_id == "1-2":
+            if self.game.current_story_stage.stage_id == "2-2":
                 # 1. Relocate top-left horizontal pair (upwards)
                 self.valid_cells.discard((1, 2))
                 self.valid_cells.discard((2, 2))
