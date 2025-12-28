@@ -31,6 +31,32 @@ class Grid:
         self.cells = [[None for _ in range(self.rows)] for _ in range(self.cols)]
         self.selected = None  # (c, r)
 
+    def reset_layout(self):
+        """Reset grid dimensions and valid cells based on current game state."""
+        st = getattr(self.game, 'state', None)
+        if st == 'story':
+            from settings import SCREEN_W, SCREEN_H
+            self.cols = SCREEN_W // CELL_SIZE
+            self.rows = SCREEN_H // CELL_SIZE
+            self.start_x = 0
+            self.start_y = 0
+            
+            if len(self.cells) != self.cols or len(self.cells[0]) != self.rows:
+                new_cells = [[None for _ in range(self.rows)] for _ in range(self.cols)]
+                for c in range(min(len(self.cells), self.cols)):
+                    for r in range(min(len(self.cells[0]), self.rows)):
+                        new_cells[c][r] = self.cells[c][r]
+                self.cells = new_cells
+
+            self.valid_cells = set()
+            self._calculate_valid_cells()
+        else:
+            self.cols = GRID_COLS
+            self.rows = GRID_ROWS
+            self.start_x = GRID_X
+            self.start_y = GRID_Y
+            self.valid_cells = None
+
     def _calculate_valid_cells(self):
         """Calculate valid grid cells that surround the path with a gap."""
         if not self.game.level or not self.game.level.path:
