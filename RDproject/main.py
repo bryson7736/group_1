@@ -248,9 +248,8 @@ class Game:
         self.buttons.append(
             Button((center_x, row_y, lb_w, btn_h), "Leaderboard", self.font_big, self.goto_leaderboard)
         )
-        self.buttons.append(
-            Button((center_x + lb_w + 10, row_y, ads_w, btn_h), "Ads", self.font_big, self.toggle_ads)
-        )
+        self.btn_remove_ads = Button((center_x + lb_w + 10, row_y, ads_w, btn_h), "No Ads", self.font_big, self.toggle_remove_ads)
+        self.buttons.append(self.btn_remove_ads)
         
         row_y += (btn_h + gap)
 
@@ -380,6 +379,10 @@ class Game:
         """Toggle help popup."""
         self.show_help = not self.show_help
 
+    def toggle_remove_ads(self) -> None:
+        """Toggle remove ads popup."""
+        self.show_remove_ads = not self.show_remove_ads
+
     def toggle_pause(self) -> None:
         """Toggle pause state."""
         self.paused = not self.paused
@@ -442,6 +445,14 @@ class Game:
         if self.btn_pause.handle(event):
             self.sound_mgr.play("click")
         
+        if self.show_ads:
+            action = self.ads_popup.handle_input(event)
+            if action == "close":
+                self.sound_mgr.play("click")
+                self.show_ads = False
+                self.toggle_pause()
+            return
+
         if self.paused:
             action = self.pause_menu.handle_input(event)
             if action:
@@ -886,6 +897,14 @@ class Game:
         if self.state not in (STATE_PLAY, STATE_STORY):
             return
 
+        # Periodic Ads Logic
+        if not self.ads_removed:
+            self.ad_timer += dt
+            if self.ad_timer >= 20.0:
+                self.ad_timer = 0.0
+                self.toggle_pause()
+                self.show_ads = True
+
         self.game_time += dt
 
         if self.to_spawn > 0:
@@ -1004,6 +1023,8 @@ class Game:
         
         if self.show_ads:
             self.ads_popup.draw(self.screen)
+        if self.show_remove_ads:
+            self.remove_ads_popup.draw(self.screen)
     def earn_coins(self, amount):
         if not hasattr(self, '_coins_awarded'):
             self.upgrades.add_coin(amount)
@@ -1179,6 +1200,9 @@ class Game:
 
         # Draw New UI
         self.draw_new_ui()
+        
+        if self.show_ads:
+            self.ads_popup.draw(self.screen)
 
         self.speed_ctrl.draw(self.screen)
         draw_wave_title(self.screen, self.font_huge, self.wave)
@@ -1507,7 +1531,16 @@ class Game:
                     # don't auto-quit on game over; here only explicit window close
                     self.quit()
                 if self.state == STATE_LOBBY:
-                    if self.show_ads:
+                    if self.show_remove_ads:
+                        action = self.remove_ads_popup.handle_input(event)
+                        if action == "close":
+                            self.sound_mgr.play("click")
+                            self.toggle_remove_ads()
+                        elif action == "pay":
+                            self.sound_mgr.play("spawn") # Success sound
+                            self.ads_removed = True
+                            self.toggle_remove_ads()
+                    elif self.show_ads:
                         action = self.ads_popup.handle_input(event)
                         if action == "close":
                             self.sound_mgr.play("click")
