@@ -448,3 +448,88 @@ class RemoveAdsPopup:
             elif event.unicode.isdigit() and len(self.card_number) < 16:
                 self.card_number += event.unicode
         return None
+
+class CoinPurchasePopup:
+    def __init__(self, font_big, font_small):
+        self.font_big = font_big
+        self.font_small = font_small
+        
+        self.w, self.h = 600, 400
+        self.x = (SCREEN_W - self.w) // 2
+        self.y = (SCREEN_H - self.h) // 2
+        self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
+        
+        self.close_btn_size = 30
+        self.close_rect = pygame.Rect(self.rect.right - self.close_btn_size - 10, 
+                                      self.rect.top + 10, 
+                                      self.close_btn_size, 
+                                      self.close_btn_size)
+        
+        # Packages: (Coins, Price, Rect)
+        self.packages = [
+            {"coins": 100, "price": "$0.99", "rect": None, "color": (100, 200, 100)},
+            {"coins": 500, "price": "$4.99", "rect": None, "color": (50, 150, 255)},
+            {"coins": 1000, "price": "$9.99", "rect": None, "color": (200, 100, 255)}
+        ]
+        
+        # Layout packages
+        btn_w, btn_h = 160, 200
+        gap = 20
+        start_x = self.rect.x + (self.w - (3 * btn_w + 2 * gap)) // 2
+        start_y = self.rect.y + 100
+        
+        for i, pkg in enumerate(self.packages):
+            pkg["rect"] = pygame.Rect(start_x + i * (btn_w + gap), start_y, btn_w, btn_h)
+
+    def draw(self, screen):
+        # Background
+        pygame.draw.rect(screen, DARK, self.rect, border_radius=15)
+        pygame.draw.rect(screen, (255, 215, 0), self.rect, width=3, border_radius=15) # Gold border
+        
+        # Title
+        title = self.font_big.render("Need More Coins?", True, (255, 215, 0))
+        screen.blit(title, (self.rect.centerx - title.get_width() // 2, self.rect.y + 30))
+        
+        # Packages
+        for pkg in self.packages:
+            r = pkg["rect"]
+            # Card bg
+            pygame.draw.rect(screen, (40, 40, 50), r, border_radius=10)
+            pygame.draw.rect(screen, pkg["color"], r, width=2, border_radius=10)
+            
+            # Coin Amount
+            amt_txt = self.font_big.render(f"{pkg['coins']}", True, WHITE)
+            screen.blit(amt_txt, (r.centerx - amt_txt.get_width()//2, r.y + 30))
+            
+            lbl_txt = self.font_small.render("Coins", True, (200, 200, 200))
+            screen.blit(lbl_txt, (r.centerx - lbl_txt.get_width()//2, r.y + 60))
+            
+            # Circle Icon placeholder
+            pygame.draw.circle(screen, (255, 215, 0), (r.centerx, r.centery + 10), 20)
+            
+            # Price Button
+            price_rect = pygame.Rect(r.x + 10, r.bottom - 50, r.width - 20, 40)
+            pygame.draw.rect(screen, pkg["color"], price_rect, border_radius=5)
+            
+            p_txt = self.font_big.render(pkg["price"], True, WHITE)
+            screen.blit(p_txt, (price_rect.centerx - p_txt.get_width()//2, price_rect.centery - p_txt.get_height()//2))
+
+        # Close button
+        pygame.draw.rect(screen, (200, 50, 50), self.close_rect, border_radius=4)
+        start_pos = (self.close_rect.left + 8, self.close_rect.top + 8)
+        end_pos = (self.close_rect.right - 8, self.close_rect.bottom - 8)
+        pygame.draw.line(screen, WHITE, start_pos, end_pos, 3)
+        start_pos2 = (self.close_rect.right - 8, self.close_rect.top + 8)
+        end_pos2 = (self.close_rect.left + 8, self.close_rect.bottom - 8)
+        pygame.draw.line(screen, WHITE, start_pos2, end_pos2, 3)
+
+    def handle_input(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.close_rect.collidepoint(event.pos):
+                return "close"
+            
+            for pkg in self.packages:
+                # Check if clicked anywhere on the package card
+                if pkg["rect"].collidepoint(event.pos):
+                    return pkg["coins"]
+        return None
