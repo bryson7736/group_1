@@ -375,9 +375,14 @@ class FireDice(Die):
         # Splash damage is 75% of main damage (Nerfed from 100%)
         splash = self.splash_dmg * self.damage_multiplier() * 0.75
         
+        # Synergy: Fire + Wind -> +50% Splash Radius
+        radius = self.splash_radius
+        if self.synergy_buffs.get("fire_wind"):
+            radius *= 1.5
+        
         self.game.bullets.append(ExplosiveBullet(
             self.game, self.x, self.y, target, 
-            dmg, splash, self.splash_radius, 
+            dmg, splash, radius, 
             speed_mult_provider=lambda: self.game.speed_mult
         ))
         self.game.sound_mgr.play("shoot")
