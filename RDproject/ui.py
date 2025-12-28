@@ -348,10 +348,15 @@ class RemoveAdsPopup:
         self.font_small = font_small
         
         # Popup dimensions
-        self.w, self.h = 400, 300
+        self.w, self.h = 400, 350
         self.x = (SCREEN_W - self.w) // 2
         self.y = (SCREEN_H - self.h) // 2
         self.rect = pygame.Rect(self.x, self.y, self.w, self.h)
+        
+        # Input Field
+        self.card_number = ""
+        self.input_rect = pygame.Rect(0, 0, 300, 40)
+        self.input_rect.center = (self.rect.centerx, self.rect.centery + 20)
         
         # Pay Button
         self.btn_w, self.btn_h = 160, 50
@@ -375,15 +380,22 @@ class RemoveAdsPopup:
         screen.blit(title, (self.rect.centerx - title.get_width() // 2, self.rect.y + 30))
         
         # Message
-        msg1 = self.font_small.render("Tired of interruptions?", True, WHITE)
-        msg2 = self.font_small.render("Pay /usr/bin/bash.99 to remove ads!", True, WHITE)
+        msg1 = self.font_small.render("Enter 16-digit Credit Card Number:", True, WHITE)
         screen.blit(msg1, (self.rect.centerx - msg1.get_width() // 2, self.rect.y + 100))
-        screen.blit(msg2, (self.rect.centerx - msg2.get_width() // 2, self.rect.y + 130))
 
+        # Input Box
+        pygame.draw.rect(screen, WHITE, self.input_rect, border_radius=5)
+        if self.card_number:
+            txt_surf = self.font_big.render(self.card_number, True, DARK)
+            screen.blit(txt_surf, (self.input_rect.x + 10, self.input_rect.y + (self.input_rect.height - txt_surf.get_height()) // 2))
+        
         # Pay Button
-        pygame.draw.rect(screen, (100, 200, 100), self.pay_rect, border_radius=8)
+        can_pay = len(self.card_number) == 16
+        btn_color = (100, 200, 100) if can_pay else (100, 100, 100)
+        
+        pygame.draw.rect(screen, btn_color, self.pay_rect, border_radius=8)
         pygame.draw.rect(screen, WHITE, self.pay_rect, width=2, border_radius=8)
-        t_pay = self.font_big.render("Pay", True, WHITE)
+        t_pay = self.font_big.render("Confirm", True, WHITE)
         screen.blit(t_pay, (self.pay_rect.centerx - t_pay.get_width()//2, self.pay_rect.centery - t_pay.get_height()//2))
 
         # Close button (X)
@@ -397,9 +409,16 @@ class RemoveAdsPopup:
         pygame.draw.line(screen, WHITE, start_pos2, end_pos2, 3)
 
     def handle_input(self, event):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_BACKSPACE:
+                self.card_number = self.card_number[:-1]
+            elif event.unicode.isdigit() and len(self.card_number) < 16:
+                self.card_number += event.unicode
+                
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.close_rect.collidepoint(event.pos):
                 return "close"
             if self.pay_rect.collidepoint(event.pos):
-                return "pay"
+                if len(self.card_number) == 16:
+                    return "pay"
         return None
