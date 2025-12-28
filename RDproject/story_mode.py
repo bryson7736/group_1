@@ -106,7 +106,7 @@ class StoryManager:
             {
                 "name": "Chamber of Torment",
                 "path": [(1280, 400), (900, 400), (900, 200), (600, 200), (600, 600), (1280, 600)],
-                "color": (139, 69, 19), "bg": None, "desc": "The air itself burns."
+                "color": (139, 69, 19), "bg": "torture_chamber", "desc": "The air itself burns."
             },
             {
                 "name": "Hell Lord's Throne",
@@ -130,6 +130,8 @@ class StoryManager:
                 # Final sub-stage of EVERY chapter has True Boss
                 true_boss = is_last
                 
+                bg_type = map_data["bg"]
+
                 stages.append(StoryStage(
                     stage_id=stage_id,
                     name=map_data["name"],
@@ -140,7 +142,7 @@ class StoryManager:
                     has_true_boss=true_boss,
                     difficulty=1.0 + i * 0.5 + s_num * 0.1,
                     path_color=map_data["color"],
-                    bg_type=map_data["bg"]
+                    bg_type=bg_type
                 ))
             
             self.chapters[f"chapter{ch_num}"] = StoryChapter(
