@@ -405,55 +405,47 @@ class Grid:
         for c in range(self.cols):
             for r in range(self.rows):
                 d = self.cells[c][r]
-                if d and hasattr(d, 'synergy_partner') and d.synergy_partner:
-                    p = d.synergy_partner
-                    pair_id = tuple(sorted((id(d), id(p))))
-                    if pair_id in drawn_pairs:
-                        continue
-                    drawn_pairs.add(pair_id)
-                    
-                    color = (255, 255, 255)
-                    if d.synergy_buffs.get("inferno"): color = (255, 69, 0) 
-                    elif d.synergy_buffs.get("toxic_spikes"): color = (138, 43, 226) 
-                    elif d.synergy_buffs.get("frost_volley"): color = (0, 255, 255) 
-                    elif d.synergy_buffs.get("sniper_nest"): color = (50, 205, 50) 
-                    elif d.synergy_buffs.get("magma"): color = (220, 20, 60) 
-                    elif d.synergy_buffs.get("plague"): color = (0, 128, 0) 
-                    
-                    start = self.center_of(d.c, d.r)
-                    end = self.center_of(p.c, p.r)
-                    
-                    # Draw a thick "bridge" connector
-                    # Calculate vector
-                    dx, dy = end[0] - start[0], end[1] - start[1]
-                    dist = math.hypot(dx, dy)
-                    angle = math.atan2(dy, dx)
-                    
-                    # Draw a rect rotated to connect them
-                    # We can just draw a thick line with rounded caps
-                    
-                    # Outer Glow
-                    glow_width = 16 + int(pulse * 8)
-                    glow_color = (color[0]//3, color[1]//3, color[2]//3)
-                    pygame.draw.line(surf, glow_color, start, end, glow_width)
-                    
-                    # Inner Core
-                    core_width = 8
-                    pygame.draw.line(surf, color, start, end, core_width)
-                    
-                    # Draw "Knots" at the ends (under the dice, but visible if dice are transparent/small)
-                    # Actually, let's draw a symbol in the middle
-                    mid_x = (start[0] + end[0]) // 2
-                    mid_y = (start[1] + end[1]) // 2
-                    
-                    # Draw a diamond shape at the center
-                    diamond_size = 10 + int(pulse * 4)
-                    points = [
-                        (mid_x, mid_y - diamond_size),
-                        (mid_x + diamond_size, mid_y),
-                        (mid_x, mid_y + diamond_size),
-                        (mid_x - diamond_size, mid_y)
-                    ]
-                    pygame.draw.polygon(surf, color, points)
-                    pygame.draw.polygon(surf, (255, 255, 255), points, 2)
+                if d and hasattr(d, 'synergy_partners') and d.synergy_partners:
+                    for p in d.synergy_partners:
+                        pair_id = tuple(sorted((id(d), id(p))))
+                        if pair_id in drawn_pairs:
+                            continue
+                        drawn_pairs.add(pair_id)
+                        
+                        color = (255, 255, 255)
+                        # Determine color based on shared synergy
+                        common_buffs = set(d.synergy_buffs.keys()) & set(p.synergy_buffs.keys())
+                        
+                        if "inferno" in common_buffs: color = (255, 69, 0) 
+                        elif "toxic_spikes" in common_buffs: color = (138, 43, 226) 
+                        elif "frost_volley" in common_buffs: color = (0, 255, 255) 
+                        elif "sniper_nest" in common_buffs: color = (50, 205, 50) 
+                        elif "magma" in common_buffs: color = (220, 20, 60) 
+                        elif "plague" in common_buffs: color = (0, 128, 0) 
+                        
+                        start = self.center_of(d.c, d.r)
+                        end = self.center_of(p.c, p.r)
+                        
+                        # Outer Glow
+                        glow_width = 16 + int(pulse * 8)
+                        glow_color = (color[0]//3, color[1]//3, color[2]//3)
+                        pygame.draw.line(surf, glow_color, start, end, glow_width)
+                        
+                        # Inner Core
+                        core_width = 8
+                        pygame.draw.line(surf, color, start, end, core_width)
+                        
+                        # Diamond at center
+                        mid_x = (start[0] + end[0]) // 2
+                        mid_y = (start[1] + end[1]) // 2
+                        
+                        diamond_size = 10 + int(pulse * 4)
+                        points = [
+                            (mid_x, mid_y - diamond_size),
+                            (mid_x + diamond_size, mid_y),
+                            (mid_x, mid_y + diamond_size),
+                            (mid_x - diamond_size, mid_y)
+                        ]
+                        pygame.draw.polygon(surf, color, points)
+                        pygame.draw.polygon(surf, (255, 255, 255), points, 2)
 
