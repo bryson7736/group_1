@@ -2,6 +2,55 @@
 
 A feature-rich Tower Defense game built with Python and Pygame, inspired by the mechanics of "Random Dice". Defend your base against waves of infernal enemies, unlock story chapters, and master the art of dice synergy!
 
+## 🌟 Special Features
+
+- **Synergy Field System**: Unlike standard pairing, placing compatible dice adjacent to each other creates a "Field" that buffs all connected units.
+- **Interactive Boss Mechanics**: The "True Boss" doesn't just attack; it forces you to react. When a die is targeted, you must **merge it away** to "flee" and dodge the attack.
+- **Parody Monetization**: A satirical take on modern mobile gaming, featuring "Fake Ads" you must close and a "Payment Store" that accepts any credit card number.
+- **Story Progression**: Unlock chapters sequentially, with progress saved automatically.
+
+## 🤖 HFSM (Hierarchical Finite State Machine) Boss AI
+
+The "True Boss" utilizes a sophisticated HFSM to manage its behavior, ensuring dynamic and challenging encounters.
+
+### Structure
+The AI Controller manages high-level states that dictate the boss's current tactical phase:
+
+1.  **IDLE State**:
+    - The default state. The boss moves along the path and regenerates energy.
+    - Evaluates conditions (Health %, Cooldowns, Player Board State) to transition to other states.
+
+2.  **ATTACK State** (Offensive):
+    - **Targeting**: Selects a specific die on the player's grid.
+    - **Telegraphing**: Flashes a warning indicator on the target for 4 seconds.
+    - **Execution**: If the player fails to merge (flee) the die, it is destroyed or disabled.
+    - *Sub-skills*: Basic Attack, AOE Attack, Disrupt.
+
+3.  **DEFENSE State** (Survival):
+    - Triggered when taking high burst damage.
+    - **Effect**: Reduces incoming damage by 50% and slows movement speed to "tank" through the wave.
+
+4.  **HEAL State** (Recovery):
+    - Triggered when HP is low but not critical.
+    - **Effect**: Stops movement to regenerate health over time.
+
+## ⚙️ CI/CD Implementation
+
+This project employs a robust **Continuous Integration and Continuous Deployment** pipeline using **GitHub Actions** to ensure code quality and automated delivery.
+
+### 1. Continuous Integration (CI)
+Triggered on every `push` or `pull_request` to the `main` branch.
+- **Environment**: Windows Server (`windows-latest`).
+- **Linting**: Uses `flake8` to enforce PEP 8 coding standards and catch syntax errors.
+- **Testing**: Runs unit tests via `pytest` to verify game logic (e.g., damage calculations, grid management).
+
+### 2. Continuous Deployment (CD)
+Triggered only on successful CI completion for pushes to `main`.
+- **Build**: Uses `PyInstaller` to compile the Python source code and assets into a standalone `.exe` file.
+- **Artifact Upload**: The resulting `GameBuild.exe` is automatically uploaded as a GitHub Artifact, ready for download and play.
+
+---
+
 ## 🎮 Game Modes
 
 ### Story Mode: Hell Chapter
@@ -39,14 +88,6 @@ Test your strategies in endless waves. How long can you survive?
     - **Sniper Nest** (Single + Wind): Massive range and damage boost.
     - **Magma** (Fire + Iron): Fire damage boost, Iron explodes on impact.
     - **Plague** (Poison + Multi): Poison spreads to nearby enemies.
-
-## ⚔️ Enemies & Bosses
-
-- **Standard Enemies**: Varying speed and HP.
-- **Big Enemy**: Tougher variants that appear periodically.
-- **True Boss**: The ultimate challenge appearing at the end of chapters.
-    - **Phases**: Cycles between Attack, Defense, and Heal states.
-    - **Mechanics**: Watch out for the Boss's target indicator! Merge the targeted die to "Flee" and dodge the attack.
 
 ## 🛠️ Progression & Upgrades
 
