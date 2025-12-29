@@ -8,14 +8,7 @@ import pygame
 from colors import WHITE, ORANGE, RED, GREEN, BLUE
 from settings import ENEMY_SIZE
 from enemy import Enemy
-
-# =============================================================================
-# FSM States
-# =============================================================================
-STATE_IDLE = "idle"
-STATE_DEFENSE = "defense"
-STATE_ATTACK = "attack"
-STATE_HEAL = "heal"
+from boss_ai.BossAIController import BossAIController
 
 # =============================================================================
 # Boss Settings (Configurable)
@@ -43,24 +36,10 @@ def calculate_boss_speed(base_speed: float) -> float:
     """Calculate Boss movement speed."""
     return base_speed * BOSS_SPEED_MULT
 
-# Global Skill Cooldown (shared by all skills)
-GLOBAL_SKILL_COOLDOWN = 5.0     # Cooldown after using any skill
-INITIAL_SKILL_COOLDOWN = 2.0    # Initial cooldown at spawn
-
-# Skill Durations (seconds)
-SKILL_DURATION = {
-    STATE_DEFENSE: 3.0,
-    STATE_ATTACK: 1.0,  # Cast time
-    STATE_HEAL: 3.0,
-}
 
 # Defense settings
 DEFENSE_DAMAGE_REDUCTION = 0.5  # 50% damage reduction
 DEFENSE_MOVE_SPEED_MULT = 0.5   # Move at 50% speed while defending
-DEFENSE_HP_THRESHOLD = 0.4      # Threshold for defense behavior logic
-
-# Heal settings
-HEAL_HP_PERCENT_PER_SEC = 0.05  # 5% max HP per second  
 
 # Attack settings
 ATTACK_DESTROY_DICE_COUNT = 1  # Number of dice to destroy per attack
@@ -83,127 +62,49 @@ class TrueBoss(Enemy):
         self.game = game
         self.money_drop = BOSS_MONEY_DROP
         
-        # FSM State
-        self.state = STATE_IDLE
-        self.state_timer = 0.0
-        
-        # Skill cooldowns and durations
-        self.durations = dict(SKILL_DURATION)
-        # Per-state cooldown timers (tested via boss.timers[STATE_X])
-        self.timers = {
-            STATE_DEFENSE: INITIAL_SKILL_COOLDOWN,
-            STATE_ATTACK: INITIAL_SKILL_COOLDOWN,
-            STATE_HEAL: INITIAL_SKILL_COOLDOWN,
-        }
+        # New Boss AI Controller
+        self.ai_controller = BossAIController(self, game)
         
         self.attack_targets = [] # List of (c, r) tuples for targeted dice
 
     def hit(self, dmg):
         """Override hit to apply defense damage reduction and track damage."""
-        if self.state == STATE_DEFENSE:
+        # Use AI controller state for damage reduction logic
+        if self.ai_controller.executor.current_skill == "Shield":
             dmg *= DEFENSE_DAMAGE_REDUCTION
         
         super().hit(dmg)
+        self.ai_controller.record_damage(dmg)
 
     def update(self, dt, speed_mult=1.0, zone_mult=1.0):
         """FSM update logic."""
         if self.dead or self.reached:
             return
 
-        # Update per-state cooldown timers
-        for state in self.timers:
-            self.timers[state] = max(0, self.timers[state] - dt * speed_mult)
-            
-        # State Machine timer
-        self.state_timer = max(0, self.state_timer - dt * speed_mult)
+        # Delegate update to AI controller
+        self.ai_controller.update(dt * speed_mult)
         
-        if self.state == STATE_IDLE:
-            self._state_idle(dt, speed_mult, zone_mult)
-        elif self.state == STATE_DEFENSE:
-            self._state_defense(dt, speed_mult, zone_mult)
-        elif self.state == STATE_ATTACK:
-            self._state_attack(dt, speed_mult, zone_mult)
-        elif self.state == STATE_HEAL:
-            self._state_heal(dt, speed_mult, zone_mult)
-
-    # -------------------------------------------------------------------------
-    # State Handlers
-    # -------------------------------------------------------------------------
-    def _state_idle(self, dt, speed_mult, zone_mult):
-        """IDLE: Move normally, try to pick a skill."""
-        super().update(dt, speed_mult, zone_mult)
-        self._try_skill()
-    
-    def _state_defense(self, dt, speed_mult, zone_mult):
-        """DEFENSE: Move slowly, reduce damage taken."""
-        super().update(dt, speed_mult * DEFENSE_MOVE_SPEED_MULT, zone_mult)
-        if self.state_timer <= 0:
-            self._reset_all_timers()
-            self.state = STATE_IDLE
-
-    def _state_attack(self, dt, speed_mult, zone_mult):
-        """ATTACK: Stop moving, cast attack when timer ends."""
-        if self.state_timer <= 0:
-            self._cast_attack()
-            self._reset_all_timers()
-            self.state = STATE_IDLE
-
-    def _state_heal(self, dt, speed_mult, zone_mult):
-        """HEAL: Stop moving, regenerate HP."""
-        heal_rate = HEAL_HP_PERCENT_PER_SEC * self.max_hp
-        self.hp = min(self.max_hp, self.hp + heal_rate * dt * speed_mult)
+        # Movement logic based on current state/skill
+        current_skill = self.ai_controller.executor.current_skill
         
-        if self.state_timer <= 0:
-            self._reset_all_timers()
-            self.state = STATE_IDLE
-
-    # -------------------------------------------------------------------------
-    # Skill Logic
-    # -------------------------------------------------------------------------
-    def _try_skill(self):
-        """Attempt to activate a skill based on priority."""
-        # Check global cooldown - if ANY timer > 0, all skills are on cooldown
-        if any(t > 0 for t in self.timers.values()):
-            return
-        
-        # Get prioritized state
-        next_state = self._get_skill_priority()
-        
-        if next_state:
-            self._enter_state(next_state)
-
-    def _get_skill_priority(self):
-        """
-        Determine which skill to use based on priority conditions.
-        Returns the STATE constant of the chosen skill, or None.
-        """
-        # 1. High Priority: Heal (if low HP or taking moderate damage)
-        # Note: HEAL_TRIGGER_THRESHOLD is 0.8 (80%) currently
-        if (self.hp < 0.5 * self.max_hp) or (self.damage_taken_last_5s > 0.25 * self.max_hp and self.damage_taken_last_5s < 0.5 * self.max_hp):
-            return STATE_HEAL
-
-        # 2. Random fallback between Defense and Attack
-        # You can add more specific conditions here (e.g. if close to end, Attack more)
-        if self.damage_taken_last_5s > 0.5 * self.max_hp :
-            return STATE_DEFENSE
+        if current_skill in ["Shield", "DamageReduction"]:
+            # Move slowly during defense
+            super().update(dt, speed_mult * DEFENSE_MOVE_SPEED_MULT, zone_mult)
+        elif current_skill in ["AOEAttack", "Heal", "SummonMinion"]:
+            # Stop moving during casting/healing
+            pass 
         else:
-            return STATE_ATTACK
+            # Move normally (Idle or BasicAttack)
+            super().update(dt, speed_mult, zone_mult)
 
-    def _reset_all_timers(self):
-        """Reset all skill timers to global cooldown (shared cooldown)."""
-        for state in self.timers:
-            self.timers[state] = GLOBAL_SKILL_COOLDOWN
-
-    def _enter_state(self, new_state):
-        """Transition to a new state."""
-        self.state = new_state
-        self.state_timer = self.durations[new_state]
-        
-        # Clear previous targets
+    # -------------------------------------------------------------------------
+    # Bridge for SkillExecutor
+    # -------------------------------------------------------------------------
+    def on_skill_start(self, skill_name):
+        """Called when a skill starts (animation trigger)."""
         self.attack_targets = []
-        
-        if new_state == STATE_ATTACK:
-            # Pre-select targets
+        if skill_name in ["BasicAttack", "AOEAttack", "Disrupt"]:
+            # Selection of targets happens when skill starts
             if self.game and self.game.grid:
                 filled = []
                 for c in range(self.game.grid.cols):
@@ -214,6 +115,16 @@ class TrueBoss(Enemy):
                 if filled:
                     count = min(ATTACK_DESTROY_DICE_COUNT, len(filled))
                     self.attack_targets = random.sample(filled, count)
+
+    def apply_skill_effect(self, skill_name):
+        """Called when a skill durationEnds (execution trigger)."""
+        if skill_name in ["BasicAttack", "AOEAttack", "Disrupt"]:
+            self._cast_attack()
+        elif skill_name == "Heal":
+            self.hp = min(self.max_hp, self.hp + self.max_hp * 0.2) # Heal 20%
+        elif skill_name == "SummonMinion":
+            # Implementation of summon minion could go here
+            pass
 
     def _cast_attack(self):
         """Destroy targeted dice on the player's grid."""
@@ -237,15 +148,17 @@ class TrueBoss(Enemy):
         border_color = None
         border_width = 0
         
-        if self.state == STATE_DEFENSE:
+        current_skill = self.ai_controller.executor.current_skill
+        
+        if current_skill == "Shield":
             color = BLUE
             border_color = WHITE
             border_width = 4
-        elif self.state == STATE_HEAL:
+        elif current_skill == "Heal":
             color = GREEN
             border_color = WHITE
             border_width = 4
-        elif self.state == STATE_ATTACK:
+        elif current_skill in ["BasicAttack", "AOEAttack", "Disrupt"]:
             color = RED
             border_color = (255, 255, 0)
             border_width = 4
@@ -279,7 +192,7 @@ class TrueBoss(Enemy):
         surf.blit(hp_txt, (r.centerx - hp_txt.get_width()//2, r.centery - hp_txt.get_height()//2))
 
         # Draw Target Indicators on Grid
-        if self.state == STATE_ATTACK and self.attack_targets:
+        if self.ai_controller.executor.current_skill in ["BasicAttack", "AOEAttack", "Disrupt"] and self.attack_targets:
             for c, r in self.attack_targets:
                 if self.game and self.game.grid:
                     rect = self.game.grid.rect_at(c, r)
