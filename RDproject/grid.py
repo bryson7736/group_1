@@ -382,6 +382,8 @@ class Grid:
                         self.set(sc, sr, None)
                         self.game.money += MERGE_REFUND
                         self.game.sound_mgr.play("merge")
+                        if hasattr(self.game, 'on_dice_merge'):
+                            self.game.on_dice_merge()
                         self.selected = None
                     else:
                         self.selected = None
