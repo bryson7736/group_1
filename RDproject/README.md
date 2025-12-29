@@ -30,50 +30,29 @@
     pip install -r requirements.txt
     ```
 
-## 如何執行
+## How to Run
 
-切換到 `RDproject` 目錄並執行 `main.py`：
+Navigate to the `RDproject` directory and run the `main.py` script:
 
 ```bash
 cd RDproject
 python main.py
 ```
 
-## 控制方式
+## Controls
 
-- **左鍵點擊 (空格)**：召喚新骰子（成本隨召喚次數增加）。
-- **左鍵拖曳 (骰子)**：選中並移動骰子。重疊於同級同類骰子即可合併。
-- **右鍵點擊**：取消選擇 / 退出刪除模式。
-- **數字鍵 1-5**：調整遊戲速度。
-- **空白鍵**：快速召喚骰子。
-- **T鍵**：切換目標優先順序（最近、前方、血量最少、血量最多）。
-- **N鍵**：若當前無敵人，立即開始下一波。
-- **R鍵**：在遊戲結束畫面重新開始。
-- **ESC鍵**：返回大廳 / 取消。
+- **Left Click (Empty Slot)**: Spawn a new die (Cost increases).
+- **Left Click (Die)**: Select a die. Click another compatible die to merge.
+- **Right Click**: Cancel selection / Exit Trash mode.
+- **1-5**: Change game speed.
+- **T**: Cycle target mode (Nearest, Front, Weak, Strong).
+- **N**: Start next wave immediately (if no enemies).
+- **R**: Restart game (in Game Over screen).
+- **ESC**: Return to Lobby / Cancel.
 
-## 遊戲特色
+## Features
 
-- **波次系統**：難度隨波次增加，具備無限挑戰模式。
-- **Boss 波次**：每 5 波會出現具備特殊能力的強大 Boss。
-- **大廳升級**：在大廳可以使用獲得的金幣永久強化骰子的基礎屬性。
-- **出戰配置**：自由選擇 5 種骰子組成你的出戰牌組。
-- **故事模式**：具備多章節挑戰與特定地圖配置。
-
----
-
-## 專案健康檢查與審計報告 (2025-12-29)
-
-本專案已完成全面的代碼審計與健康檢查，以下為檢查摘要：
-
-### 1. 穩定性與崩潰預防
-- **路徑處理優化**：所有資源（圖片、音效）現已使用絕對路徑解析 (`os.path.abspath`)，有效解決了在不同執行軌跡下可能發生的 `FileNotFoundError` 問題。
-- **防禦性編程**：針對 `JSON` 讀取（排行榜、進度存檔）以及 UI 元件點擊事件，已實施 `try-except` 或屬性檢查，確保資料損壞時程式不會崩潰。
-- **環境相容性**：音訊管理器 (`SoundManager`) 具備自動格式降級處理，並適配多種常見音訊編解碼器。
-
-### 2. 功能檢查
-- **核心邏輯**：骰子合併、攻擊邏輯與波次生成功能運作正常。
-- **測試驗證**：所有預設單元測試 (`pytest`) 均已通過，涵蓋骰子屬性、敵人邏輯與等級管理。
-- **Boss AI**：Boss 行為樹能正確處理狀態切換（防禦、攻擊、治療）。
-
-### 3. 結論
-專案目前處於 **穩定 (Stable)** 狀態。已修復所有可能導致即時崩潰的問題，核心玩法流暢。後續開發建議著重於優化大型檔案 `main.py` 的代碼結構以提升維護性。
+- **Wave System**: Infinite waves with increasing difficulty.
+- **Boss Waves**: Every 5th wave is a boss wave with special abilities.
+- **Upgrades**: Upgrade dice stats (Damage, Fire Rate, Cost) in the Lobby.
+- **Loadout**: Choose your deck of dice (currently 3 types available).
