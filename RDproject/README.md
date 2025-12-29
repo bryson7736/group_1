@@ -70,8 +70,36 @@ AI 架構嚴格遵守三層分離原則：
 **Strategy Layer (策略層) → Behavior Layer (行為層) → Action Layer (執行層)**
 
 ### 🟦 Strategy Layer —「態度決定方針」
-- **職責**：依據 `Player Metrics` 評析最近 5 秒的玩家行為，決定 Boss 的戰鬥姿態（Idle, Aggressive, Defensive, Recovery）。
-- **邏輯**：低頻更新，避免決策過於破碎。
+- **職責**：依據 `Player Metrics` 評析最近 5 秒的玩家行為，決定 Boss 的戰鬥姿態。
+- **邏輯**：低頻更新，避免決策過於破碎。具備最小狀態持續時間（如 2 秒），防止狀態頻繁震盪。
+
+#### 具體策略說明 (Concrete Strategies)：
+AI 透過實作 `Strategy` 抽象介面的四個子類別來實現不同的戰鬥風格：
+
+1. **IdleStrategy (觀察/閒置)**
+   - **核心邏輯**：Boss 的初始狀態。此時威脅度低，僅執行基礎維持動作。
+   - **轉換條件**：
+     - 若威脅值 (Threat) > 0.4 → 轉為 **Aggressive**。
+     - 若威脅值 (Threat) > 0.7 → 直接跳轉 **Defensive**。
+     - 若血量 < 30% → 轉為 **Recovery**。
+
+2. **AggressiveStrategy (主動進攻)**
+   - **核心邏輯**：玩家表現出中等威脅。Boss 會增加干擾或攻擊技能的權重。
+   - **轉換條件**：
+     - 若威脅值 > 0.8 → 轉為 **Defensive** (感到壓力)。
+     - 若威脅值 < 0.2 → 回歸 **Idle** (放鬆警惕)。
+     - 若血量 < 30% → 轉為 **Recovery**。
+
+3. **DefensiveStrategy (防禦強化)**
+   - **核心邏輯**：玩家輸出火力極猛或合成非常頻繁。Boss 優先保護自己，減少受到的傷害。
+   - **轉換條件**：
+     - 若威脅值 < 0.5 → 降級為 **Aggressive**。
+     - 若血量 < 20% → 進入 **Recovery** 的最後掙扎。
+
+4. **RecoveryStrategy (緊急恢復)**
+   - **核心邏輯**：Boss 血量低於危險門檻。此時無論玩家威脅如何，都以存活與回血為最高優先級。
+   - **轉換條件**：
+     - 當血量恢復至 50% 以上時 → 重新評估威脅並轉回 **Defensive** 或其他狀態。
 
 ### 🟩 Behavior Layer —「策略轉化行為」
 - **職責**：在當前策略框架下選擇具體技能。例如在 `Aggressive` 策略下，若玩家合成頻率過高，則優先執行 `Disrupt` 技能。
@@ -194,6 +222,27 @@ classDiagram
     
     BehaviorFSM ..> SkillExecutor : 請求執行技能
     SkillExecutor ..> TrueBoss : 套用技能效果
+```
+
+### 3. Boss 策略狀態轉換圖 (State Transition Diagram)
+視覺化展現 Boss 如何根據玩家威脅 (Threat) 與自身血量 (HP) 切換戰鬥姿態。
+
+```mermaid
+stateDiagram-v2
+    [*] --> IdleStrategy
+    
+    IdleStrategy --> AggressiveStrategy : Threat > 0.4
+    IdleStrategy --> DefensiveStrategy : Threat > 0.7
+    IdleStrategy --> RecoveryStrategy : HP < 30%
+    
+    AggressiveStrategy --> DefensiveStrategy : Threat > 0.8
+    AggressiveStrategy --> IdleStrategy : Threat < 0.2
+    AggressiveStrategy --> RecoveryStrategy : HP < 30%
+    
+    DefensiveStrategy --> AggressiveStrategy : Threat < 0.5
+    DefensiveStrategy --> RecoveryStrategy : HP < 20%
+    
+    RecoveryStrategy --> DefensiveStrategy : HP > 50%
 ```
 
 ---
