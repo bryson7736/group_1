@@ -18,12 +18,11 @@
 
 ## ⌨️ 控制方式 (Controls)
 
-- **左鍵點擊 (空格)**：召喚新骰子（成本隨次數增加）。
-- **左鍵拖曳 (骰子)**：選中骰子，重疊於符合條件的骰子即可合併。
+- **空格**：召喚新骰子（成本隨次數增加）。
+- **左鍵選取**：選中骰子，重疊於符合條件的骰子即可合併。
 - **右鍵點擊**：取消當前選擇或退出刪除模式。
 - **空白鍵**：快速進行骰子召喚。
 - **數字鍵 1-5**：調整遊戲執行速度（1x 到 16x）。
-- **T鍵**：切換目標優先順序（最近、前方、血量最少、血量最多）。
 - **N鍵**：若當前無敵人，立即開始下一波。
 - **R鍵**：在結束畫面快速重啟遊戲。
 - **ESC鍵**：返回大廳或取消當前操作。
@@ -32,7 +31,7 @@
 
 - **波次與 Boss 系統**：難度動態成長，每 5 波會出現具備 HFSM AI 智能的強大 Boss。
 - **大廳強化系統**：消耗遊戲中獲得的金幣，永久提升骰子的基礎屬性。
-- **出戰配置 (Loadout)**：自定義 5 種骰子作為你的出戰陣容。
+- **出戰配置 (Loadout)**：自定義 1~5 種骰子作為你的出戰陣容。
 - **分層地圖與章節**：包含不同地形配置的故事模式章節。
 
 ## 🛠️ 安裝與執行 (Setup & Run)
@@ -88,6 +87,114 @@ AI 的感官來源，透過滑動窗口監控：
 - **Merge Rate**：資源整合威脅。
 - **Dice Count**：棋盤覆蓋威脅。
 計算得出的 `Threat Score` 是驅動策略層切換的核心依據。
+
+---
+
+## 📊 系統架構類別圖 (Class Diagrams)
+
+### 1. 專案宏觀架構 (Big Picture)
+展現遊戲核心組件間的關聯與層級。
+
+```mermaid
+classDiagram
+    class Game {
+        +grid: Grid
+        +level_mgr: LevelManager
+        +story_mgr: StoryManager
+        +sound_mgr: SoundManager
+        +update(dt)
+        +draw()
+    }
+    class Grid {
+        +cols: int
+        +rows: int
+        +dice: List[Die]
+        +update(dt)
+    }
+    class LevelManager {
+        +wave: int
+        +spawn_enemy()
+    }
+    class StoryManager {
+        +progress: StoryProgress
+        +chapters: List[StoryChapter]
+    }
+    class Die {
+        <<abstract>>
+        +level: int
+        +type: string
+        +attack()
+    }
+    class Enemy {
+        +hp: int
+        +speed: float
+        +update(dt)
+    }
+    class TrueBoss {
+        +ai_controller: BossAIController
+    }
+
+    Game "1" *-- "1" Grid : 擁有
+    Game "1" *-- "1" LevelManager : 波次管理
+    Game "1" *-- "1" StoryManager : 劇情管理
+    Grid "1" o-- "0..*" Die : 包含
+    Game "1" o-- "0..*" Enemy : 生成與追蹤
+    Enemy <|-- BigEnemy : 繼承
+    BigEnemy <|-- TrueBoss : 繼承
+    TrueBoss "1" *-- "1" BossAIController : AI 控制
+```
+
+### 2. Boss AI - HFSM 詳細邏輯
+展現分層有限狀態機內各層級的互動流與責任分配。
+
+```mermaid
+classDiagram
+    class BossAIController {
+        +metrics: PlayerMetrics
+        +strategy_fsm: StrategyFSM
+        +behavior_fsm: BehaviorFSM
+        +executor: SkillExecutor
+        +update(dt)
+    }
+    class PlayerMetrics {
+        +damage_rate: float
+        +merge_rate: float
+        +threat_score: float
+        +update(dt)
+    }
+    class StrategyFSM {
+        +current_strategy: Strategy
+        +update(metrics, dt)
+    }
+    class Strategy {
+        <<abstract>>
+        +decide(metrics) Strategy
+        +default_behavior() Behavior
+    }
+    class BehaviorFSM {
+        +current_behavior: Behavior
+        +update(metrics, executor)
+    }
+    class SkillExecutor {
+        +current_skill: Skill
+        +is_busy: bool
+        +execute(skill_name)
+    }
+
+    BossAIController "1" *-- "1" PlayerMetrics : 狀態感知
+    BossAIController "1" *-- "1" StrategyFSM : 策略決策
+    BossAIController "1" *-- "1" BehaviorFSM : 行為選擇
+    BossAIController "1" *-- "1" SkillExecutor : 行動執行
+    
+    StrategyFSM "1" o-- "1" Strategy : 當前策略
+    Strategy <|-- IdleStrategy
+    Strategy <|-- AggressiveStrategy
+    Strategy <|-- DefensiveStrategy
+    Strategy <|-- RecoveryStrategy
+    
+    BehaviorFSM ..> SkillExecutor : 請求執行技能
+    SkillExecutor ..> TrueBoss : 套用技能效果
+```
 
 ---
 
