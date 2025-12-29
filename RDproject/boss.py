@@ -71,7 +71,6 @@ class TrueBoss(Enemy):
         super().__init__(path_points, hp, speed, size=ENEMY_SIZE * BOSS_SIZE_MULT)
         self.game = game
         self.money_drop = BOSS_MONEY_DROP
-        self.icon = icon_surface  # Boss icon for display
         
         # New Boss AI Controller
         self.ai_controller = BossAIController(self, game)
