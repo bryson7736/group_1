@@ -67,6 +67,18 @@ class TrueBoss(Enemy):
         
         self.attack_targets = [] # List of (c, r) tuples for targeted dice
 
+    @property
+    def state(self):
+        """Map HFSM skill names back to legacy state names for UI compatibility."""
+        skill = self.ai_controller.executor.current_skill
+        if skill in ["Shield", "DamageReduction"]:
+            return "defense"
+        elif skill in ["BasicAttack", "AOEAttack", "Disrupt"]:
+            return "attack"
+        elif skill == "Heal":
+            return "heal"
+        return "idle"
+
     def hit(self, dmg):
         """Override hit to apply defense damage reduction and track damage."""
         # Use AI controller state for damage reduction logic
