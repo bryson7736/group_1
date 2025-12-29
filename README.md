@@ -247,5 +247,28 @@ stateDiagram-v2
 
 ---
 
+## 🔁 CI/CD Overview
+
+本專案導入 CI/CD（Continuous Integration / Continuous Delivery）作為自動化品質控管流程，確保在多人協作與頻繁修改 Boss AI（HFSM）邏輯的情況下，系統行為仍保持穩定與可預期。
+
+### Continuous Integration (CI)
+- 每次程式碼提交或合併時自動觸發。
+- 執行建置、基本測試與靜態檢查。
+- 確保 AI 核心模組（FSM、Metrics、Executor）可正常運作。
+- 問題在進入主分支前即被發現。
+
+### Continuous Delivery (CD)
+- CI 通過後自動產生可部署版本。
+- 支援測試與回溯，不強制自動上線。
+- 降低手動部署與整合錯誤風險。
+
+### 核心價值 (Value)
+- 主分支維持可執行狀態。
+- 行為改動可快速驗證與回溯。
+- 降低整合與除錯成本。
+- 提升專案整體工程品質。
+
+---
+
 ## ✅ 總結 (Summary)
 本專案結合了經典的塔防玩法與中高階的遊戲 AI 架構設計，不僅提供了完整的遊戲體驗，更為隨機環境下的動態 AI 決策提供了一個可工程化、可擴展的技術範本。
