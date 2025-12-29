@@ -911,6 +911,12 @@ class Game:
         else:
             self.sound_mgr.play("error")
 
+    def on_dice_merge(self) -> None:
+        """Called when user merges two dice. Notify Boss if present."""
+        for e in self.enemies:
+            if hasattr(e, 'ai_controller'):
+                e.ai_controller.record_merge()
+
     def start_wave(self) -> None:
         """Start the next wave of enemies."""
         self.telegraphs = []
