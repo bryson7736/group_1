@@ -11,6 +11,14 @@ from enemy import Enemy
 from boss_ai.BossAIController import BossAIController
 
 # =============================================================================
+# FSM States (Legacy compatibility)
+# =============================================================================
+STATE_IDLE = "idle"
+STATE_DEFENSE = "defense"
+STATE_ATTACK = "attack"
+STATE_HEAL = "heal"
+
+# =============================================================================
 # Boss Settings (Configurable)
 # =============================================================================
 BOSS_SIZE_MULT = 3          # Boss is 3x larger than normal enemy
@@ -74,8 +82,9 @@ class TrueBoss(Enemy):
         
         # New Boss AI Controller
         self.ai_controller = BossAIController(self, game)
+        self.icon = icon_surface
         
-        self.attack_targets = [] # List of (c, r) tuples for targeted dice
+        self.attack_targets = [] # List of (c, r, die) tuples for targeted dice
 
     @property
     def state(self):
@@ -154,7 +163,9 @@ class TrueBoss(Enemy):
         if not self.game or not self.game.grid:
             return
             
-        for c, r, target_die in self.attack_targets:
+        for target in self.attack_targets:
+            if len(target) < 3: continue
+            c, r, target_die = target
             # Verify die still exists there and is the SAME die (hasn't fled/merged)
             current_die = self.game.grid.get(c, r)
             if current_die and current_die is target_die:
@@ -224,7 +235,9 @@ class TrueBoss(Enemy):
 
         # Draw Target Indicators on Grid
         if self.state == STATE_ATTACK and self.attack_targets:
-            for c, r in self.attack_targets:
+            for target in self.attack_targets:
+                if len(target) < 3: continue
+                c, r, target_die = target
                 if self.game and self.game.grid:
                     rect = self.game.grid.rect_at(c, r)
                     # Draw a crosshair or target symbol

@@ -15,4 +15,4 @@ class SummonMinion(Behavior):
         return HealSelf()
 
     def enter(self, executor):
-        executor.cast("SummonMinion", duration=1.0)
+        executor.cast("SummonMinion", duration=3.0)

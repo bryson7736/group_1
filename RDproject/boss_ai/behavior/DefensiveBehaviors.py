@@ -15,4 +15,4 @@ class DamageReduction(Behavior):
         return self
 
     def enter(self, executor):
-        executor.cast("DamageReduction", duration=5.0)
+        executor.cast("DamageReduction", duration=3.0)

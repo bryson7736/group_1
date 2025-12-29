@@ -9,7 +9,7 @@ class BasicAttack(Behavior):
         return self
 
     def enter(self, executor):
-        executor.cast("BasicAttack", duration=1.0)
+        executor.cast("BasicAttack", duration=4.0)
 
     @staticmethod
     def ready():
@@ -20,7 +20,7 @@ class AOEAttack(Behavior):
         return BasicAttack()
 
     def enter(self, executor):
-        executor.cast("AOEAttack", duration=2.0)
+        executor.cast("AOEAttack", duration=4.0)
 
     @staticmethod
     def ready():
@@ -31,7 +31,7 @@ class Disrupt(Behavior):
         return BasicAttack()
 
     def enter(self, executor):
-        executor.cast("Disrupt", duration=1.5)
+        executor.cast("Disrupt", duration=4.0)
 
     @staticmethod
     def ready():
