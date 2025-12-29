@@ -57,6 +57,13 @@ class StoryProgress:
         """Check if a chapter is completed."""
         return chapter_id in self.completed_chapters
     
+    def unlock_all_chapters(self):
+        """Unlock all chapters for testing/cheats."""
+        for i in range(1, 6):
+            cid = f"chapter{i}"
+            if cid not in self.completed_chapters:
+                self.completed_chapters.append(cid)
+    
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for saving."""
         return {
@@ -102,27 +109,27 @@ class StoryManager:
         original_maps = [
             {
                 "name": "Hell Gate",
-                "path": [(1280, 100), (900, 100), (900, 300), (600, 300), (600, 600), (1280, 600)],
+                "path": [(1280, 100), (900, 100), (900, 350), (620, 350), (620, 620), (1280, 620)],
                 "color": (0, 0, 0), "bg": "hell", "desc": "The entrance to the infernal realm."
             },
             {
                 "name": "Burning Path",
-                "path": [(0, 100), (650, 100), (650, 400), (450, 400), (450, 650), (1280, 650)],
+                "path": [(0, 100), (630, 100), (630, 350), (450, 350), (450, 450), (630, 450), (630, 550), (450, 550),  (450, 650), (1280, 650)],
                 "color": (255, 0, 0), "bg": "burning_path", "desc": "Cross the lava rivers."
             },
             {
                 "name": "Demon Fortress",
-                "path": [(1290, 80), (800, 80), (800, 500), (400, 500), (400, 300), (50, 300), (50, 650), (640, 650), (640, 800)],
+                "path": [(1290, 80), (770, 80), (770, 500), (350, 500), (350, 320), (50, 320), (50, 650), (650, 650), (650, 800)],
                 "color": (255, 128, 0), "bg": "demon_fortress", "desc": "Built by the damned."
             },
             {
                 "name": "Chamber of Torment",
-                "path": [(1280, 400), (900, 400), (900, 200), (600, 200), (600, 600), (1280, 600)],
+                "path": [(1280, 350), (900, 350), (900, 180), (630, 180), (630, 620), (1280, 620)],
                 "color": (139, 69, 19), "bg": "torture_chamber", "desc": "The air itself burns."
             },
             {
                 "name": "Hell Lord's Throne",
-                "path": [(1280, 430), (1030, 430), (1030, 110), (430, 110), (430, 630), (1280, 630)],
+                "path": [(1280, 360), (1030, 360), (1030, 110), (830, 110), (830, 260), (630, 260), (630, 110), (480, 110), (480, 630), (1280, 630)],
                 "color": (218, 179, 0), "bg": "hell_lord", "desc": "Face the ultimate test!"
             }
         ]
@@ -201,6 +208,24 @@ class StoryManager:
     def is_chapter_completed(self, chapter_id: str) -> bool:
         """Check if a chapter is completed."""
         return self.progress.is_chapter_completed(chapter_id)
+    
+    def unlock_all_chapters(self):
+        """Unlock all chapters."""
+        self.progress.unlock_all_chapters()
+        self.save_progress()
+    
+    def is_chapter_unlocked(self, chapter_id: str) -> bool:
+        """Check if a chapter is unlocked."""
+        if chapter_id == "chapter1":
+            return True
+        
+        # Extract number
+        try:
+            num = int(chapter_id.replace("chapter", ""))
+            prev_chapter = f"chapter{num-1}"
+            return self.progress.is_chapter_completed(prev_chapter)
+        except ValueError:
+            return False
     
     def save_progress(self):
         """Save progress to file."""

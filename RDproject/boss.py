@@ -36,6 +36,16 @@ def calculate_boss_speed(base_speed: float) -> float:
     """Calculate Boss movement speed."""
     return base_speed * BOSS_SPEED_MULT
 
+# Global Skill Cooldown (shared by all skills)
+GLOBAL_SKILL_COOLDOWN = 5.0     # Cooldown after using any skill
+INITIAL_SKILL_COOLDOWN = 2.0    # Initial cooldown at spawn
+
+# Skill Durations (seconds)
+SKILL_DURATION = {
+    STATE_DEFENSE: 3.0,
+    STATE_ATTACK: 4.0,  # Cast time prolonged to 4s
+    STATE_HEAL: 3.0,
+}
 
 # Defense settings
 DEFENSE_DAMAGE_REDUCTION = 0.5  # 50% damage reduction
@@ -57,10 +67,11 @@ class TrueBoss(Enemy):
     - HEAL: Stops to regenerate HP
     """
     
-    def __init__(self, path_points, hp, speed, game=None):
+    def __init__(self, path_points, hp, speed, game=None, icon_surface=None):
         super().__init__(path_points, hp, speed, size=ENEMY_SIZE * BOSS_SIZE_MULT)
         self.game = game
         self.money_drop = BOSS_MONEY_DROP
+        self.icon = icon_surface  # Boss icon for display
         
         # New Boss AI Controller
         self.ai_controller = BossAIController(self, game)
@@ -121,8 +132,9 @@ class TrueBoss(Enemy):
                 filled = []
                 for c in range(self.game.grid.cols):
                     for r in range(self.game.grid.rows):
-                        if self.game.grid.get(c, r):
-                            filled.append((c, r))
+                        d = self.game.grid.get(c, r)
+                        if d:
+                            filled.append((c, r, d))
                 
                 if filled:
                     count = min(ATTACK_DESTROY_DICE_COUNT, len(filled))
@@ -143,9 +155,10 @@ class TrueBoss(Enemy):
         if not self.game or not self.game.grid:
             return
             
-        for c, r in self.attack_targets:
-            # Verify die still exists there (it might have been merged/trashed)
-            if self.game.grid.get(c, r):
+        for c, r, target_die in self.attack_targets:
+            # Verify die still exists there and is the SAME die (hasn't fled/merged)
+            current_die = self.game.grid.get(c, r)
+            if current_die and current_die is target_die:
                 self.game.grid.remove(c, r)
         
         self.attack_targets = []
@@ -179,6 +192,13 @@ class TrueBoss(Enemy):
         if border_color:
             pygame.draw.rect(surf, border_color, r, width=border_width, border_radius=10)
         
+        # Draw boss icon if available
+        if self.icon:
+            icon_size = int(self.size * 0.8)
+            icon_scaled = pygame.transform.smoothscale(self.icon, (icon_size, icon_size))
+            icon_rect = icon_scaled.get_rect(center=r.center)
+            surf.blit(icon_scaled, icon_rect)
+        
         # Debuff indicators
         if self.poison_timer > 0:
             pygame.draw.rect(surf, (180, 50, 255), r, width=2, border_radius=10)
@@ -204,7 +224,7 @@ class TrueBoss(Enemy):
         surf.blit(hp_txt, (r.centerx - hp_txt.get_width()//2, r.centery - hp_txt.get_height()//2))
 
         # Draw Target Indicators on Grid
-        if self.ai_controller.executor.current_skill in ["BasicAttack", "AOEAttack", "Disrupt"] and self.attack_targets:
+        if self.state == STATE_ATTACK and self.attack_targets:
             for c, r in self.attack_targets:
                 if self.game and self.game.grid:
                     rect = self.game.grid.rect_at(c, r)

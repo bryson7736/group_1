@@ -219,8 +219,26 @@ class Game:
             self.img_add_die = pygame.transform.smoothscale(self.img_add_die, (40, 40))
         except:
             self.img_add_die = None
+        
+        # Load boss icon for all chapters
+        self.boss_icon = None
+        try:
+            boss_icon_path = os.path.join(ASSETS_DIR, "boss_chapter5.png")
+            if os.path.exists(boss_icon_path):
+                self.boss_icon = pygame.image.load(boss_icon_path).convert_alpha()
+        except:
+            pass
 
         self._build_lobby()
+
+    def cheat_unlock_all(self) -> None:
+        """Unlock everything (Cheat)."""
+        self.story_mgr.unlock_all_chapters()
+        self.upgrades.coins = 99999
+        self.ads_removed = True
+        self.speed_ctrl.locked_indices = []
+        self.sound_mgr.play("upgrade")
+        print("CHEAT ACTIVATED: All Unlocked, Rich, Pro Mode")
 
     # --------------- Lobby ---------------
     def _build_lobby(self) -> None:
@@ -289,6 +307,11 @@ class Game:
             Button((center_x, row_y, btn_w // 2 - 10, btn_h), "Help", self.font_big, self.goto_help)
         )
         self.quit_btn = Button((center_x + btn_w // 2 + 10, row_y, btn_w // 2 - 10, btn_h), "Quit", self.font_big, self.quit)
+
+        # Creator Button (Bottom Left)
+        self.buttons.append(
+            Button((20, SCREEN_H - 80, 120, 60), "Creator", self.font_big, self.cheat_unlock_all, bg=(100, 100, 200))
+        )
 
 
     def start_level(self, idx: int) -> None:
@@ -777,7 +800,7 @@ class Game:
         # Click on stage buttons
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mx, my = event.pos
-            btn_w, btn_h = 480, 80
+            btn_w, btn_h = 600, 80
             gap = 16
             start_x = (SCREEN_W - btn_w) // 2
             start_y = 180
@@ -786,8 +809,11 @@ class Game:
             for i, chapter in enumerate(chapters):
                 r = pygame.Rect(start_x, start_y + i * (btn_h + gap), btn_w, btn_h)
                 if r.collidepoint(mx, my):
-                    self.start_story_chapter(chapter.chapter_id)
-                    self.sound_mgr.play("click")
+                    if self.story_mgr.is_chapter_unlocked(chapter.chapter_id):
+                        self.start_story_chapter(chapter.chapter_id)
+                        self.sound_mgr.play("click")
+                    else:
+                        self.sound_mgr.play("error")
                     break
     
     def story_handle(self, event: pygame.event.Event) -> None:
@@ -966,7 +992,8 @@ class Game:
         if self.is_true_boss_wave and self.to_spawn == 1:
             boss_hp = calculate_boss_hp(self.wave, self.level.difficulty)
             boss_speed = calculate_boss_speed(speed)
-            e = TrueBoss(path, boss_hp, boss_speed, game=self)
+            # Load boss icon for all chapters
+            e = TrueBoss(path, boss_hp, boss_speed, game=self, icon_surface=self.boss_icon)
         elif self.is_big_enemy_wave and self.to_spawn == 1:
             hp *= BIG_ENEMY_HP_MULT
             e = BigEnemy(path, hp, speed * 0.85)
@@ -1710,7 +1737,7 @@ class Game:
         self.screen.blit(sub, (SCREEN_W // 2 - sub.get_width() // 2, 130))
         
         # Stage buttons
-        btn_w, btn_h = 480, 80
+        btn_w, btn_h = 600, 80
         gap = 16
         start_x = (SCREEN_W - btn_w) // 2
         start_y = 180
@@ -1721,8 +1748,8 @@ class Game:
         for i, chapter in enumerate(chapters):
             r = pygame.Rect(start_x, start_y + i * (btn_h + gap), btn_w, btn_h)
             
-            # Simple check for unlock (optional)
-            unlocked = True # For now let them play all
+            # Check for unlock
+            unlocked = self.story_mgr.is_chapter_unlocked(chapter.chapter_id)
             
             color = (200, 80, 40) if unlocked else (60, 60, 60)
             text_color = WHITE if unlocked else (120, 120, 120)
@@ -1732,6 +1759,17 @@ class Game:
             
             txt = self.font_big.render(chapter.name, True, text_color)
             self.screen.blit(txt, (r.centerx - txt.get_width() // 2, r.centery - txt.get_height() // 2))
+            
+            if not unlocked:
+                # Draw Lock Icon
+                lock_size = 30
+                lock_x = r.right - lock_size - 20
+                lock_y = r.centery - lock_size // 2
+                
+                # Body
+                pygame.draw.rect(self.screen, (200, 200, 200), (lock_x, lock_y + 10, lock_size, lock_size - 10))
+                # Shackle
+                pygame.draw.arc(self.screen, (200, 200, 200), (lock_x + 5, lock_y - 5, lock_size - 10, 30), 0, 3.14159, 3)
             
             # Draw checkmark if chapter is completed
             if self.story_mgr.is_chapter_completed(chapter.chapter_id):
